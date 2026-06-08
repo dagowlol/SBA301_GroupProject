@@ -3,6 +3,7 @@ package hoang.com.auction_system_be.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -47,5 +48,20 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    ResponseEntity<ApiResponse> handlingValidationException(MethodArgumentNotValidException exception) {
+        String message = exception.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation error");
+
+        ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setCode(4000);
+        apiResponse.setMessage(message);
+
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
 
 }
