@@ -1,4 +1,4 @@
-﻿package hoang.com.auction_system_be.entity;
+package hoang.com.auction_system_be.entity;
 
 import hoang.com.auction_system_be.enums.AuthProvider;
 import hoang.com.auction_system_be.enums.RoleName;
@@ -6,26 +6,23 @@ import hoang.com.auction_system_be.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_email", columnList = "email", unique = true)
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class User extends BaseEntity {
 
     @Column(name = "first_name", nullable = false, length = 100)
     String firstName;
@@ -58,12 +55,4 @@ public class User {
     @Column(nullable = false, length = 30)
     @Builder.Default
     RoleName role = RoleName.USER;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
 }

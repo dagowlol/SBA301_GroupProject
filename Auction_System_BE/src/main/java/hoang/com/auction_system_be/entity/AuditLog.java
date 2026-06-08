@@ -1,12 +1,11 @@
-﻿package hoang.com.auction_system_be.entity;
+package hoang.com.auction_system_be.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "audit_logs", indexes = {
@@ -14,16 +13,15 @@ import java.time.LocalDateTime;
         @Index(name = "idx_audit_timestamp", columnList = "created_at"),
         @Index(name = "idx_audit_entity", columnList = "entity_type, entity_id")
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE audit_logs SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuditLog {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class AuditLog extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -43,8 +41,4 @@ public class AuditLog {
 
     @Column(name = "ip_address", length = 50)
     String ipAddress;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
 }

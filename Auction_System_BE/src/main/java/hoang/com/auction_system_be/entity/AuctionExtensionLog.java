@@ -1,10 +1,11 @@
-﻿package hoang.com.auction_system_be.entity;
+package hoang.com.auction_system_be.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -16,16 +17,15 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_extlog_created_at", columnList = "created_at")
         }
 )
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE auction_extension_logs SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuctionExtensionLog {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class AuctionExtensionLog extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "session_id", nullable = false)
@@ -49,9 +49,4 @@ public class AuctionExtensionLog {
 
     @Column(name = "reason", length = 200)
     String reason;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
 }
-

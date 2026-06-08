@@ -8,7 +8,11 @@ import org.springframework.http.HttpStatusCode;
 public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
     UNAUTHENTICATED(1001, "Unauthenticated", HttpStatus.UNAUTHORIZED),
-    UNAUTHORIZED(1002, "You do not have permission", HttpStatus.FORBIDDEN);
+    UNAUTHORIZED(1002, "You do not have permission", HttpStatus.FORBIDDEN),
+
+    // Category
+    CATEGORY_NOT_FOUND(2001, "Category not found", HttpStatus.NOT_FOUND),
+    CATEGORY_NAME_EXISTED(2002, "Category name already existed", HttpStatus.BAD_REQUEST);
 
     @Getter
     private int code;

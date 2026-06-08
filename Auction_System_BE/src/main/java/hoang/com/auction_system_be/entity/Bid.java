@@ -1,9 +1,12 @@
-﻿package hoang.com.auction_system_be.entity;
+package hoang.com.auction_system_be.entity;
 
 import hoang.com.auction_system_be.enums.BidStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,16 +17,15 @@ import java.time.LocalDateTime;
         @Index(name = "idx_bid_timestamp", columnList = "bid_timestamp"),
         @Index(name = "idx_bid_status", columnList = "status")
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE bids SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Bid {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class Bid extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "participant_id", nullable = false)
@@ -34,7 +36,7 @@ public class Bid {
 
     @Column(name = "is_auto_bid", nullable = false)
     @Builder.Default
-    Boolean isAutoBid = false;
+    boolean isAutoBid = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -47,4 +49,3 @@ public class Bid {
     @Column(name = "ip_address", length = 50)
     String ipAddress;
 }
-
