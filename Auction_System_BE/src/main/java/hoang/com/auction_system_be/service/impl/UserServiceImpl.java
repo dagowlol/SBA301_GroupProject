@@ -8,6 +8,7 @@ import hoang.com.auction_system_be.dto.response.UserResponse;
 import hoang.com.auction_system_be.entity.User;
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
+import hoang.com.auction_system_be.mapper.UserMapper;
 import hoang.com.auction_system_be.repository.UserRepository;
 import hoang.com.auction_system_be.service.UserService;
 import lombok.AccessLevel;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
+    UserMapper userMapper;
 
     @Override
     public UserResponse createUser(UserCreateRequest request) {
@@ -43,7 +45,7 @@ public class UserServiceImpl implements UserService {
                 // role and status will use defaults (USER and ACTIVE) defined in entity
                 .build();
 
-        return mapToResponse(userRepository.save(user));
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
@@ -56,20 +58,20 @@ public class UserServiceImpl implements UserService {
         if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
         if (request.getAddress() != null) user.setAddress(request.getAddress());
 
-        return mapToResponse(userRepository.save(user));
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        return mapToResponse(user);
+        return userMapper.toUserResponse(user);
     }
 
     @Override
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(this::mapToResponse)
+                .map(userMapper::toUserResponse)
                 .collect(Collectors.toList());
     }
 
@@ -79,7 +81,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
         user.setRole(request.getRole());
-        return mapToResponse(userRepository.save(user));
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
@@ -88,7 +90,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
                 
         user.setStatus(request.getStatus());
-        return mapToResponse(userRepository.save(user));
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
@@ -99,19 +101,5 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
-    private UserResponse mapToResponse(User user) {
-        return UserResponse.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .address(user.getAddress())
-                .authProvider(user.getAuthProvider())
-                .status(user.getStatus())
-                .role(user.getRole())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-    }
+
 }
