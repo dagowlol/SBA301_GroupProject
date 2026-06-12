@@ -1,4 +1,4 @@
-﻿package hoang.com.auction_system_be.entity;
+package hoang.com.auction_system_be.entity;
 
 import hoang.com.auction_system_be.enums.AuthProvider;
 import hoang.com.auction_system_be.enums.RoleName;
@@ -38,6 +38,9 @@ public class User {
 
     @Column(name = "phone_number", length = 20)
     String phoneNumber;
+
+    @Column(name = "password")
+    String password;
 
     @Column(columnDefinition = "TEXT")
     String address;

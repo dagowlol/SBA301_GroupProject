@@ -1,4 +1,4 @@
-﻿package hoang.com.auction_system_be.entity;
+package hoang.com.auction_system_be.entity;
 
 import hoang.com.auction_system_be.enums.DisputeStatus;
 import jakarta.persistence.*;
