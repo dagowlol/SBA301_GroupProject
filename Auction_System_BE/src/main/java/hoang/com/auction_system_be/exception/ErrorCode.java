@@ -12,9 +12,15 @@ public enum ErrorCode {
 
     // Category
     CATEGORY_NOT_FOUND(2001, "Category not found", HttpStatus.NOT_FOUND),
-    CATEGORY_NAME_EXISTED(2002, "Category name already existed", HttpStatus.BAD_REQUEST);
+    CATEGORY_NAME_EXISTED(2002, "Category name already existed", HttpStatus.BAD_REQUEST),
+    
+    // User
     USER_EXISTED(1003, "User existed", HttpStatus.BAD_REQUEST),
-    USER_NOT_FOUND(1004, "User not found", HttpStatus.NOT_FOUND);
+    USER_NOT_FOUND(1004, "User not found", HttpStatus.NOT_FOUND),
+
+    // Item
+    ITEM_NOT_FOUND(4001, "Item not found", HttpStatus.NOT_FOUND),
+    INVALID_ITEM_STATUS(4002, "Invalid item status for this operation", HttpStatus.BAD_REQUEST);
 
     @Getter
     private int code;
