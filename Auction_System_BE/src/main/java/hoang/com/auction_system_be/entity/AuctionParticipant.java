@@ -3,8 +3,10 @@ package hoang.com.auction_system_be.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,16 +30,15 @@ import java.util.List;
                 @Index(name = "idx_participant_user", columnList = "user_id")
         }
 )
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE auction_participants SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuctionParticipant {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class AuctionParticipant extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -62,4 +63,3 @@ public class AuctionParticipant {
     @Column(name = "joined_at", nullable = false, updatable = false)
     LocalDateTime joinedAt;
 }
-

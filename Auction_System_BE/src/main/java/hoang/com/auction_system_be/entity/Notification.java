@@ -4,10 +4,9 @@ import hoang.com.auction_system_be.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "notifications", indexes = {
@@ -15,16 +14,15 @@ import java.time.LocalDateTime;
         @Index(name = "idx_notif_is_read", columnList = "is_read"),
         @Index(name = "idx_notif_type", columnList = "type")
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE notifications SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Notification {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class Notification extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -42,16 +40,11 @@ public class Notification {
 
     @Column(name = "is_read", nullable = false)
     @Builder.Default
-    Boolean isRead = false;
+    boolean isRead = false;
 
     @Column(name = "reference_id")
     Long referenceId;
 
     @Column(name = "reference_type", length = 50)
     String referenceType;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
 }
-

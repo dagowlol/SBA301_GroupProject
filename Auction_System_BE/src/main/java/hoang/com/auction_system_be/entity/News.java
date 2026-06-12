@@ -5,9 +5,9 @@ import hoang.com.auction_system_be.enums.NewsType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
@@ -16,16 +16,15 @@ import java.time.LocalDateTime;
         @Index(name = "idx_news_type", columnList = "type"),
         @Index(name = "idx_news_status", columnList = "status")
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE news SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class News {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class News extends BaseEntity {
 
     @Column(nullable = false, length = 300)
     String title;
@@ -48,7 +47,7 @@ public class News {
 
     @Column(name = "is_featured", nullable = false)
     @Builder.Default
-    Boolean isFeatured = false;
+    boolean isFeatured = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
@@ -56,13 +55,4 @@ public class News {
 
     @Column(name = "published_at")
     LocalDateTime publishedAt;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
 }
-

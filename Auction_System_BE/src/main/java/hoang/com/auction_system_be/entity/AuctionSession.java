@@ -4,9 +4,9 @@ import hoang.com.auction_system_be.enums.SessionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,16 +19,15 @@ import java.util.List;
         @Index(name = "idx_session_status", columnList = "status"),
         @Index(name = "idx_session_time", columnList = "start_time, end_time")
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE auction_sessions SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuctionSession {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class AuctionSession extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
@@ -60,15 +59,15 @@ public class AuctionSession {
 
     @Column(name = "anti_snipe_window_seconds", nullable = false)
     @Builder.Default
-    Integer antiSnipeWindowSeconds = 10;
+    int antiSnipeWindowSeconds = 10;
 
     @Column(name = "anti_snipe_extension_seconds", nullable = false)
     @Builder.Default
-    Integer antiSnipeExtensionSeconds = 30;
+    int antiSnipeExtensionSeconds = 30;
 
     @Column(name = "bid_count", nullable = false)
     @Builder.Default
-    Integer bidCount = 0;
+    int bidCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
@@ -80,13 +79,4 @@ public class AuctionSession {
     @OneToMany(mappedBy = "session", fetch = FetchType.LAZY)
     @Builder.Default
     List<AuctionParticipant> participants = new ArrayList<>();
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
 }
-
