@@ -20,7 +20,11 @@ public enum ErrorCode {
 
     // Item
     ITEM_NOT_FOUND(4001, "Item not found", HttpStatus.NOT_FOUND),
-    INVALID_ITEM_STATUS(4002, "Invalid item status for this operation", HttpStatus.BAD_REQUEST);
+    INVALID_ITEM_STATUS(4002, "Invalid item status for this operation", HttpStatus.BAD_REQUEST),
+    
+    // Payment
+    PAYMENT_NOT_FOUND(5001, "Payment not found", HttpStatus.NOT_FOUND),
+    INVALID_PAYMENT_STATUS(5002, "Invalid payment status for this operation", HttpStatus.BAD_REQUEST);
 
     @Getter
     private int code;
