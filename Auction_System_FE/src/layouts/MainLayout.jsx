@@ -1,81 +1,49 @@
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { Navbar, Nav, Container, Button, Form, InputGroup } from 'react-bootstrap';
-import { Search, Facebook, Twitter, Instagram } from 'lucide-react';
-import { useContext } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import AuthModal from '../features/auth/components/AuthModal';
+import { Search, Mail, ArrowRight, Compass, Heart, Award, Shield } from 'lucide-react';
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isAuthenticated, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
-  const isHome = location.pathname === '/';
 
   return (
-    <div className="d-flex flex-column min-vh-100 bg-light" style={{ border: '3px solid #a855f7' }}>
+    <div className="d-flex flex-column min-vh-100 bg-light">
       {/* Header / Navbar */}
-      <Navbar bg="white" expand="lg" className="py-3 sticky-top border-bottom shadow-sm">
+      <Navbar bg="white" expand="lg" className="border-bottom py-3 sticky-top shadow-sm">
         <Container>
-          <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 text-dark d-flex align-items-center" style={{ fontStyle: 'italic', position: 'relative' }}>
-            <span style={{ 
-              background: 'linear-gradient(180deg, #003d5b 0%, #0077b6 50%, #90e0ef 100%)', 
-              WebkitBackgroundClip: 'text', 
-              WebkitTextFillColor: 'transparent', 
-              letterSpacing: '2px', 
-              fontWeight: 900,
-              fontFamily: 'Impact, sans-serif'
-            }}>ANNEXE</span>
+          <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 tracking-wider text-dark d-flex align-items-center">
+            <span style={{ color: '#005f73', letterSpacing: '1px' }}>ANNEXE</span>
+            <span className="ms-1 fw-light text-muted fs-6 uppercase">Auction</span>
           </Navbar.Brand>
           
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-between">
-            <Nav className="mx-auto gap-4 text-dark fw-semibold" style={{ fontSize: '0.9rem' }}>
+            <Nav className="mx-auto gap-3 text-uppercase fw-semibold" style={{ fontSize: '0.85rem' }}>
               <Nav.Link as={Link} to="/" className="text-dark hover-teal">Home</Nav.Link>
-              <Nav.Link as={Link} to="/auction" className="text-dark hover-teal">Auction</Nav.Link>
-              <Nav.Link as={Link} to="/results" className="text-dark hover-teal">Results</Nav.Link>
-              <Nav.Link as={Link} to="/value-buy-sell" className="text-dark hover-teal">Value, Buy, Sell</Nav.Link>
-              <Nav.Link as={Link} to="/about-us" className="text-dark hover-teal">About Us</Nav.Link>
-              <Nav.Link as={Link} to="/contact-us" className="text-dark hover-teal">Contact Us</Nav.Link>
+              <Nav.Link as={Link} to="/" className="text-dark hover-teal">Auction</Nav.Link>
+              <Nav.Link as={Link} to="/" className="text-dark hover-teal">Results</Nav.Link>
+              <Nav.Link as={Link} to="/" className="text-dark hover-teal">Value, Buy, Sell</Nav.Link>
+              <Nav.Link as={Link} to="/" className="text-dark hover-teal">About Us</Nav.Link>
+              <Nav.Link as={Link} to="/" className="text-dark hover-teal">Contact Us</Nav.Link>
             </Nav>
             
             <div className="d-flex align-items-center gap-3">
               <Button 
-                className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0" 
-                style={{ backgroundColor: '#003d5b', width: '38px', height: '38px' }}
+                variant="outline-dark" 
+                size="sm" 
+                className="rounded-circle p-2 border-0" 
                 aria-label="Search"
               >
                 <Search size={18} />
               </Button>
-              {isAuthenticated ? (
-                <>
-                  <Button 
-                    variant="dark" 
-                    className="px-4 py-2 rounded-pill fw-bold" 
-                    style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
-                    onClick={() => navigate('/admin/items')}
-                  >
-                    Staff Portal
-                  </Button>
-                  <Button 
-                    variant="outline-danger" 
-                    className="px-3 py-2 rounded-pill fw-bold" 
-                    style={{ fontSize: '0.9rem' }}
-                    onClick={logout}
-                  >
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <Button 
-                  variant="dark" 
-                  className="px-4 py-2 rounded-pill fw-bold" 
-                  style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
-                  onClick={openAuthModal}
-                >
-                  Sign In
-                </Button>
-              )}
+              <Button 
+                variant="dark" 
+                className="px-4 py-2 rounded-pill font-semibold text-uppercase" 
+                style={{ fontSize: '0.8rem', backgroundColor: '#004e64', borderColor: '#004e64' }}
+                onClick={() => navigate('/admin/items')}
+              >
+                Staff Portal
+              </Button>
             </div>
           </Navbar.Collapse>
         </Container>
@@ -86,80 +54,93 @@ export default function MainLayout() {
         <Outlet />
       </main>
 
-      <AuthModal show={isAuthModalOpen} onHide={closeAuthModal} />
-
       {/* Footer */}
-      <footer className="pt-5 pb-4" style={{ backgroundColor: '#333333', color: '#ffffff' }}>
+      <footer className="text-white pt-5 pb-3" style={{ backgroundColor: '#2b2d31' }}>
         <Container>
-          <div className="row justify-content-between mb-5">
+          <div className="row g-4 mb-5">
             {/* Left Column: Brand & Info */}
-            <div className="col-lg-5 col-md-6 mb-4 mb-md-0">
-              <h2 className="fw-bold mb-4 text-white" style={{ lineHeight: '1.1', fontSize: '2.5rem' }}>Annexe<br/>Auction</h2>
-              <p className="text-light small opacity-75" style={{ lineHeight: '1.6', maxWidth: '350px' }}>
+            <div className="col-lg-4 col-md-6">
+              <h5 className="fw-bold mb-3 text-uppercase tracking-wider">Annexe Auction</h5>
+              <p className="text-muted small mb-4" style={{ lineHeight: '1.6' }}>
                 Wisma Geha, Jl. Timor No.25, RT.9/RW.4,<br />
-                Gondangdia, Kec. Menteng, Kota Jakarta<br />
-                Pusat, Daerah Khusus Ibukota Jakarta 10350<br />
-                p. 0813-1066-8211<br />
-                e. info@annexe-auction.online
+                Gondangdia, Kec. Menteng, Kota Jakarta Pusat,<br />
+                Daerah Khusus Ibukota Jakarta 10350<br />
+                p. 0813-1055-1511<br />
+                e. info@annexeauctions.com
               </p>
+              <div className="d-flex gap-2">
+                <Button variant="outline-secondary" size="sm" className="rounded-circle p-2 border-muted text-white">
+                  <Compass size={16} />
+                </Button>
+                <Button variant="outline-secondary" size="sm" className="rounded-circle p-2 border-muted text-white">
+                  <Heart size={16} />
+                </Button>
+                <Button variant="outline-secondary" size="sm" className="rounded-circle p-2 border-muted text-white">
+                  <Award size={16} />
+                </Button>
+                <Button variant="outline-secondary" size="sm" className="rounded-circle p-2 border-muted text-white">
+                  <Shield size={16} />
+                </Button>
+              </div>
             </div>
 
-            {/* Right Column: Newsletter & Links */}
-            <div className="col-lg-6 col-md-6">
-              {/* Newsletter */}
-              <div className="mb-5">
-                <h6 className="fw-bold text-white mb-3" style={{ fontSize: '1rem' }}>subscribe to our newsletter</h6>
-                <Form onSubmit={(e) => e.preventDefault()} className="d-flex align-items-end">
+            {/* Middle Column: Links */}
+            <div className="col-lg-4 col-md-6">
+              <div className="row">
+                <div className="col-6">
+                  <h6 className="fw-bold text-uppercase mb-3 small tracking-wide">Services</h6>
+                  <ul className="list-unstyled small d-flex flex-column gap-2 text-muted">
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">Consign with us</Link></li>
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">Register to bid</Link></li>
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">Auctions list</Link></li>
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">Valuation</Link></li>
+                  </ul>
+                </div>
+                <div className="col-6">
+                  <h6 className="fw-bold text-uppercase mb-3 small tracking-wide">Legal</h6>
+                  <ul className="list-unstyled small d-flex flex-column gap-2 text-muted">
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">Terms & Conditions</Link></li>
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">Privacy Policy</Link></li>
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">Buyer Premium</Link></li>
+                    <li><Link to="/" className="text-decoration-none text-reset hover-white">FAQ</Link></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Newsletter */}
+            <div className="col-lg-4 col-md-12">
+              <h6 className="fw-bold text-uppercase mb-3 small tracking-wide">subscribe to our newsletter</h6>
+              <p className="text-muted small mb-3">Stay updated with our latest auction collections and hot bids.</p>
+              <Form onSubmit={(e) => e.preventDefault()}>
+                <InputGroup className="mb-3">
                   <Form.Control
                     placeholder="enter your email address"
-                    className="bg-transparent border-0 border-bottom border-light text-white rounded-0 shadow-none px-0 pb-2 me-4"
-                    style={{ fontSize: '0.85rem' }}
+                    aria-label="Email address"
+                    className="bg-transparent border-secondary text-white placeholder-muted py-2"
+                    style={{ fontSize: '0.9rem', borderColor: '#495057' }}
                   />
                   <Button 
                     variant="outline-light"
-                    className="px-4 py-1 border-light rounded-0 text-white"
-                    style={{ fontSize: '0.85rem' }}
+                    className="px-3 border-secondary"
+                    style={{ backgroundColor: '#495057', borderColor: '#495057' }}
                     type="submit"
                   >
-                    Send
+                    <ArrowRight size={18} />
                   </Button>
-                </Form>
-              </div>
-
-              {/* Links */}
-              <div className="row mt-4">
-                <div className="col-6">
-                  <ul className="list-unstyled fw-semibold text-white mb-0 d-flex flex-column gap-3" style={{ fontSize: '0.9rem' }}>
-                    <li><Link to="/" className="text-decoration-none text-white" style={{ opacity: 0.9 }}>Consign with us</Link></li>
-                    <li><Link to="/" className="text-decoration-none text-white" style={{ opacity: 0.9 }}>Register to bid</Link></li>
-                  </ul>
-                </div>
-                <div className="col-6">
-                  <ul className="list-unstyled fw-semibold text-white mb-0 d-flex flex-column gap-3" style={{ fontSize: '0.9rem' }}>
-                    <li><Link to="/" className="text-decoration-none text-white" style={{ opacity: 0.9 }}>Terms & Conditions</Link></li>
-                    <li><Link to="/" className="text-decoration-none text-white" style={{ opacity: 0.9 }}>Privacy Policy</Link></li>
-                  </ul>
-                </div>
-              </div>
+                </InputGroup>
+              </Form>
             </div>
           </div>
 
-          {/* Bottom row: Copyright & Socials */}
-          <div className="d-flex align-items-center mt-5 pt-3">
-            <span className="text-light small opacity-75" style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-              &copy; 2022 Annexe Auction Online. All rights reserved
-            </span>
-            <div className="flex-grow-1 border-bottom border-secondary opacity-50 mx-4"></div>
+          <hr className="border-secondary mb-3" />
+
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small text-muted">
+            <span>&copy; {new Date().getFullYear()} Annexe Auction. All rights reserved.</span>
             <div className="d-flex gap-3">
-              <Button variant="light" className="rounded-circle p-0 d-flex align-items-center justify-content-center border-0" style={{ width: '32px', height: '32px' }}>
-                <Facebook size={16} color="#333" />
-              </Button>
-              <Button variant="light" className="rounded-circle p-0 d-flex align-items-center justify-content-center border-0" style={{ width: '32px', height: '32px' }}>
-                <Twitter size={16} color="#333" />
-              </Button>
-              <Button variant="light" className="rounded-circle p-0 d-flex align-items-center justify-content-center border-0" style={{ width: '32px', height: '32px' }}>
-                <Instagram size={16} color="#333" />
-              </Button>
+              <Link to="/" className="text-decoration-none text-reset hover-white">Facebook</Link>
+              <Link to="/" className="text-decoration-none text-reset hover-white">Instagram</Link>
+              <Link to="/" className="text-decoration-none text-reset hover-white">LinkedIn</Link>
             </div>
           </div>
         </Container>
