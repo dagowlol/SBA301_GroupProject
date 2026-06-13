@@ -52,7 +52,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void registerWithOtp(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new AppException(ErrorCode.USER_EXIST);
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
         User user = User.builder()
                 .firstName(request.getFirstName())

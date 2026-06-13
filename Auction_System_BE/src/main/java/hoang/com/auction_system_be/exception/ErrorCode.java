@@ -17,16 +17,24 @@ public enum ErrorCode {
     INVALID_CSRF_TOKEN(1008, "Invalid CSRF token", HttpStatus.UNAUTHORIZED),
     // ─── User ─────────────────────────────────────────────────────────────
     USER_NOT_FOUND(1009, "User not found", HttpStatus.NOT_FOUND),
-    USER_EXIST(1010, "Email already exists", HttpStatus.CONFLICT),
+    USER_EXISTED(1010, "User existed", HttpStatus.BAD_REQUEST),
     USER_LOCKED(1011, "Account is locked due to too many failed login attempts", HttpStatus.FORBIDDEN),
     USER_NOT_ACTIVE(1012, "Account is not yet activated. Please verify your OTP.", HttpStatus.FORBIDDEN),
     USER_INACTIVE(1013, "Account is inactive. Please contact support.", HttpStatus.FORBIDDEN),
     USER_STATUS_INVALID(1014, "Invalid user status", HttpStatus.INTERNAL_SERVER_ERROR),
     // ─── Role ─────────────────────────────────────────────────────────────
-    ROLE_NOT_FOUND(1015, "Role not found", HttpStatus.NOT_FOUND);
+    ROLE_NOT_FOUND(1015, "Role not found", HttpStatus.NOT_FOUND),
+    // ─── Category ─────────────────────────────────────────────────────────
+    CATEGORY_NOT_FOUND(2001, "Category not found", HttpStatus.NOT_FOUND),
+    CATEGORY_NAME_EXISTED(2002, "Category name already existed", HttpStatus.BAD_REQUEST),
+    // ─── Item ─────────────────────────────────────────────────────────────
+    ITEM_NOT_FOUND(4001, "Item not found", HttpStatus.NOT_FOUND),
+    INVALID_ITEM_STATUS(4002, "Invalid item status for this operation", HttpStatus.BAD_REQUEST);
+
     private final int code;
     private final String message;
     private final HttpStatusCode statusCode;
+
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;

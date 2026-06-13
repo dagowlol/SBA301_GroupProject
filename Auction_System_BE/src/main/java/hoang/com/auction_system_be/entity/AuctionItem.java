@@ -1,12 +1,12 @@
-﻿package hoang.com.auction_system_be.entity;
+package hoang.com.auction_system_be.entity;
 
 import hoang.com.auction_system_be.enums.ItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,16 +19,15 @@ import java.util.List;
         @Index(name = "idx_item_category", columnList = "category_id"),
         @Index(name = "idx_item_status", columnList = "status")
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE auction_items SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuctionItem {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class AuctionItem extends BaseEntity {
 
     @Column(nullable = false, length = 200)
     String name;
@@ -72,12 +71,4 @@ public class AuctionItem {
     @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
     @Builder.Default
     List<AuctionSession> sessions = new ArrayList<>();
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
 }

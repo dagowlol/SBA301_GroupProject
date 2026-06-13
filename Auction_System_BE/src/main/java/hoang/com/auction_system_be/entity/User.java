@@ -1,27 +1,31 @@
 package hoang.com.auction_system_be.entity;
+
 import hoang.com.auction_system_be.enums.AuthProvider;
 import hoang.com.auction_system_be.enums.RoleName;
 import hoang.com.auction_system_be.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import java.time.Instant;
-import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_email", columnList = "email", unique = true)
 })
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class User extends BaseEntity {
+
     @Column(name = "first_name", nullable = false, length = 100)
     String firstName;
     @Column(name = "last_name", nullable = false, length = 100)
@@ -32,6 +36,10 @@ public class User {
     String passwordHash;
     @Column(name = "phone_number", length = 20)
     String phoneNumber;
+
+    @Column(name = "password")
+    String password;
+
     @Column(columnDefinition = "TEXT")
     String address;
     @Enumerated(EnumType.STRING)
@@ -53,10 +61,4 @@ public class User {
     Integer failedLoginAttempts = 0;
     @Column(name = "locked_at")
     Instant lockedAt;
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
 }

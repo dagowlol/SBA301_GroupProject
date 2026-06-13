@@ -3,23 +3,21 @@ package hoang.com.auction_system_be.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "item_images")
-@Data
-@Builder
+@SQLDelete(sql = "UPDATE item_images SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+@Getter
+@Setter
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ItemImage {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+public class ItemImage extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
@@ -30,14 +28,9 @@ public class ItemImage {
 
     @Column(name = "is_primary", nullable = false)
     @Builder.Default
-    Boolean isPrimary = false;
+    boolean isPrimary = false;
 
-    @Column(name = "sort_order")
+    @Column(name = "sort_order", nullable = false)
     @Builder.Default
-    Integer sortOrder = 0;
-
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    LocalDateTime createdAt;
+    int sortOrder = 0;
 }
-
