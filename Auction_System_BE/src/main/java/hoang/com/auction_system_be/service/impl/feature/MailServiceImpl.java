@@ -30,7 +30,7 @@ public class MailServiceImpl implements MailService {
             message.setText(buildOtpEmailText(otp));
             mailSender.send(message);
             log.info("OTP email sent to: {}", toEmail);
-        } catch (Exception e) {
+        } catch (Exception e) { 
             log.warn("Failed to send OTP email to {}: {}. (Please check SMTP config in application.properties if you want real emails)", toEmail, e.getMessage());
         }
     }
