@@ -1,0 +1,39 @@
+const BASE_URL = 'http://localhost:8080/api';
+
+/**
+ * Custom wrapper for standard fetch to handle JSON requests, error boundaries,
+ * and mapping properties from/to the backend.
+ */
+export async function apiRequest(path, options = {}) {
+  const url = `${BASE_URL}${path}`;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  const config = {
+    ...options,
+    headers,
+  };
+
+  try {
+    const response = await fetch(url, config);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    // For DELETE or empty responses
+    if (response.status === 204 || path.includes('delete') || options.method === 'DELETE') {
+      const data = await response.json().catch(() => ({}));
+      return data;
+    }
+
+    const data = await response.json();
+    return data.result; // Standard Spring Boot ApiResponse wrapping
+  } catch (error) {
+    console.error(`API Request failed for ${url}:`, error);
+    throw error;
+  }
+}
+
