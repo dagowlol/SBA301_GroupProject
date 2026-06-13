@@ -19,6 +19,7 @@ export default function ProductCard({ item }) {
 
   // Active status color helper
   const isActive = item.status === 'Active';
+  const isPending = item.status === 'Pending';
   
   return (
     <Card 
@@ -35,7 +36,7 @@ export default function ProductCard({ item }) {
           style={{ transition: 'transform 0.3s ease' }}
         />
         <div className="position-absolute top-2 right-2">
-          <Badge bg={isActive ? "success" : "warning"} className="text-uppercase shadow-sm">
+          <Badge bg={isActive ? "success" : isPending ? "info" : "warning"} className="text-uppercase shadow-sm">
             {item.status}
           </Badge>
         </div>
@@ -43,17 +44,17 @@ export default function ProductCard({ item }) {
       
       <Card.Body className="d-flex flex-column text-start p-3 bg-white">
         <Card.Title className="fw-bold mb-0 text-truncate text-dark" style={{ fontSize: '1.15rem' }}>
-          {item.title}
+          {item.title || 'Untitled'}
         </Card.Title>
         <div className="text-muted small mb-3 italic">
-          by {item.artist}
+          by {item.artist || 'Unknown'}
         </div>
         
         <div className="mt-auto">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <span className="text-muted small text-uppercase">Current Bid:</span>
+            <span className="text-muted small text-uppercase">{isActive ? 'Current Bid:' : 'Starting Price:'}</span>
             <span className="fw-bold text-dark fs-5">
-              {item.currentBid ? `$${item.currentBid}` : '-'}
+              {item.currentBid ? `$${item.currentBid.toLocaleString()}` : item.startingPrice ? `$${item.startingPrice.toLocaleString()}` : '-'}
             </span>
           </div>
 

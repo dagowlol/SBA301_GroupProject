@@ -7,12 +7,7 @@ export const AppContext = createContext();
 
 export function AppContextProvider({ children }) {
   const [categories, setCategories] = useState([]);
-
-  const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem('auction_items');
-    const raw = saved ? JSON.parse(saved) : initialItems;
-    return productService.processItems(raw);
-  });
+  const [items, setItems] = useState([]);
 
   // Fetch categories from Backend via Service
   useEffect(() => {
@@ -24,7 +19,6 @@ export function AppContextProvider({ children }) {
         console.error("Failed to load categories from Service, falling back to local storage", err);
         const saved = localStorage.getItem('auction_categories');
         const fallback = saved ? JSON.parse(saved) : initialCategories;
-        // fallback categories are mapped as well to keep shape consistency
         setCategories(fallback.map(c => ({
           id: c.id,
           name: c.name,
@@ -40,6 +34,22 @@ export function AppContextProvider({ children }) {
     loadCategories();
   }, []);
 
+  // Fetch items from Backend via Service
+  useEffect(() => {
+    async function loadItems() {
+      try {
+        const pageResult = await productService.getAllItems({ size: 100 }); // fetch first 100 items
+        setItems(pageResult.content);
+      } catch (err) {
+        console.error("Failed to load items from Service, falling back to local storage", err);
+        const saved = localStorage.getItem('auction_items');
+        const fallback = saved ? JSON.parse(saved) : initialItems;
+        setItems(productService.processItems(fallback));
+      }
+    }
+    loadItems();
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('auction_categories', JSON.stringify(categories));
   }, [categories]);
@@ -48,40 +58,37 @@ export function AppContextProvider({ children }) {
     localStorage.setItem('auction_items', JSON.stringify(items));
   }, [items]);
 
-  // F09: Approve an item
-  const approveItem = (id) => {
-    setItems(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, status: 'Active', type: 'Current' }; // Set to Active to show up on the live auctions
-      }
-      return item;
-    }));
+  // F09: Approve an item on backend
+  const approveItem = async (id) => {
+    try {
+      const updated = await productService.approveItem(id);
+      setItems(prev => prev.map(item => (item.id === id ? updated : item)));
+    } catch (err) {
+      console.error("Failed to approve item via Service", err);
+      throw err;
+    }
   };
 
-  // F09: Reject an item
-  const rejectItem = (id) => {
-    setItems(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, status: 'Rejected' };
-      }
-      return item;
-    }));
+  // F09: Reject an item on backend
+  const rejectItem = async (id, reason) => {
+    try {
+      const updated = await productService.rejectItem(id, reason);
+      setItems(prev => prev.map(item => (item.id === id ? updated : item)));
+    } catch (err) {
+      console.error("Failed to reject item via Service", err);
+      throw err;
+    }
   };
 
   // Item CRUD
-  const addItem = (item) => {
-    const newItem = {
-      ...item,
-      id: Date.now(),
-      views: 0,
-      bids: [],
-      currentBid: null,
-      status: item.status || 'Pending',
-      submittedBy: item.submittedBy || 'seller_current',
-      type: item.status === 'Active' ? 'Current' : (item.status === 'Approved' ? 'Upcoming' : 'Upcoming')
-    };
-    const processed = productService.processItems([newItem])[0];
-    setItems(prev => [processed, ...prev]);
+  const addItem = async (item) => {
+    try {
+      const created = await productService.createItem(item);
+      setItems(prev => [created, ...prev]);
+    } catch (err) {
+      console.error("Failed to submit item via Service", err);
+      throw err;
+    }
   };
 
   const editItem = (id, updated) => {

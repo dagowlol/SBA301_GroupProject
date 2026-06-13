@@ -3,24 +3,22 @@ import { AppContext } from '../../../context/AppContext';
 import { Container, Row, Col, Pagination } from 'react-bootstrap';
 import FilterBar from '../components/FilterBar';
 import ProductCard from '../components/ProductCard';
-import { productService } from '../services/productService';
 
 export default function CatalogPage() {
   const { items } = useContext(AppContext);
-  
   // Local state for filtering/sorting
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // all, upcoming, current
+  const [activeTab, setActiveTab] = useState('all'); // all, upcoming, current, pending
   const [sortBy, setSortBy] = useState('default');
-  
+
   // Pagination mockup
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
   // Filter & Sort Logic
   const filteredAndSortedItems = useMemo(() => {
-    // Only display approved or active items to public users
-    let result = productService.filterPublicItems(items);
+    if (!Array.isArray(items)) return [];
+    let result = [...items];
 
     // Filter by tab
     if (activeTab === 'upcoming') {
@@ -28,13 +26,15 @@ export default function CatalogPage() {
     } else if (activeTab === 'current') {
       result = result.filter(item => item.status === 'Active');
     }
+    // 'all' tab shows everything
 
     // Filter by search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.title.toLowerCase().includes(q) || 
-        item.artist.toLowerCase().includes(q)
+      result = result.filter(item =>
+        (item.title || '').toLowerCase().includes(q) ||
+        (item.artist || '').toLowerCase().includes(q) ||
+        (item.category || '').toLowerCase().includes(q)
       );
     }
 
@@ -42,9 +42,9 @@ export default function CatalogPage() {
     if (sortBy === 'newest') {
       result.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
     } else if (sortBy === 'most_viewed') {
-      result.sort((a, b) => b.views - a.views);
+      result.sort((a, b) => (b.views || 0) - (a.views || 0));
     } else if (sortBy === 'title_a_z') {
-      result.sort((a, b) => a.title.localeCompare(b.title));
+      result.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
 
     return result;
@@ -61,15 +61,15 @@ export default function CatalogPage() {
   return (
     <div>
       {/* Hero Banner Section */}
-      <div 
+      <div
         className="w-100 py-5 text-white position-relative overflow-hidden mb-4 d-flex align-items-center justify-content-center"
-        style={{ 
-          background: 'linear-gradient(135deg, #003049 0%, #005f73 100%)', 
-          height: '240px' 
+        style={{
+          background: 'linear-gradient(135deg, #003049 0%, #005f73 100%)',
+          height: '240px'
         }}
       >
         {/* Dot pattern overlay */}
-        <div 
+        <div
           className="position-absolute top-0 start-0 w-100 h-100 opacity-10"
           style={{
             backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
@@ -88,7 +88,7 @@ export default function CatalogPage() {
 
       {/* Main catalog layout */}
       <Container className="pb-5">
-        <FilterBar 
+        <FilterBar
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           activeTab={activeTab}
@@ -120,12 +120,12 @@ export default function CatalogPage() {
         {totalPages > 1 && (
           <div className="d-flex justify-content-center mt-5">
             <Pagination>
-              <Pagination.Prev 
+              <Pagination.Prev
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               />
               {[...Array(totalPages)].map((_, i) => (
-                <Pagination.Item 
+                <Pagination.Item
                   key={i + 1}
                   active={currentPage === i + 1}
                   onClick={() => setCurrentPage(i + 1)}
@@ -133,7 +133,7 @@ export default function CatalogPage() {
                   {i + 1}
                 </Pagination.Item>
               ))}
-              <Pagination.Next 
+              <Pagination.Next
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               />
