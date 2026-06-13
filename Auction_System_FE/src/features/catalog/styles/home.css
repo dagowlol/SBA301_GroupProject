@@ -1,0 +1,304 @@
+/* Hero Section */
+.home-hero {
+  position: relative;
+  background-color: #f9fafb;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Background Blur Effect (Simulating the gallery image in Figma) */
+.home-hero-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('https://images.unsplash.com/photo-1577083552431-6e5fd01988ec?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+  background-size: cover;
+  background-position: center;
+  filter: blur(15px) opacity(0.3);
+  z-index: 0;
+}
+
+/* Halftone Circle Graphic */
+.halftone-circle {
+  position: absolute;
+  left: calc(50% - 250px); /* Adjust to place behind the left text */
+  top: 15%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle at top right, #e0f2fe 0%, #bae6fd 50%, rgba(255,255,255,0) 80%);
+  z-index: 1;
+}
+
+.halftone-circle::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  background-image: radial-gradient(#9ca3af 1px, transparent 1px);
+  background-size: 8px 8px;
+  opacity: 0.5;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+}
+
+.home-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  padding-bottom: 60px; /* space for tabs at the bottom */
+}
+
+.hero-left-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hero-title-left {
+  font-size: 6.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #000;
+  letter-spacing: -2px;
+}
+
+.hero-title-right {
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: #374151;
+  max-width: 400px;
+  line-height: 1.2;
+  border-left: 1px solid #9ca3af;
+  padding-left: 30px;
+  margin-left: 20px;
+}
+
+.btn-register-redeem {
+  margin-top: 35px;
+  border: none;
+  background: linear-gradient(135deg, #003d5b 0%, #0a9396 100%);
+  color: white;
+  font-weight: 800;
+  padding: 14px 32px;
+  font-size: 1rem;
+  border-radius: 30px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 4px 15px rgba(0, 61, 91, 0.3);
+}
+
+.btn-register-redeem:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 61, 91, 0.5);
+  color: white;
+}
+
+/* Dynamic Item Content */
+.hero-item-content {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+}
+
+.hero-item-title {
+  font-size: 5rem;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #000;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.hero-item-author {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-top: 5px;
+  margin-bottom: 0;
+}
+
+.hero-item-meta-col {
+  margin-left: 20px;
+}
+
+.hero-item-meta {
+  font-size: 1.2rem;
+  color: #4b5563;
+  font-weight: 300;
+  border-left: 2px solid #6b7280;
+  padding-left: 30px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.hero-tabs-container {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 8px;
+  z-index: 10;
+  max-width: 100%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.hero-tab {
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  padding: 20px 32px;
+  text-align: left;
+  min-width: 200px;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 12px;
+}
+
+.hero-tab:last-child {
+  border-right: none;
+}
+
+.hero-tab:hover {
+  background: rgba(255,255,255,0.8);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 25px rgba(0,0,0,0.1);
+  z-index: 5;
+}
+
+.hero-tab.active {
+  background: white;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  transform: translateY(-8px) scale(1.02);
+  z-index: 6;
+  border-right: none;
+}
+
+.hero-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #003d5b;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.hero-tab-title {
+  font-weight: 800;
+  color: #000;
+  font-size: 1.1rem;
+  margin-bottom: 2px;
+}
+
+.hero-tab-subtitle {
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+/* Value, Buy, Sell Section */
+.value-section {
+  background-color: #004e64;
+  color: white;
+  padding: 80px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.value-img-wrapper {
+  padding-left: 15%; /* match bootstrap container alignment approximately */
+}
+
+.value-img {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  object-fit: cover;
+  display: block;
+}
+
+.value-content-wrapper {
+  padding-right: 15%;
+  margin-left: -15%; /* pull left to overlap image */
+  position: relative;
+  z-index: 2;
+}
+
+.value-title {
+  font-size: 6rem;
+  font-weight: 800;
+  line-height: 0.95;
+  margin-bottom: 30px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.value-desc {
+  font-size: 1rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  max-width: 450px;
+  margin-bottom: 40px;
+}
+
+.btn-value-outline {
+  border: 1px solid rgba(255,255,255,0.8);
+  color: white;
+  background: transparent;
+  padding: 12px 32px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-value-outline:hover {
+  background: white;
+  color: #004e64;
+}
+
+.value-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.btn-value-solid {
+  border: 1px solid white;
+  color: #004e64;
+  background: white;
+  padding: 10px 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: block;
+  width: 200px;
+  transition: all 0.2s;
+}
+
+.btn-value-solid:hover {
+  background: transparent;
+  color: white;
+}
+
+/* 3D Tilt Effect applied to content */
+.tilt-3d {
+  transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform-style: preserve-3d;
+}
+
+.tilt-3d:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) scale(1.02);
+}
+
+.glass-box {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}

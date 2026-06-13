@@ -9,7 +9,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import hoang.com.auction_system_be.exception.AppException;
+import hoang.com.auction_system_be.exception.ErrorCode;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -20,6 +25,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Void>> register(
             @Valid @RequestBody RegisterRequest request) {
+        checkAlreadyAuthenticated();
         authService.registerWithOtp(request);
         return ResponseEntity.ok(ApiResponse.success(
                 "OTP sent to your email. Please verify to activate your account!"));
@@ -35,6 +41,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Void>> login(
             @Valid @RequestBody LoginRequest request) {
+        checkAlreadyAuthenticated();
         authService.loginWithOtp(request);
         return ResponseEntity.ok(ApiResponse.success(
                 "OTP sent to your email. Please verify to complete login!"));
@@ -62,6 +69,7 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody PasswordResetRequest request) {
+        checkAlreadyAuthenticated();
         authService.requestResetPassword(request.getEmail());
         return ResponseEntity.ok(ApiResponse.success(
                 "An OTP has been sent to your email to reset your password."));
@@ -89,5 +97,12 @@ public class AuthController {
         authService.logout(refreshToken, csrfTokenHeader);
         cookieService.clearCookies(response);
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully!"));
+    }
+
+    private void checkAlreadyAuthenticated() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            throw new AppException(ErrorCode.ALREADY_AUTHENTICATED);
+        }
     }
 }

@@ -22,6 +22,7 @@ public enum ErrorCode {
     USER_NOT_ACTIVE(1012, "Account is not yet activated. Please verify your OTP.", HttpStatus.FORBIDDEN),
     USER_INACTIVE(1013, "Account is inactive. Please contact support.", HttpStatus.FORBIDDEN),
     USER_STATUS_INVALID(1014, "Invalid user status", HttpStatus.INTERNAL_SERVER_ERROR),
+    ALREADY_AUTHENTICATED(1016, "You are already logged in", HttpStatus.BAD_REQUEST),
     // ─── Role ─────────────────────────────────────────────────────────────
     ROLE_NOT_FOUND(1015, "Role not found", HttpStatus.NOT_FOUND),
     // ─── Category ─────────────────────────────────────────────────────────

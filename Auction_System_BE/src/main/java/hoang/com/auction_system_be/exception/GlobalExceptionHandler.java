@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
         String message = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .map(org.springframework.validation.FieldError::getDefaultMessage)
                 .findFirst()
                 .orElse("Validation error");
 
