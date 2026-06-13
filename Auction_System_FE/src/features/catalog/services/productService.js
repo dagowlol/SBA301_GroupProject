@@ -1,9 +1,76 @@
+import { itemApi } from '../../../api/itemApi';
 import { productMapper } from '../mappers/productMapper';
 
 /**
  * Service to manage Product/Item logic, validations, and mapping orchestrations.
  */
 export const productService = {
+  /**
+   * Fetches paginated and filtered items from backend
+   * @param {Object} [params] - Query filter parameters (page, size, name, categoryId, status)
+   * @returns {Promise<Object>} Page structure with mapped frontend models { content, totalPages, totalElements }
+   */
+  getAllItems: async (params = {}) => {
+    try {
+      const res = await itemApi.getItems(params);
+      
+      // Handle Spring Boot PageResponse structure
+      if (res && Array.isArray(res.content)) {
+        return {
+          content: res.content.map(productMapper.toFrontendModel),
+          totalPages: res.totalPages || 1,
+          totalElements: res.totalElements || res.content.length
+        };
+      } 
+      
+      // Fallback if backend returns list directly
+      if (Array.isArray(res)) {
+        return {
+          content: res.map(productMapper.toFrontendModel),
+          totalPages: 1,
+          totalElements: res.length
+        };
+      }
+
+      return { content: [], totalPages: 1, totalElements: 0 };
+    } catch (err) {
+      console.error("Failed to load items in Service", err);
+      throw err;
+    }
+  },
+
+  /**
+   * Submits a new item details to backend
+   * @param {Object} itemModel - Item details from frontend form
+   * @returns {Promise<Object>} Newly created mapped item model
+   */
+  createItem: async (itemModel) => {
+    const requestDto = productMapper.toRequestDto(itemModel);
+    const rawDto = await itemApi.create(requestDto);
+    return productMapper.toFrontendModel(rawDto);
+  },
+
+  /**
+   * Approves a pending item on the backend
+   * @param {number} id - Item ID
+   * @returns {Promise<Object>} Mapped approved item response model
+   */
+  approveItem: async (id) => {
+    const rawDto = await itemApi.approve(id);
+    return productMapper.toFrontendModel(rawDto);
+  },
+
+  /**
+   * Rejects a pending item with a reason on the backend
+   * @param {number} id - Item ID
+   * @param {string} rejectionReason - Explanation details
+   * @returns {Promise<Object>} Mapped rejected item response model
+   */
+  rejectItem: async (id, rejectionReason) => {
+    const rawDto = await itemApi.reject(id, rejectionReason);
+    return productMapper.toFrontendModel(rawDto);
+  },
+
   /**
    * Processes a list of items to standardize them into Frontend models
    * @param {Object[]} rawItems - Raw item list

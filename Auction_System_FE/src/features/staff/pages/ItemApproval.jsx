@@ -42,17 +42,23 @@ export default function ItemApproval() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Form states
+  // Form states matching ItemRequest and ItemResponse
   const [title, setTitle] = useState('');
-  const [artist, setArtist] = useState('');
-  const [category, setCategory] = useState('');
-  const [reserve, setReserve] = useState('');
-  const [image, setImage] = useState('');
   const [description, setDescription] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [reserve, setReserve] = useState('');
+  const [startingPrice, setStartingPrice] = useState('');
+  
+  // Presentation / Mock UI states
+  const [artist, setArtist] = useState('');
+  const [image, setImage] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [status, setStatus] = useState('Pending');
   const [submittedBy, setSubmittedBy] = useState('');
+  
+  // Error state for handling Spring Boot constraint exceptions
+  const [error, setError] = useState('');
 
   // Count pending items
   const pendingCount = useMemo(() => {
@@ -62,12 +68,14 @@ export default function ItemApproval() {
   // Open modals
   const handleOpenAdd = () => {
     setTitle('');
-    setArtist('');
-    setCategory(categories[0]?.name || 'Paintings');
-    setReserve('');
-    setImage('https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=60'); // default mock art img
     setDescription('');
-    // Defaults: start tomorrow, end in 10 days
+    setCategoryId(categories[0]?.id || '');
+    setReserve('');
+    setStartingPrice('');
+    setArtist('');
+    setImage('');
+    
+    // Default start tomorrow, end in 10 days
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tenDaysLater = new Date();
@@ -77,61 +85,106 @@ export default function ItemApproval() {
     setEndTime(tenDaysLater.toISOString().substring(0, 16));
     setStatus('Pending');
     setSubmittedBy(`seller_${Math.floor(Math.random() * 100)}`);
+    setError('');
     setShowAddModal(true);
   };
 
   const handleOpenEdit = (item) => {
     setSelectedItem(item);
     setTitle(item.title);
-    setArtist(item.artist);
-    setCategory(item.category);
-    setReserve(item.reserve);
-    setImage(item.image);
     setDescription(item.description);
+    
+    // Attempt to match categoryId
+    const matchedCategory = categories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
+    setCategoryId(item.categoryId || matchedCategory?.id || categories[0]?.id || '');
+    
+    setReserve(item.reserve);
+    setStartingPrice(item.startingPrice || '');
+    setArtist(item.artist);
+    setImage(item.image);
     setStartTime(new Date(item.startTime).toISOString().substring(0, 16));
     setEndTime(new Date(item.endTime).toISOString().substring(0, 16));
     setStatus(item.status);
     setSubmittedBy(item.submittedBy);
+    setError('');
     setShowEditModal(true);
   };
 
-  // Form handlers
-  const handleAddSubmit = (e) => {
-    e.preventDefault();
-    if (!title.trim() || !artist.trim() || !reserve) return;
-
-    addItem({
-      title,
-      artist,
-      category,
-      reserve: parseFloat(reserve),
-      image,
-      description,
-      startTime: new Date(startTime).toISOString(),
-      endTime: new Date(endTime).toISOString(),
-      status,
-      submittedBy
-    });
-    setShowAddModal(false);
+  // Action handlers
+  const handleApprove = async (id) => {
+    setError('');
+    try {
+      await approveItem(id);
+    } catch (err) {
+      setError(err.message || 'Failed to approve item on backend.');
+    }
   };
 
-  const handleEditSubmit = (e) => {
-    e.preventDefault();
-    if (!selectedItem || !title.trim() || !artist.trim() || !reserve) return;
+  const handleReject = async (id) => {
+    const reason = window.prompt("Enter rejection reason (required):");
+    if (reason === null) return; // cancelled
+    if (!reason.trim()) {
+      alert("Rejection reason is required!");
+      return;
+    }
 
-    editItem(selectedItem.id, {
-      title,
-      artist,
-      category,
-      reserve: parseFloat(reserve),
-      image,
-      description,
-      startTime: new Date(startTime).toISOString(),
-      endTime: new Date(endTime).toISOString(),
-      status,
-      submittedBy
-    });
-    setShowEditModal(false);
+    setError('');
+    try {
+      await rejectItem(id, reason);
+    } catch (err) {
+      setError(err.message || 'Failed to reject item on backend.');
+    }
+  };
+
+  // Form submit handlers (Async try-catch)
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    if (!title.trim() || !categoryId || !startingPrice) return;
+    setError('');
+
+    try {
+      await addItem({
+        title,
+        description,
+        categoryId: parseInt(categoryId),
+        startingPrice: parseFloat(startingPrice),
+        reserve: reserve ? parseFloat(reserve) : null,
+        artist: artist || 'Unknown Artist',
+        image: image || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=60',
+        startTime: new Date(startTime).toISOString(),
+        endTime: new Date(endTime).toISOString(),
+        status,
+        submittedBy
+      });
+      setShowAddModal(false);
+    } catch (err) {
+      setError(err.message || 'Failed to submit item to backend.');
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedItem || !title.trim() || !categoryId || !startingPrice) return;
+    setError('');
+
+    try {
+      await editItem(selectedItem.id, {
+        title,
+        description,
+        categoryId: parseInt(categoryId),
+        startingPrice: parseFloat(startingPrice),
+        reserve: reserve ? parseFloat(reserve) : null,
+        artist,
+        image,
+        startTime: new Date(startTime).toISOString(),
+        endTime: new Date(endTime).toISOString(),
+        status,
+        submittedBy
+      });
+      setShowEditModal(false);
+    } catch (err) {
+      setError(err.message || 'Failed to update item on backend.');
+    }
   };
 
   const handleDelete = (id) => {
@@ -208,6 +261,8 @@ export default function ItemApproval() {
         </Button>
       </div>
 
+      {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+
       {/* Filter Bar (Search, Status, Sorting) */}
       <Row className="g-3 mb-4">
         <Col md={5} sm={12}>
@@ -273,8 +328,8 @@ export default function ItemApproval() {
               <th className="py-3 px-3">Title</th>
               <th className="py-3">Artist</th>
               <th className="py-3">Category</th>
+              <th className="py-3 text-end">Starting Price</th>
               <th className="py-3 text-end">Reserve</th>
-              <th className="py-3 text-end">Current Bid</th>
               <th className="py-3 text-center">Status</th>
               <th className="py-3 text-center">Submitted By</th>
               <th className="py-3 text-center" style={{ width: '150px' }}>Actions</th>
@@ -286,10 +341,8 @@ export default function ItemApproval() {
                 <td className="fw-bold text-dark py-3 px-3">{item.title}</td>
                 <td className="text-muted py-3">{item.artist}</td>
                 <td className="text-muted py-3">{item.category}</td>
+                <td className="text-end py-3">${item.startingPrice || 0}</td>
                 <td className="text-end fw-semibold py-3">${item.reserve}</td>
-                <td className="text-end py-3 text-teal fw-bold">
-                  {item.currentBid ? `$${item.currentBid}` : '-'}
-                </td>
                 <td className="text-center py-3">
                   <Badge 
                     className={`px-3 py-2 text-uppercase rounded-pill ${getBadgeStyle(item.status)}`}
@@ -297,6 +350,11 @@ export default function ItemApproval() {
                   >
                     {item.status}
                   </Badge>
+                  {item.status === 'Rejected' && item.rejectionReason && (
+                    <div className="text-danger small mt-1 font-monospace" style={{ fontSize: '0.7rem' }}>
+                      Reason: {item.rejectionReason}
+                    </div>
+                  )}
                 </td>
                 <td className="text-center text-muted font-monospace py-3">{item.submittedBy}</td>
                 <td className="text-center py-3">
@@ -308,7 +366,7 @@ export default function ItemApproval() {
                           size="sm" 
                           className="text-success p-0 hover-opacity"
                           title="Approve"
-                          onClick={() => approveItem(item.id)}
+                          onClick={() => handleApprove(item.id)}
                         >
                           <Check size={18} />
                         </Button>
@@ -317,7 +375,7 @@ export default function ItemApproval() {
                           size="sm" 
                           className="text-danger p-0 hover-opacity"
                           title="Reject"
-                          onClick={() => rejectItem(item.id)}
+                          onClick={() => handleReject(item.id)}
                         >
                           <X size={18} />
                         </Button>
@@ -360,10 +418,12 @@ export default function ItemApproval() {
         </Modal.Header>
         <Form onSubmit={handleAddSubmit}>
           <Modal.Body className="p-4">
+            {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+            
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Item Title</Form.Label>
+                  <Form.Label className="small fw-semibold">Item Name (Title)</Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="e.g. Starry Night"
@@ -381,44 +441,55 @@ export default function ItemApproval() {
                     placeholder="e.g. Vincent Van Gogh"
                     value={artist}
                     onChange={(e) => setArtist(e.target.value)}
-                    required
                   />
                 </Form.Group>
               </Col>
             </Row>
 
             <Row className="g-3">
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Category</Form.Label>
-                  <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                  <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
                     {categories.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
+                      <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 150.00"
+                    value={startingPrice}
+                    onChange={(e) => setStartingPrice(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
                   <Form.Control
                     type="number"
-                    placeholder="e.g. 500"
+                    step="0.01"
+                    placeholder="e.g. 500.00"
                     value={reserve}
                     onChange={(e) => setReserve(e.target.value)}
-                    required
                   />
                 </Form.Group>
               </Col>
             </Row>
 
             <Form.Group className="mb-3">
-              <Form.Label className="small fw-semibold">Image URL</Form.Label>
+              <Form.Label className="small fw-semibold">Image URL (Optional)</Form.Label>
               <Form.Control
                 type="url"
                 value={image}
                 onChange={(e) => setImage(e.target.value)}
-                required
               />
             </Form.Group>
 
@@ -430,6 +501,7 @@ export default function ItemApproval() {
                 placeholder="Details about the artwork..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                required
               />
             </Form.Group>
 
@@ -477,7 +549,6 @@ export default function ItemApproval() {
                     type="text"
                     value={submittedBy}
                     onChange={(e) => setSubmittedBy(e.target.value)}
-                    required
                   />
                 </Form.Group>
               </Col>
@@ -506,6 +577,8 @@ export default function ItemApproval() {
         </Modal.Header>
         <Form onSubmit={handleEditSubmit}>
           <Modal.Body className="p-4">
+            {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -525,31 +598,42 @@ export default function ItemApproval() {
                     type="text"
                     value={artist}
                     onChange={(e) => setArtist(e.target.value)}
-                    required
                   />
                 </Form.Group>
               </Col>
             </Row>
 
             <Row className="g-3">
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Category</Form.Label>
-                  <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                  <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
                     {categories.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
+                      <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={startingPrice}
+                    onChange={(e) => setStartingPrice(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
                   <Form.Control
                     type="number"
+                    step="0.01"
                     value={reserve}
                     onChange={(e) => setReserve(e.target.value)}
-                    required
                   />
                 </Form.Group>
               </Col>
@@ -561,7 +645,6 @@ export default function ItemApproval() {
                 type="url"
                 value={image}
                 onChange={(e) => setImage(e.target.value)}
-                required
               />
             </Form.Group>
 
@@ -572,6 +655,7 @@ export default function ItemApproval() {
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                required
               />
             </Form.Group>
 
@@ -619,7 +703,6 @@ export default function ItemApproval() {
                     type="text"
                     value={submittedBy}
                     onChange={(e) => setSubmittedBy(e.target.value)}
-                    required
                   />
                 </Form.Group>
               </Col>
