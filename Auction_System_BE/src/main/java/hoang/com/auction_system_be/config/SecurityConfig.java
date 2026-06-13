@@ -1,4 +1,5 @@
-package hoang.com.auction_system_be.security;
+package hoang.com.auction_system_be.config;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,34 +11,37 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import hoang.com.auction_system_be.security.JwtAuthenticationFilter;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationProvider authenticationProvider;
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/v1/auth/**",
-            "/api/categories/**",
-            "/api/items/**",
-            "/api/users/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/v3/api-docs/**"
-    };
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final AuthenticationProvider authenticationProvider;
+        private static final String[] PUBLIC_ENDPOINTS = {
+                        "/api/v1/auth/**",
+                        "/api/categories/**",
+                        "/api/items/**",
+                        "/api/users/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
+        };
+
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                                                .anyRequest().authenticated())
+                                .authenticationProvider(authenticationProvider)
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                return http.build();
+        }
 }
