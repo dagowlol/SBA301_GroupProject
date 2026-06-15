@@ -24,6 +24,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for API
             .authorizeHttpRequests(auth -> auth
                 // Allow all requests for now since we are just building CRUD APIs
+                .requestMatchers("/ws-auction/**").permitAll()
                 .anyRequest().permitAll()
             );
 
