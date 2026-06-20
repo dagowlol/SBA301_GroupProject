@@ -62,7 +62,7 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                 .reservePrice(request.getReservePrice())
                 .category(category)
                 .seller(seller)
-                .status(ItemStatus.ACTIVE)
+                .status(ItemStatus.PENDING)
                 .build();
 
         AuctionItem savedItem = itemRepository.save(item);
