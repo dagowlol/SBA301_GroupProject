@@ -146,39 +146,25 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Place Bid Form */}
+          {/* Place Bid Form Redirect to Live Auction Room */}
           {isActive ? (
-            <div className="border p-4 rounded bg-white shadow-sm mb-4">
-              <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
-                <Hammer size={18} style={{ color: '#004e64' }} />
-                <span>Place Your Bid</span>
+            <div className="border p-4 rounded bg-white shadow-sm mb-4 text-center">
+              <h5 className="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2 text-success">
+                <span className="text-warning">⚡</span>
+                <span>Live Auction is Active!</span>
               </h5>
-
-              {errorMsg && <Alert variant="danger" className="py-2 small">{errorMsg}</Alert>}
-              {successMsg && <Alert variant="success" className="py-2 small">{successMsg}</Alert>}
-
-              <Form onSubmit={handlePlaceBid}>
-                <Form.Group className="mb-3" controlId="bidInput">
-                  <Form.Label className="small text-muted">
-                    Bid Amount (USD) - Min bid: ${productService.getMinimumBidRequired(item)}
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="Enter bid amount..."
-                    value={bidAmount}
-                    onChange={(e) => setBidAmount(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-                <Button 
-                  variant="dark" 
-                  type="submit" 
-                  className="w-100 py-2 text-uppercase fw-semibold"
-                  style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
-                >
-                  Confirm Bid
-                </Button>
-              </Form>
+              <p className="text-muted small mb-4">
+                This item is currently being auctioned in real-time. Join the live room to place bids and see live updates.
+              </p>
+              <Button 
+                variant="success" 
+                onClick={() => navigate(`/auction/${item.id}`)}
+                className="w-100 py-2 text-uppercase fw-semibold d-flex align-items-center justify-content-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #0f9f83 0%, #0077b6 100%)', border: 'none' }}
+              >
+                <Hammer size={16} />
+                <span>Enter Live Auction Room</span>
+              </Button>
             </div>
           ) : (
             <Alert variant="info" className="mb-4">

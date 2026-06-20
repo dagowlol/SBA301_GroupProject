@@ -10,6 +10,7 @@ import CategoryManagement from '../features/staff/pages/CategoryManagement';
 import ItemApproval from '../features/staff/pages/ItemApproval';
 import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
+import AuctionRoom from '../features/auction/pages/AuctionRoom';
 
 import HomePage from '../features/catalog/pages/HomePage';
 
@@ -22,6 +23,7 @@ export default function AppRoutes() {
           <Route index element={<HomePage />} />
           <Route path="auction" element={<CatalogPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
+          <Route path="auction/:sessionId" element={<AuctionRoom />} />
           <Route element={<GuestRoute />}>
             <Route path="register" element={<RegisterPage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />

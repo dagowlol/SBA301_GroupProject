@@ -27,10 +27,12 @@ public class AuctionSessionScheduler {
     @Transactional
     public void closeExpiredSessions() {
 
-        List<AuctionSession> sessions = auctionSessionRepository
-                .findByStatusAndEndTimeBefore(
-                        SessionStatus.ACTIVE,
-                        LocalDateTime.now());
+        List<AuctionSession> sessions =
+                auctionSessionRepository
+                        .findByStatusAndEndTimeBefore(
+                                SessionStatus.ACTIVE,
+                                LocalDateTime.now()
+                        );
 
         for (AuctionSession session : sessions) {
 
@@ -38,7 +40,8 @@ public class AuctionSessionScheduler {
 
             messagingTemplate.convertAndSend(
                     "/topic/auction/" + session.getId() + "/ended",
-                    "Auction ended");
+                    "Auction ended"
+            );
         }
     }
 }
