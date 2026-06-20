@@ -88,13 +88,6 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
             if (session.getStatus() != SessionStatus.ACTIVE) {
                 throw new AppException(ErrorCode.SESSION_NOT_ACTIVE);
             }
-            if (LocalDateTime.now().isAfter(session.getEndTime())) {
-
-                session.setStatus(SessionStatus.ENDED);
-                auctionSessionRepository.save(session);
-
-                throw new AppException(ErrorCode.AUCTION_ENDED);
-                }
 
             // Rule 3 & 4: Bid amount validation
             BigDecimal currentPrice = session.getCurrentHighestBid() != null
