@@ -79,4 +79,7 @@ public class AuctionSession extends BaseEntity {
     @OneToMany(mappedBy = "session", fetch = FetchType.LAZY)
     @Builder.Default
     List<AuctionParticipant> participants = new ArrayList<>();
+
+    @Version
+    Long version;
 }

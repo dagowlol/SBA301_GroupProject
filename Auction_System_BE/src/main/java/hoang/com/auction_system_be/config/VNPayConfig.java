@@ -1,14 +1,16 @@
 package hoang.com.auction_system_be.config;
 
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.Random;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 
 @Configuration
 @Getter
