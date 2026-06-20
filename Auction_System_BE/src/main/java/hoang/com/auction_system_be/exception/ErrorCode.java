@@ -1,7 +1,9 @@
 package hoang.com.auction_system_be.exception;
+
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+
 @Getter
 public enum ErrorCode {
     // ─── General ──────────────────────────────────────────────────────────
@@ -36,6 +38,7 @@ public enum ErrorCode {
     SESSION_NOT_FOUND(6001, "Auction session not found", HttpStatus.NOT_FOUND),
     SESSION_NOT_ACTIVE(6002, "Auction session is not active", HttpStatus.BAD_REQUEST),
     INVALID_BID_AMOUNT(6003, "Bid amount is too low", HttpStatus.BAD_REQUEST),
+    AUCTION_ENDED(6004, "Auction has ended", HttpStatus.BAD_REQUEST),
 
     // Payment
     PAYMENT_NOT_FOUND(5001, "Payment not found", HttpStatus.NOT_FOUND),
@@ -50,6 +53,7 @@ public enum ErrorCode {
         this.message = message;
         this.statusCode = statusCode;
     }
+
     public int getHttpStatus() {
         return ((HttpStatus) statusCode).value();
     }

@@ -62,7 +62,7 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                 .reservePrice(request.getReservePrice())
                 .category(category)
                 .seller(seller)
-                .status(ItemStatus.PENDING)
+                .status(ItemStatus.ACTIVE)
                 .build();
 
         AuctionItem savedItem = itemRepository.save(item);
@@ -149,9 +149,9 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                 predicates.add(cb.equal(root.get("status"), status));
             }
 
-            if (requester.getRole() == RoleName.USER) {
-                predicates.add(cb.equal(root.get("seller").get("id"), requesterId));
-            }
+            // if (requester.getRole() == RoleName.USER) {
+            // predicates.add(cb.equal(root.get("seller").get("id"), requesterId));
+            // }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

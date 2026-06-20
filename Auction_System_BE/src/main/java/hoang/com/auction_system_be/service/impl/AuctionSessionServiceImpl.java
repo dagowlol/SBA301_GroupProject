@@ -33,149 +33,151 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AuctionSessionServiceImpl implements AuctionSessionService {
 
-    AuctionSessionRepository auctionSessionRepository;
-    BidRepository bidRepository;
-    UserRepository userRepository;
-    AuctionParticipantRepository auctionParticipantRepository;
-    AuctionExtensionLogRepository auctionExtensionLogRepository;
-    SimpMessagingTemplate messagingTemplate;
-    AuctionSessionMapper auctionSessionMapper;
-    BidMapper bidMapper;
+        AuctionSessionRepository auctionSessionRepository;
+        BidRepository bidRepository;
+        UserRepository userRepository;
+        AuctionParticipantRepository auctionParticipantRepository;
+        AuctionExtensionLogRepository auctionExtensionLogRepository;
+        SimpMessagingTemplate messagingTemplate;
+        AuctionSessionMapper auctionSessionMapper;
+        BidMapper bidMapper;
 
-    @Override
-    @Transactional(readOnly = true)
-    public AuctionSessionDetailResponse getAuctionSessionDetail(Long sessionId) {
-        AuctionSession session = auctionSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new AppException(ErrorCode.SESSION_NOT_FOUND));
+        @Override
+        @Transactional(readOnly = true)
+        public AuctionSessionDetailResponse getAuctionSessionDetail(Long sessionId) {
+                AuctionSession session = auctionSessionRepository.findById(sessionId)
+                                .orElseThrow(() -> new AppException(ErrorCode.SESSION_NOT_FOUND));
 
-        AuctionItem item = session.getItem();
+                AuctionItem item = session.getItem();
 
-        // Get the primary image URL, fallback to first image if no primary
-        String imageUrl = item.getImages().stream()
-                .filter(ItemImage::isPrimary)
-                .findFirst()
-                .or(() -> item.getImages().stream().findFirst())
-                .map(ItemImage::getImageUrl)
-                .orElse(null);
+                // Get the primary image URL, fallback to first image if no primary
+                String imageUrl = item.getImages().stream()
+                                .filter(ItemImage::isPrimary)
+                                .findFirst()
+                                .or(() -> item.getImages().stream().findFirst())
+                                .map(ItemImage::getImageUrl)
+                                .orElse(null);
 
-        // Get current winner name
-        String currentWinnerName = null;
-        if (session.getCurrentWinnerParticipant() != null) {
-            User winner = session.getCurrentWinnerParticipant().getUser();
-            currentWinnerName = winner.getFirstName() + " " + winner.getLastName();
+                // Get current winner name
+                String currentWinnerName = null;
+                if (session.getCurrentWinnerParticipant() != null) {
+                        User winner = session.getCurrentWinnerParticipant().getUser();
+                        currentWinnerName = winner.getFirstName() + " " + winner.getLastName();
+                }
+
+                // Get latest 10 bid logs
+                List<Bid> recentBids = bidRepository
+                                .findTop10ByParticipantSessionIdOrderByBidTimestampDesc(sessionId);
+
+                List<BidLogResponse> bidLogs = recentBids.stream()
+                                .map(bidMapper::toBidLogResponse)
+                                .collect(Collectors.toList());
+
+                return auctionSessionMapper.toDetailResponse(session, imageUrl, currentWinnerName, bidLogs);
         }
 
-        // Get latest 10 bid logs
-        List<Bid> recentBids = bidRepository
-                .findTop10ByParticipantSessionIdOrderByBidTimestampDesc(sessionId);
+        @Override
+        @Transactional
+        public void placeBid(Long sessionId, PlaceBidRequest request) {
+                try {
+                        // Rule 1: Auction session must exist
+                        AuctionSession session = auctionSessionRepository.findById(sessionId)
+                                        .orElseThrow(() -> new AppException(ErrorCode.SESSION_NOT_FOUND));
 
-        List<BidLogResponse> bidLogs = recentBids.stream()
-                .map(bidMapper::toBidLogResponse)
-                .collect(Collectors.toList());
+                        // Rule 2: Session must be ACTIVE
+                        if (session.getStatus() != SessionStatus.ACTIVE) {
+                                throw new AppException(ErrorCode.SESSION_NOT_ACTIVE);
+                        }
+                        if (LocalDateTime.now().isAfter(session.getEndTime())) {
 
-        return auctionSessionMapper.toDetailResponse(session, imageUrl, currentWinnerName, bidLogs);
-    }
+                                session.setStatus(SessionStatus.ENDED);
+                                auctionSessionRepository.save(session);
 
-    @Override
-    @Transactional
-    public void placeBid(Long sessionId, PlaceBidRequest request) {
-        try {
-            // Rule 1: Auction session must exist
-            AuctionSession session = auctionSessionRepository.findById(sessionId)
-                    .orElseThrow(() -> new AppException(ErrorCode.SESSION_NOT_FOUND));
+                                throw new AppException(ErrorCode.AUCTION_ENDED);
+                        }
+                        // Rule 3 & 4: Bid amount validation
+                        BigDecimal currentPrice = session.getCurrentHighestBid() != null
+                                        ? session.getCurrentHighestBid()
+                                        : session.getItem().getStartingPrice();
 
-            // Rule 2: Session must be ACTIVE
-            if (session.getStatus() != SessionStatus.ACTIVE) {
-                throw new AppException(ErrorCode.SESSION_NOT_ACTIVE);
-            }
+                        BigDecimal minimumBid = currentPrice.add(session.getMinimumIncrement());
 
-            // Rule 3 & 4: Bid amount validation
-            BigDecimal currentPrice = session.getCurrentHighestBid() != null
-                    ? session.getCurrentHighestBid()
-                    : session.getItem().getStartingPrice();
+                        if (request.getBidAmount().compareTo(minimumBid) < 0) {
+                                throw new AppException(ErrorCode.INVALID_BID_AMOUNT);
+                        }
 
-            BigDecimal minimumBid = currentPrice.add(session.getMinimumIncrement());
+                        // Find the user
+                        User user = userRepository.findById(request.getUserId())
+                                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-            if (request.getBidAmount().compareTo(minimumBid) < 0) {
-                throw new AppException(ErrorCode.INVALID_BID_AMOUNT);
-            }
+                        // Find or create participant
+                        AuctionParticipant participant = auctionParticipantRepository
+                                        .findByUserIdAndSessionId(request.getUserId(), sessionId)
+                                        .orElseGet(() -> {
+                                                AuctionParticipant newParticipant = auctionSessionMapper
+                                                                .toParticipant(user, session);
+                                                return auctionParticipantRepository.save(newParticipant);
+                                        });
 
-            // Find the user
-            User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                        // Save bid
+                        LocalDateTime now = LocalDateTime.now();
+                        Bid bid = bidMapper.toBid(participant, request.getBidAmount(), now);
+                        bidRepository.save(bid);
 
-            // Find or create participant
-            AuctionParticipant participant = auctionParticipantRepository
-                    .findByUserIdAndSessionId(request.getUserId(), sessionId)
-                    .orElseGet(() -> {
-                        AuctionParticipant newParticipant = auctionSessionMapper.toParticipant(user, session);
-                        return auctionParticipantRepository.save(newParticipant);
-                    });
+                        // Update session
+                        session.setCurrentHighestBid(request.getBidAmount());
+                        session.setCurrentWinnerParticipant(participant);
+                        session.setBidCount(session.getBidCount() + 1);
 
-            // Save bid
-            LocalDateTime now = LocalDateTime.now();
-            Bid bid = bidMapper.toBid(participant, request.getBidAmount(), now);
-            bidRepository.save(bid);
+                        // Anti-snipe: extend if <= 30 seconds remaining
+                        LocalDateTime oldEndTime = session.getEndTime();
+                        long secondsRemaining = Duration.between(now, oldEndTime).getSeconds();
 
-            // Update session
-            session.setCurrentHighestBid(request.getBidAmount());
-            session.setCurrentWinnerParticipant(participant);
-            session.setBidCount(session.getBidCount() + 1);
+                        if (secondsRemaining <= 30) {
+                                LocalDateTime newEndTime = oldEndTime.plusSeconds(30);
+                                session.setEndTime(newEndTime);
 
-            // Anti-snipe: extend if <= 30 seconds remaining
-            LocalDateTime oldEndTime = session.getEndTime();
-            long secondsRemaining = Duration.between(now, oldEndTime).getSeconds();
+                                AuctionExtensionLog extensionLog = auctionSessionMapper.toExtensionLog(
+                                                session,
+                                                participant,
+                                                oldEndTime,
+                                                newEndTime,
+                                                "Anti-snipe: bid placed within last 30 seconds");
+                                auctionExtensionLogRepository.save(extensionLog);
 
-            if (secondsRemaining <= 30) {
-                LocalDateTime newEndTime = oldEndTime.plusSeconds(30);
-                session.setEndTime(newEndTime);
+                                log.info("Anti-snipe triggered for session {}: extended from {} to {}",
+                                                sessionId, oldEndTime, newEndTime);
+                        }
 
-                AuctionExtensionLog extensionLog = auctionSessionMapper.toExtensionLog(
-                        session,
-                        participant,
-                        oldEndTime,
-                        newEndTime,
-                        "Anti-snipe: bid placed within last 30 seconds"
-                );
-                auctionExtensionLogRepository.save(extensionLog);
+                        auctionSessionRepository.save(session);
 
-                log.info("Anti-snipe triggered for session {}: extended from {} to {}",
-                        sessionId, oldEndTime, newEndTime);
-            }
+                        log.info("Bid placed successfully - session: {}, user: {}, amount: {}",
+                                        sessionId, request.getUserId(), request.getBidAmount());
 
-            auctionSessionRepository.save(session);
+                        // Broadcast to all subscribers
+                        String winnerName = user.getFirstName() + " " + user.getLastName();
+                        BidBroadcastResponse broadcastResponse = bidMapper.toBidBroadcastResponse(
+                                        sessionId,
+                                        request.getBidAmount(),
+                                        winnerName,
+                                        session.getEndTime(),
+                                        now);
 
-            log.info("Bid placed successfully - session: {}, user: {}, amount: {}",
-                    sessionId, request.getUserId(), request.getBidAmount());
+                        messagingTemplate.convertAndSend(
+                                        "/topic/auction/" + sessionId,
+                                        broadcastResponse);
 
-            // Broadcast to all subscribers
-            String winnerName = user.getFirstName() + " " + user.getLastName();
-            BidBroadcastResponse broadcastResponse = bidMapper.toBidBroadcastResponse(
-                    sessionId,
-                    request.getBidAmount(),
-                    winnerName,
-                    session.getEndTime(),
-                    now
-            );
+                } catch (AppException e) {
+                        log.warn("Bid validation failed for session {}: {}", sessionId, e.getMessage());
 
-            messagingTemplate.convertAndSend(
-                    "/topic/auction/" + sessionId,
-                    broadcastResponse
-            );
+                        // Send private error message to the bidder
+                        ErrorSocketResponse errorResponse = auctionSessionMapper.toErrorSocketResponse(
+                                        e.getErrorCode().getMessage());
 
-        } catch (AppException e) {
-            log.warn("Bid validation failed for session {}: {}", sessionId, e.getMessage());
-
-            // Send private error message to the bidder
-            ErrorSocketResponse errorResponse = auctionSessionMapper.toErrorSocketResponse(
-                    e.getErrorCode().getMessage()
-            );
-
-            messagingTemplate.convertAndSendToUser(
-                    request.getUserId().toString(),
-                    "/queue/errors",
-                    errorResponse
-            );
+                        messagingTemplate.convertAndSendToUser(
+                                        request.getUserId().toString(),
+                                        "/queue/errors",
+                                        errorResponse);
+                }
         }
-    }
 }
