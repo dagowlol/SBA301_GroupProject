@@ -8,6 +8,8 @@ import CatalogPage from '../features/catalog/pages/CatalogPage';
 import ProductDetailPage from '../features/catalog/pages/ProductDetailPage';
 import CategoryManagement from '../features/staff/pages/CategoryManagement';
 import ItemApproval from '../features/staff/pages/ItemApproval';
+import BidMonitoring from '../features/staff/pages/BidMonitoring';
+import DisputeManagement from '../features/staff/pages/DisputeManagement';
 import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
@@ -35,6 +37,8 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="/admin/items" replace />} />
           <Route path="categories" element={<CategoryManagement />} />
           <Route path="items" element={<ItemApproval />} />
+          <Route path="bid-monitoring" element={<BidMonitoring />} />
+          <Route path="disputes" element={<DisputeManagement />} />
         </Route>
 
         {/* Fallback Catch-all Route */}

@@ -33,26 +33,26 @@ public class DisputeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'AUCTION_MANAGER')")
-    @Operation(summary = "Get disputes", description = "Get paginated disputes with optional filters for sessionId and raisedById. Requires ADMIN or AUCTION_MANAGER role.")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "Get disputes", description = "Get paginated disputes with optional filters. Requires ADMIN or AUCTION_MANAGER role.")
     public ApiResponse<PageResponse<DisputeResponse>> getDisputes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long sessionId,
             @RequestParam(required = false) Long raisedById) {
-        
+
         return ApiResponse.<PageResponse<DisputeResponse>>builder()
                 .result(disputeService.getDisputes(page, size, sessionId, raisedById))
                 .build();
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'AUCTION_MANAGER')")
-    @Operation(summary = "Update dispute status", description = "Update the status and resolution of a dispute. Requires ADMIN or AUCTION_MANAGER role.")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "Resolve or update dispute status", description = "Update the status of a dispute. Requires ADMIN or AUCTION_MANAGER role.")
     public ApiResponse<DisputeResponse> updateDisputeStatus(
             @PathVariable Long id,
             @Valid @RequestBody DisputeResolutionRequest request) {
-        
+
         return ApiResponse.<DisputeResponse>builder()
                 .result(disputeService.updateDisputeStatus(id, request))
                 .build();

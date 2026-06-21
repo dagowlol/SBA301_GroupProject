@@ -20,10 +20,11 @@ export default function Sidebar() {
     { name: 'Auction Categories', icon: Tags, path: '/admin/categories', badge: 'F08' },
     { name: 'Auction Items', icon: Package, path: '/admin/items', badge: 'F09' },
     { name: 'Auction Sessions', icon: Calendar, path: '#', badge: 'F10' },
-    { name: 'Bid Monitoring', icon: Activity, path: '#', badge: 'F11' },
+    { name: 'Bid Monitoring', icon: Activity, path: '/admin/bid-monitoring', badge: 'F11' },
     { name: 'Auto-Bid Management', icon: Cpu, path: '#', badge: 'F12' },
     { name: 'News Management', icon: Newspaper, path: '#', badge: 'F13' },
     { name: 'User Management', icon: Users, path: '#', badge: 'F14' },
+    { name: 'Dispute Management', icon: Activity, path: '/admin/disputes', badge: 'F16' },
     { name: 'Auction Statistics', icon: BarChart3, path: '#', badge: 'F15' },
   ];
 

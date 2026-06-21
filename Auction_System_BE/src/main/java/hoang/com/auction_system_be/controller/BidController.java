@@ -22,7 +22,7 @@ public class BidController {
     BidService bidService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'AUCTION_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
     @Operation(summary = "Get bid logs", description = "Get paginated bid logs with optional filters for sessionId and userId. Requires ADMIN or AUCTION_MANAGER role.")
     public ApiResponse<PageResponse<BidLogResponse>> getBidLogs(
             @RequestParam(defaultValue = "0") int page,
