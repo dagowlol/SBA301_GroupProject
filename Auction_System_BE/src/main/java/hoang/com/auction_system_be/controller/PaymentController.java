@@ -2,7 +2,7 @@ package hoang.com.auction_system_be.controller;
 
 import hoang.com.auction_system_be.dto.response.ApiResponse;
 import hoang.com.auction_system_be.dto.response.PaymentResponse;
-import hoang.com.auction_system_be.service.CorePaymentService;
+import hoang.com.auction_system_be.service.payment.CorePaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +21,7 @@ public class PaymentController {
     @Operation(summary = "Check payment status", description = "Retrieve payment status using gateway transaction reference")
     @GetMapping("/status")
     public ApiResponse<PaymentResponse> checkStatus(
-            @Parameter(description = "Gateway transaction reference (e.g. vnp_TransactionNo)")
-            @RequestParam("vnp_TransactionNo") String vnp_TransactionNo) {
+            @Parameter(description = "Gateway transaction reference (e.g. vnp_TransactionNo)") @RequestParam("vnp_TransactionNo") String vnp_TransactionNo) {
         return ApiResponse.<PaymentResponse>builder()
                 .result(corePaymentService.getPaymentStatus(vnp_TransactionNo))
                 .build();

@@ -6,7 +6,8 @@ import hoang.com.auction_system_be.enums.PaymentStatus;
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.repository.PaymentRepository;
-import hoang.com.auction_system_be.service.impl.VNPayServiceImpl;
+import hoang.com.auction_system_be.service.payment.CorePaymentService;
+import hoang.com.auction_system_be.service.payment.VNPayServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -103,8 +103,7 @@ public class VNPayServiceImplTest {
         assertEquals("00", result.get("RspCode"));
         assertEquals("Confirm Success", result.get("Message"));
         verify(corePaymentService, times(1)).updatePaymentStatus(
-                10L, "VNP123456", "VNPAY", true, null
-        );
+                10L, "VNP123456", "VNPAY", true, null);
     }
 
     @Test
@@ -119,7 +118,8 @@ public class VNPayServiceImplTest {
 
         assertEquals("97", result.get("RspCode"));
         assertEquals("Invalid Checksum", result.get("Message"));
-        verify(corePaymentService, never()).updatePaymentStatus(anyLong(), anyString(), anyString(), anyBoolean(), anyString());
+        verify(corePaymentService, never()).updatePaymentStatus(anyLong(), anyString(), anyString(), anyBoolean(),
+                anyString());
     }
 
     @Test
@@ -137,6 +137,7 @@ public class VNPayServiceImplTest {
 
         assertEquals("04", result.get("RspCode"));
         assertEquals("Invalid Amount", result.get("Message"));
-        verify(corePaymentService, never()).updatePaymentStatus(anyLong(), anyString(), anyString(), anyBoolean(), anyString());
+        verify(corePaymentService, never()).updatePaymentStatus(anyLong(), anyString(), anyString(), anyBoolean(),
+                anyString());
     }
 }

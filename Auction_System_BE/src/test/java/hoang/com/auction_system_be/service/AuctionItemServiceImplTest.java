@@ -15,6 +15,9 @@ import hoang.com.auction_system_be.mapper.ItemMapper;
 import hoang.com.auction_system_be.repository.AuctionItemRepository;
 import hoang.com.auction_system_be.repository.CategoryRepository;
 import hoang.com.auction_system_be.repository.UserRepository;
+import hoang.com.auction_system_be.service.auth.SecurityContextService;
+import hoang.com.auction_system_be.service.item.AuctionItemServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +35,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +53,7 @@ class AuctionItemServiceImplTest {
     private ItemMapper itemMapper;
 
     @Mock
-    private AuthenticationService authenticationService;
+    private SecurityContextService securityContextService;
 
     @InjectMocks
     private AuctionItemServiceImpl auctionItemService;
@@ -104,8 +106,7 @@ class AuctionItemServiceImplTest {
     @Test
     void createItem_Success() {
         // Arrange
-        when(authenticationService.getCurrentUserId()).thenReturn(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(seller));
+        when(securityContextService.getCurrentUserEntity()).thenReturn(seller);
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         when(itemRepository.save(any(AuctionItem.class))).thenReturn(item);
         when(itemMapper.toResponse(any(AuctionItem.class))).thenReturn(itemResponse);
@@ -122,8 +123,7 @@ class AuctionItemServiceImplTest {
     @Test
     void createItem_UserNotFound_ThrowsException() {
         // Arrange
-        when(authenticationService.getCurrentUserId()).thenReturn(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(securityContextService.getCurrentUserEntity()).thenThrow(new AppException(ErrorCode.USER_NOT_FOUND));
 
         // Act & Assert
         AppException exception = assertThrows(AppException.class, () -> {
@@ -137,8 +137,7 @@ class AuctionItemServiceImplTest {
     @Test
     void approveItem_Success() {
         // Arrange
-        when(authenticationService.getCurrentUserId()).thenReturn(2L);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(securityContextService.checkAdminOrManagerUser()).thenReturn(admin);
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(itemRepository.save(any(AuctionItem.class))).thenReturn(item);
         when(itemMapper.toResponse(any(AuctionItem.class))).thenReturn(itemResponse);
@@ -156,10 +155,7 @@ class AuctionItemServiceImplTest {
     @Test
     void approveItem_Unauthorized_ThrowsException() {
         // Arrange
-        when(authenticationService.getCurrentUserId()).thenReturn(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(seller)); // role USER
-
-        // Act & Assert
+        when(securityContextService.checkAdminOrManagerUser()).thenThrow(new AppException(ErrorCode.UNAUTHORIZED));
         AppException exception = assertThrows(AppException.class, () -> {
             auctionItemService.approveItem(1L);
         });
@@ -172,8 +168,7 @@ class AuctionItemServiceImplTest {
     void rejectItem_Success() {
         // Arrange
         ItemRejectRequest rejectRequest = new ItemRejectRequest("Invalid item");
-        when(authenticationService.getCurrentUserId()).thenReturn(2L);
-        when(userRepository.findById(2L)).thenReturn(Optional.of(admin));
+        when(securityContextService.checkAdminOrManagerUser()).thenReturn(admin);
         when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
         when(itemRepository.save(any(AuctionItem.class))).thenReturn(item);
         when(itemMapper.toResponse(any(AuctionItem.class))).thenReturn(itemResponse);
@@ -191,9 +186,8 @@ class AuctionItemServiceImplTest {
     @Test
     void getItems_Success() {
         // Arrange
-        when(authenticationService.getCurrentUserId()).thenReturn(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(seller));
-        
+        when(securityContextService.getCurrentUserEntity()).thenReturn(seller);
+
         Page<AuctionItem> page = new PageImpl<>(Collections.singletonList(item));
         when(itemRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
         when(itemMapper.toResponse(any(AuctionItem.class))).thenReturn(itemResponse);

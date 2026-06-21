@@ -1,7 +1,5 @@
 package hoang.com.auction_system_be.service.impl.system;
 
-import hoang.com.auction_system_be.service.system.*;
-
 import hoang.com.auction_system_be.dto.request.LoginRequest;
 import hoang.com.auction_system_be.dto.request.OtpVerifyRequest;
 import hoang.com.auction_system_be.dto.request.RegisterRequest;
@@ -14,8 +12,12 @@ import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.repository.UserRepository;
 import hoang.com.auction_system_be.security.UserDetailsImpl;
-import hoang.com.auction_system_be.service.feature.MailService;
-import hoang.com.auction_system_be.service.feature.OtpService;
+import hoang.com.auction_system_be.service.auth.AuthServiceImpl;
+import hoang.com.auction_system_be.service.auth.JwtService;
+import hoang.com.auction_system_be.service.auth.RefreshTokenService;
+import hoang.com.auction_system_be.service.common.mail.MailService;
+import hoang.com.auction_system_be.service.common.otp.OtpService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +31,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;

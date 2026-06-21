@@ -1,7 +1,7 @@
 package hoang.com.auction_system_be.controller;
 
 import hoang.com.auction_system_be.dto.request.PlaceBidRequest;
-import hoang.com.auction_system_be.service.AuctionSessionService;
+import hoang.com.auction_system_be.service.session.AuctionSessionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
