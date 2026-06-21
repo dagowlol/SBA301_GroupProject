@@ -22,9 +22,12 @@ public class BidMapper {
 
         return BidLogResponse.builder()
                 .bidId(bid.getId())
+                .sessionId(bid.getParticipant().getSession().getId())
+                .userId(bidder != null ? bidder.getId() : null)
                 .bidderName(bidderName)
                 .amount(bid.getAmount())
                 .bidTime(bid.getBidTimestamp())
+                .isSuspicious(bid.isSuspicious())
                 .build();
     }
 

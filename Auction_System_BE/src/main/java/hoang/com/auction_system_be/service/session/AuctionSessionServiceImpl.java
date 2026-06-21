@@ -15,7 +15,9 @@ import hoang.com.auction_system_be.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +42,18 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
         SimpMessagingTemplate messagingTemplate;
         AuctionSessionMapper auctionSessionMapper;
         BidMapper bidMapper;
+
+        @NonFinal
+        @Value("${auction.anti-shill.window-seconds:5}")
+        int antiShillWindowSeconds;
+
+        @NonFinal
+        @Value("${auction.anti-shill.max-bids:4}")
+        int antiShillMaxBids;
+
+        @NonFinal
+        @Value("${auction.anti-spam.cooldown-millis:500}")
+        long antiSpamCooldownMillis;
 
         @Override
         @Transactional(readOnly = true)
@@ -109,6 +123,10 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                         User user = userRepository.findById(request.getUserId())
                                         .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+                        // Anti-spam check: prevent multiple bids within configured cooldown
+                        LocalDateTime now = LocalDateTime.now();
+                        validateSpamCooldown(sessionId, request.getUserId(), now);
+
                         // Find or create participant
                         AuctionParticipant participant = auctionParticipantRepository
                                         .findByUserIdAndSessionId(request.getUserId(), sessionId)
@@ -118,9 +136,12 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                                 return auctionParticipantRepository.save(newParticipant);
                                         });
 
+                        // Anti-shill bidding check: 2 users bidding excessively
+                        boolean isSuspicious = isShillBiddingDetected(sessionId, request.getUserId(), now);
+
                         // Save bid
-                        LocalDateTime now = LocalDateTime.now();
                         Bid bid = bidMapper.toBid(participant, request.getBidAmount(), now);
+                        bid.setSuspicious(isSuspicious);
                         bidRepository.save(bid);
 
                         // Update session
@@ -178,5 +199,37 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                         "/queue/errors",
                                         errorResponse);
                 }
+        }
+
+        private boolean isShillBiddingDetected(Long sessionId, Long currentUserId, LocalDateTime now) {
+                List<Bid> recentBids = bidRepository.findTop10ByParticipantSessionIdOrderByBidTimestampDesc(sessionId);
+                long recentBidsCount = recentBids.stream()
+                        .filter(b -> Duration.between(b.getBidTimestamp(), now).getSeconds() <= antiShillWindowSeconds)
+                        .count();
+
+                if (recentBidsCount >= antiShillMaxBids) {
+                        java.util.Set<Long> userIds = recentBids.stream()
+                                .filter(b -> Duration.between(b.getBidTimestamp(), now).getSeconds() <= antiShillWindowSeconds)
+                                .map(b -> b.getParticipant().getUser().getId())
+                                .collect(Collectors.toSet());
+                        userIds.add(currentUserId);
+                        
+                        if (userIds.size() == 2) {
+                                log.warn("Shill bidding detected for session {}: 2 users placed >={} bids in {}s", 
+                                        sessionId, antiShillMaxBids, antiShillWindowSeconds);
+                                return true;
+                        }
+                }
+                return false;
+        }
+
+        private void validateSpamCooldown(Long sessionId, Long userId, LocalDateTime now) {
+                bidRepository.findTopByParticipantUserIdAndParticipantSessionIdOrderByBidTimestampDesc(userId, sessionId)
+                        .ifPresent(lastBid -> {
+                                long millisBetween = Duration.between(lastBid.getBidTimestamp(), now).toMillis();
+                                if (millisBetween < antiSpamCooldownMillis) {
+                                        throw new AppException(ErrorCode.TOO_MANY_REQUESTS);
+                                }
+                        });
         }
 }

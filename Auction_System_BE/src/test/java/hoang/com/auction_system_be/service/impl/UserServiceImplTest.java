@@ -12,6 +12,7 @@ import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.mapper.UserMapper;
 import hoang.com.auction_system_be.repository.UserRepository;
+import hoang.com.auction_system_be.service.auth.SecurityContextService;
 import hoang.com.auction_system_be.service.user.UserServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserMapper userMapper;
+
+    @Mock
+    private SecurityContextService securityContextService;
 
     @InjectMocks
     private UserServiceImpl userService;
