@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
 @Table(name = "bids", indexes = {
         @Index(name = "idx_bid_participant", columnList = "participant_id"),
         @Index(name = "idx_bid_timestamp", columnList = "bid_timestamp"),
-        @Index(name = "idx_bid_status", columnList = "status")
+        @Index(name = "idx_bid_status", columnList = "status"),
+        @Index(name = "idx_bid_session", columnList = "participant_id, bid_timestamp")
 })
 @SQLDelete(sql = "UPDATE bids SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
@@ -48,4 +49,8 @@ public class Bid extends BaseEntity {
 
     @Column(name = "ip_address", length = 50)
     String ipAddress;
+
+    @Column(name = "is_suspicious", nullable = false)
+    @Builder.Default
+    boolean isSuspicious = false;
 }

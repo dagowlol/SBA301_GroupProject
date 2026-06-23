@@ -39,10 +39,14 @@ public enum ErrorCode {
     SESSION_NOT_ACTIVE(6002, "Auction session is not active", HttpStatus.BAD_REQUEST),
     INVALID_BID_AMOUNT(6003, "Bid amount is too low", HttpStatus.BAD_REQUEST),
     AUCTION_ENDED(6004, "Auction has ended", HttpStatus.BAD_REQUEST),
+    TOO_MANY_REQUESTS(6005, "Too many requests, please slow down", HttpStatus.TOO_MANY_REQUESTS),
 
     // Payment
     PAYMENT_NOT_FOUND(5001, "Payment not found", HttpStatus.NOT_FOUND),
-    INVALID_PAYMENT_STATUS(5002, "Invalid payment status for this operation", HttpStatus.BAD_REQUEST);
+    INVALID_PAYMENT_STATUS(5002, "Invalid payment status for this operation", HttpStatus.BAD_REQUEST),
+
+    // Dispute
+    DISPUTE_NOT_FOUND(7001, "Dispute not found", HttpStatus.NOT_FOUND);
 
     private final int code;
     private final String message;

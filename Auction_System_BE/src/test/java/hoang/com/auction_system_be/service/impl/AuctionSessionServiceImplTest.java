@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -100,6 +101,10 @@ class AuctionSessionServiceImplTest {
                                 .user(testUser)
                                 .session(testSession)
                                 .build();
+                                
+                ReflectionTestUtils.setField(auctionSessionService, "antiShillWindowSeconds", 5);
+                ReflectionTestUtils.setField(auctionSessionService, "antiShillMaxBids", 4);
+                ReflectionTestUtils.setField(auctionSessionService, "antiSpamCooldownMillis", 500L);
         }
 
         @Test
@@ -199,6 +204,41 @@ class AuctionSessionServiceImplTest {
 
                 assertThat(errorCaptor.getValue().getMessage())
                                 .isEqualTo("Bid amount is too low");
+        }
+
+        @Test
+        @DisplayName("placeBid - fail: anti-spam prevents bidding within 500ms")
+        void placeBid_fail_spam() {
+                // Arrange
+                PlaceBidRequest request = PlaceBidRequest.builder()
+                                .userId(1L)
+                                .bidAmount(BigDecimal.valueOf(110))
+                                .build();
+
+                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+                
+                Bid lastBid = Bid.builder()
+                                .bidTimestamp(LocalDateTime.now().minusNanos(100_000_000)) // 100ms ago
+                                .build();
+                                
+                when(bidRepository.findTopByParticipantUserIdAndParticipantSessionIdOrderByBidTimestampDesc(1L, 1L))
+                                .thenReturn(Optional.of(lastBid));
+
+                // Act
+                auctionSessionService.placeBid(1L, request);
+
+                // Assert
+                verify(bidRepository, never()).save(any(Bid.class));
+                
+                ArgumentCaptor<ErrorSocketResponse> errorCaptor = ArgumentCaptor.forClass(ErrorSocketResponse.class);
+                verify(messagingTemplate).convertAndSendToUser(
+                                eq("1"),
+                                eq("/queue/errors"),
+                                errorCaptor.capture());
+
+                assertThat(errorCaptor.getValue().getMessage())
+                                .isEqualTo("Too many requests, please slow down");
         }
 
         @Test

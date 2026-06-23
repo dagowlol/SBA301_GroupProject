@@ -16,7 +16,10 @@ import java.time.LocalDateTime;
 public class BidLogResponse {
 
     Long bidId;
+    Long sessionId;
+    Long userId;
     String bidderName;
     BigDecimal amount;
     LocalDateTime bidTime;
+    Boolean isSuspicious;
 }
