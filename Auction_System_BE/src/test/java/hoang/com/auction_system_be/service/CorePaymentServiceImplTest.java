@@ -8,7 +8,8 @@ import hoang.com.auction_system_be.enums.PaymentType;
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.repository.PaymentRepository;
-import hoang.com.auction_system_be.service.impl.CorePaymentServiceImpl;
+import hoang.com.auction_system_be.service.payment.CorePaymentServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import AdminLayout from '../layouts/AdminLayout';
+import GuestRoute from './GuestRoute';
 
 // Feature components
 import CatalogPage from '../features/catalog/pages/CatalogPage';
@@ -8,6 +9,11 @@ import ProductDetailPage from '../features/catalog/pages/ProductDetailPage';
 import CategoryManagement from '../features/staff/pages/CategoryManagement';
 import ItemApproval from '../features/staff/pages/ItemApproval';
 import UserManagement from '../features/staff/pages/UserManagement';
+import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
+import RegisterPage from '../features/auth/pages/RegisterPage';
+import AuctionRoom from '../features/auction/pages/AuctionRoom';
+
+import HomePage from '../features/catalog/pages/HomePage';
 
 export default function AppRoutes() {
   return (
@@ -15,8 +21,14 @@ export default function AppRoutes() {
       <Routes>
         {/* Public User Routes */}
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<CatalogPage />} />
+          <Route index element={<HomePage />} />
+          <Route path="auction" element={<CatalogPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
+          <Route path="auction/:sessionId" element={<AuctionRoom />} />
+          <Route element={<GuestRoute />}>
+            <Route path="register" element={<RegisterPage />} />
+            <Route path="verify-email" element={<VerifyEmailPage />} />
+          </Route>
         </Route>
 
         {/* Staff Dashboard Routes */}

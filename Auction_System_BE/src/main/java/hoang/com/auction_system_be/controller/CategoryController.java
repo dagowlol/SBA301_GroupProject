@@ -3,12 +3,12 @@ package hoang.com.auction_system_be.controller;
 import hoang.com.auction_system_be.dto.request.CategoryRequest;
 import hoang.com.auction_system_be.dto.response.ApiResponse;
 import hoang.com.auction_system_be.dto.response.CategoryResponse;
-import hoang.com.auction_system_be.service.CategoryService;
+import hoang.com.auction_system_be.service.category.CategoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Tag(name = "Category Controller", description = "APIs for managing auction categories")
@@ -25,6 +25,7 @@ public class CategoryController {
     CategoryService categoryService;
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
     @Operation(summary = "Create a new category", description = "Creates a category and returns its details. Validates CategoryRequest constraints.")
     public ApiResponse<CategoryResponse> createCategory(@RequestBody @Valid CategoryRequest request) {
         return ApiResponse.<CategoryResponse>builder()
@@ -49,6 +50,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
     @Operation(summary = "Update an existing category", description = "Updates details of an existing category using its ID.")
     public ApiResponse<CategoryResponse> updateCategory(
             @PathVariable Long id,
@@ -59,6 +61,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
     @Operation(summary = "Soft delete a category", description = "Marks a category as deleted (soft delete) using its ID.")
     public ApiResponse<Void> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);

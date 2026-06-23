@@ -10,4 +10,7 @@ export default defineConfig({
     setupFiles: './src/setupTests.js',
     include: ['tests/**/*.{test,spec}.{js,jsx}'],
   },
+   define: {
+    global: 'globalThis'
+  }
 })

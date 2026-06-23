@@ -6,8 +6,10 @@ const BASE_URL = 'http://localhost:8080/api';
  */
 export async function apiRequest(path, options = {}) {
   const url = `${BASE_URL}${path}`;
+  const storedToken = sessionStorage.getItem('accessToken');
   const headers = {
     'Content-Type': 'application/json',
+    ...(storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {}),
     ...options.headers,
   };
 

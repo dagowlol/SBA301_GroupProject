@@ -1,7 +1,7 @@
 package hoang.com.auction_system_be.controller;
 
 import hoang.com.auction_system_be.dto.response.ApiResponse;
-import hoang.com.auction_system_be.service.VNPayService;
+import hoang.com.auction_system_be.service.payment.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +24,7 @@ public class VNPayController {
     @Operation(summary = "Create VNPay URL", description = "Generate a secure URL to redirect user to VNPay gateway")
     @GetMapping("/create-url/{paymentId}")
     public ApiResponse<Map<String, String>> createPaymentUrl(
-            @Parameter(description = "ID of the payment record")
-            @PathVariable Long paymentId, 
+            @Parameter(description = "ID of the payment record") @PathVariable Long paymentId,
             HttpServletRequest request) {
         String url = vnPayService.createVNPayUrl(paymentId, request);
         return ApiResponse.<Map<String, String>>builder()

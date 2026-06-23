@@ -5,9 +5,13 @@ import { Clock, Tag } from 'lucide-react';
 export default function ProductCard({ item }) {
   const navigate = useNavigate();
 
-  // Handle navigate to detail
+  // Handle navigate to detail or live auction room
   const handleCardClick = () => {
-    navigate(`/product/${item.id}`);
+    if (item.status === 'Active') {
+      navigate(`/auction/${item.id}`);
+    } else {
+      navigate(`/product/${item.id}`);
+    }
   };
 
   // Format date helper
