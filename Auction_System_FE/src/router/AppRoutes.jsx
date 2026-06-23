@@ -10,6 +10,7 @@ import CategoryManagement from '../features/staff/pages/CategoryManagement';
 import ItemApproval from '../features/staff/pages/ItemApproval';
 import BidMonitoring from '../features/staff/pages/BidMonitoring';
 import DisputeManagement from '../features/staff/pages/DisputeManagement';
+import UserManagement from '../features/staff/pages/UserManagement';
 import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
@@ -39,6 +40,7 @@ export default function AppRoutes() {
           <Route path="items" element={<ItemApproval />} />
           <Route path="bid-monitoring" element={<BidMonitoring />} />
           <Route path="disputes" element={<DisputeManagement />} />
+          <Route path="users" element={<UserManagement />} />
         </Route>
 
         {/* Fallback Catch-all Route */}
