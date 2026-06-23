@@ -1,8 +1,6 @@
 package hoang.com.auction_system_be.service.impl;
 
 import hoang.com.auction_system_be.dto.request.PlaceBidRequest;
-import hoang.com.auction_system_be.dto.response.BidBroadcastResponse;
-import hoang.com.auction_system_be.dto.response.ErrorSocketResponse;
 import hoang.com.auction_system_be.entity.*;
 import hoang.com.auction_system_be.enums.SessionStatus;
 import hoang.com.auction_system_be.repository.*;
@@ -17,7 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.ApplicationEventPublisher;
+import hoang.com.auction_system_be.event.BidPlacedEvent;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,228 +30,244 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuctionSessionServiceImplTest {
 
-    @Mock
-    AuctionSessionRepository auctionSessionRepository;
+        @Mock
+        AuctionSessionRepository auctionSessionRepository;
 
-    @Mock
-    BidRepository bidRepository;
+        @Mock
+        BidRepository bidRepository;
 
-    @Mock
-    UserRepository userRepository;
+        @Mock
+        UserRepository userRepository;
 
-    @Mock
-    AuctionParticipantRepository auctionParticipantRepository;
+        @Mock
+        AuctionParticipantRepository auctionParticipantRepository;
 
-    @Mock
-    AuctionExtensionLogRepository auctionExtensionLogRepository;
+        @Mock
+        ApplicationEventPublisher eventPublisher;
 
-    @Mock
-    SimpMessagingTemplate messagingTemplate;
+        @Mock
+        hoang.com.auction_system_be.service.DistributedLockService lockService;
 
-    @Spy
-    AuctionSessionMapper auctionSessionMapper = new AuctionSessionMapper();
+        @Mock
+        org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
-    @Spy
-    BidMapper bidMapper = new BidMapper();
+        @Mock
+        hoang.com.auction_system_be.service.AuthenticationService authenticationService;
 
-    @InjectMocks
-    AuctionSessionServiceImpl auctionSessionService;
+        @Mock
+        AuctionExtensionLogRepository auctionExtensionLogRepository;
 
-    User testUser;
-    AuctionItem testItem;
-    AuctionSession testSession;
-    AuctionParticipant testParticipant;
 
-    @BeforeEach
-    void setUp() {
-        testUser = User.builder()
-                .id(1L)
-                .firstName("John")
-                .lastName("Doe")
-                .email("john@example.com")
-                .build();
+        @Spy
+        AuctionSessionMapper auctionSessionMapper = new AuctionSessionMapper();
 
-        testItem = AuctionItem.builder()
-                .id(1L)
-                .name("Test Item")
-                .description("Test Description")
-                .startingPrice(BigDecimal.valueOf(100))
-                .images(new ArrayList<>())
-                .build();
+        @Spy
+        BidMapper bidMapper = new BidMapper();
 
-        testSession = AuctionSession.builder()
-                .id(1L)
-                .item(testItem)
-                .status(SessionStatus.ACTIVE)
-                .currentHighestBid(BigDecimal.valueOf(100))
-                .minimumIncrement(BigDecimal.valueOf(10))
-                .startTime(LocalDateTime.now().minusHours(1))
-                .endTime(LocalDateTime.now().plusHours(1))
-                .bidCount(0)
-                .antiSnipeWindowSeconds(10)
-                .antiSnipeExtensionSeconds(30)
-                .participants(new ArrayList<>())
-                .build();
+        @InjectMocks
+        AuctionSessionServiceImpl auctionSessionService;
 
-        testParticipant = AuctionParticipant.builder()
-                .id(1L)
-                .user(testUser)
-                .session(testSession)
-                .build();
-    }
+        User testUser;
+        AuctionItem testItem;
+        AuctionSession testSession;
+        AuctionParticipant testParticipant;
 
-    @Test
-    @DisplayName("placeBid - success: valid bid is saved and broadcast")
-    void placeBid_success() {
-        // Arrange
-        PlaceBidRequest request = PlaceBidRequest.builder()
-                .userId(1L)
-                .bidAmount(BigDecimal.valueOf(110))
-                .build();
+        @BeforeEach
+        void setUp() {
+                testUser = User.builder()
+                                .id(1L)
+                                .firstName("John")
+                                .lastName("Doe")
+                                .email("john@example.com")
+                                .build();
 
-        when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(auctionParticipantRepository.findByUserIdAndSessionId(1L, 1L))
-                .thenReturn(Optional.of(testParticipant));
-        when(bidRepository.save(any(Bid.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(auctionSessionRepository.save(any(AuctionSession.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+                testItem = AuctionItem.builder()
+                                .id(1L)
+                                .name("Test Item")
+                                .description("Test Description")
+                                .startingPrice(BigDecimal.valueOf(100))
+                                .images(new ArrayList<>())
+                                .build();
 
-        // Act
-        auctionSessionService.placeBid(1L, request);
+                testSession = AuctionSession.builder()
+                                .id(1L)
+                                .item(testItem)
+                                .status(SessionStatus.ACTIVE)
+                                .currentHighestBid(BigDecimal.valueOf(100))
+                                .minimumIncrement(BigDecimal.valueOf(10))
+                                .startTime(LocalDateTime.now().minusHours(1))
+                                .endTime(LocalDateTime.now().plusHours(1))
+                                .bidCount(0)
+                                .antiSnipeWindowSeconds(10)
+                                .antiSnipeExtensionSeconds(30)
+                                .participants(new ArrayList<>())
+                                .build();
 
-        // Assert
-        verify(bidRepository).save(any(Bid.class));
-        verify(auctionSessionRepository).save(any(AuctionSession.class));
+                testParticipant = AuctionParticipant.builder()
+                                .id(1L)
+                                .user(testUser)
+                                .session(testSession)
+                                .build();
+        }
 
-        assertThat(testSession.getCurrentHighestBid()).isEqualByComparingTo(BigDecimal.valueOf(110));
-        assertThat(testSession.getCurrentWinnerParticipant()).isEqualTo(testParticipant);
-        assertThat(testSession.getBidCount()).isEqualTo(1);
+        @Test
+        @DisplayName("placeBid - success: valid bid is saved and broadcast")
+        void placeBid_success() {
+                // Arrange
+                PlaceBidRequest request = PlaceBidRequest.builder()
+                                .userId(1L)
+                                .bidAmount(BigDecimal.valueOf(110))
+                                .build();
 
-        // Verify broadcast
-        ArgumentCaptor<BidBroadcastResponse> broadcastCaptor =
-                ArgumentCaptor.forClass(BidBroadcastResponse.class);
-        verify(messagingTemplate).convertAndSend(
-                eq("/topic/auction/1"),
-                broadcastCaptor.capture()
-        );
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
+                when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+                when(auctionParticipantRepository.findByUserIdAndSessionId(1L, 1L))
+                                .thenReturn(Optional.of(testParticipant));
+                when(bidRepository.save(any(Bid.class))).thenAnswer(inv -> inv.getArgument(0));
+                when(auctionSessionRepository.save(any(AuctionSession.class)))
+                                .thenAnswer(inv -> inv.getArgument(0));
 
-        BidBroadcastResponse broadcast = broadcastCaptor.getValue();
-        assertThat(broadcast.getSessionId()).isEqualTo(1L);
-        assertThat(broadcast.getCurrentPrice()).isEqualByComparingTo(BigDecimal.valueOf(110));
-        assertThat(broadcast.getWinnerName()).isEqualTo("John Doe");
-    }
+                // Act
+                auctionSessionService.placeBid(1L, request);
 
-    @Test
-    @DisplayName("placeBid - fail: session is not active")
-    void placeBid_fail_sessionNotActive() {
-        // Arrange
-        testSession.setStatus(SessionStatus.ENDED);
+                // Assert
+                verify(bidRepository).save(any(Bid.class));
+                verify(auctionSessionRepository).save(any(AuctionSession.class));
 
-        PlaceBidRequest request = PlaceBidRequest.builder()
-                .userId(1L)
-                .bidAmount(BigDecimal.valueOf(110))
-                .build();
+                assertThat(testSession.getCurrentHighestBid()).isEqualByComparingTo(BigDecimal.valueOf(110));
+                assertThat(testSession.getCurrentWinnerParticipant()).isEqualTo(testParticipant);
+                assertThat(testSession.getBidCount()).isEqualTo(1);
 
-        when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                // Verify broadcast
+                verify(eventPublisher).publishEvent(any(BidPlacedEvent.class));
 
-        // Act
-        auctionSessionService.placeBid(1L, request);
 
-        // Assert - no bid saved, error sent to user
-        verify(bidRepository, never()).save(any(Bid.class));
-        verify(auctionSessionRepository, never()).save(any(AuctionSession.class));
+        }
 
-        ArgumentCaptor<ErrorSocketResponse> errorCaptor =
-                ArgumentCaptor.forClass(ErrorSocketResponse.class);
-        verify(messagingTemplate).convertAndSendToUser(
-                eq("1"),
-                eq("/queue/errors"),
-                errorCaptor.capture()
-        );
+        @Test
+        @DisplayName("placeBid - fail: session is not active")
+        void placeBid_fail_sessionNotActive() {
+                // Arrange
+                testSession.setStatus(SessionStatus.ENDED);
 
-        assertThat(errorCaptor.getValue().getMessage())
-                .isEqualTo("Auction session is not active");
-    }
+                PlaceBidRequest request = PlaceBidRequest.builder()
+                                .userId(1L)
+                                .bidAmount(BigDecimal.valueOf(110))
+                                .build();
 
-    @Test
-    @DisplayName("placeBid - fail: bid amount is too low")
-    void placeBid_fail_bidTooLow() {
-        // Arrange
-        PlaceBidRequest request = PlaceBidRequest.builder()
-                .userId(1L)
-                .bidAmount(BigDecimal.valueOf(105)) // needs at least 110 (100 + 10 increment)
-                .build();
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
 
-        when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                // Act & Assert
+                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                    auctionSessionService.placeBid(1L, request);
+                });
+        }
 
-        // Act
-        auctionSessionService.placeBid(1L, request);
+        @Test
+        @DisplayName("placeBid - fail: bid amount is too low")
+        void placeBid_fail_bidTooLow() {
+                // Arrange
+                PlaceBidRequest request = PlaceBidRequest.builder()
+                                .userId(1L)
+                                .bidAmount(BigDecimal.valueOf(105)) // needs at least 110 (100 + 10 increment)
+                                .build();
 
-        // Assert - no bid saved, error sent to user
-        verify(bidRepository, never()).save(any(Bid.class));
-        verify(auctionSessionRepository, never()).save(any(AuctionSession.class));
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
 
-        ArgumentCaptor<ErrorSocketResponse> errorCaptor =
-                ArgumentCaptor.forClass(ErrorSocketResponse.class);
-        verify(messagingTemplate).convertAndSendToUser(
-                eq("1"),
-                eq("/queue/errors"),
-                errorCaptor.capture()
-        );
+                // Act & Assert
+                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                    auctionSessionService.placeBid(1L, request);
+                });
+        }
 
-        assertThat(errorCaptor.getValue().getMessage())
-                .isEqualTo("Bid amount is too low");
-    }
+        @Test
+        @DisplayName("placeBid - anti-snipe: extends auction time when bid placed within 30 seconds of end")
+        void placeBid_extendAuctionTime() {
+                // Arrange - session ends in 20 seconds (within 30s anti-snipe window)
+                LocalDateTime nearEndTime = LocalDateTime.now().plusSeconds(20);
+                testSession.setEndTime(nearEndTime);
+                testSession.setAntiSnipeWindowSeconds(30);
 
-    @Test
-    @DisplayName("placeBid - anti-snipe: extends auction time when bid placed within 30 seconds of end")
-    void placeBid_extendAuctionTime() {
-        // Arrange - session ends in 20 seconds (within 30s anti-snipe window)
-        LocalDateTime nearEndTime = LocalDateTime.now().plusSeconds(20);
-        testSession.setEndTime(nearEndTime);
+                PlaceBidRequest request = PlaceBidRequest.builder()
+                                .userId(1L)
+                                .bidAmount(BigDecimal.valueOf(110))
+                                .build();
 
-        PlaceBidRequest request = PlaceBidRequest.builder()
-                .userId(1L)
-                .bidAmount(BigDecimal.valueOf(110))
-                .build();
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
+                when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+                when(auctionParticipantRepository.findByUserIdAndSessionId(1L, 1L))
+                                .thenReturn(Optional.of(testParticipant));
+                when(bidRepository.save(any(Bid.class))).thenAnswer(inv -> inv.getArgument(0));
+                when(auctionSessionRepository.save(any(AuctionSession.class)))
+                                .thenAnswer(inv -> inv.getArgument(0));
+                when(auctionExtensionLogRepository.save(any(AuctionExtensionLog.class)))
+                                .thenAnswer(inv -> inv.getArgument(0));
 
-        when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(auctionParticipantRepository.findByUserIdAndSessionId(1L, 1L))
-                .thenReturn(Optional.of(testParticipant));
-        when(bidRepository.save(any(Bid.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(auctionSessionRepository.save(any(AuctionSession.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
-        when(auctionExtensionLogRepository.save(any(AuctionExtensionLog.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+                // Act
+                auctionSessionService.placeBid(1L, request);
 
-        // Act
-        auctionSessionService.placeBid(1L, request);
+                // Assert
+                verify(bidRepository).save(any(Bid.class));
+                verify(auctionSessionRepository).save(any(AuctionSession.class));
+                verify(auctionExtensionLogRepository).save(any(AuctionExtensionLog.class));
 
-        // Assert
-        verify(bidRepository).save(any(Bid.class));
-        verify(auctionSessionRepository).save(any(AuctionSession.class));
-        verify(auctionExtensionLogRepository).save(any(AuctionExtensionLog.class));
+                // End time should have been extended by 30 seconds
+                assertThat(testSession.getEndTime()).isAfter(nearEndTime);
 
-        // End time should have been extended by 30 seconds
-        assertThat(testSession.getEndTime()).isAfter(nearEndTime);
+                // Verify extension log was saved with correct data
+                ArgumentCaptor<AuctionExtensionLog> logCaptor = ArgumentCaptor.forClass(AuctionExtensionLog.class);
+                verify(auctionExtensionLogRepository).save(logCaptor.capture());
 
-        // Verify extension log was saved with correct data
-        ArgumentCaptor<AuctionExtensionLog> logCaptor =
-                ArgumentCaptor.forClass(AuctionExtensionLog.class);
-        verify(auctionExtensionLogRepository).save(logCaptor.capture());
+                AuctionExtensionLog savedLog = logCaptor.getValue();
+                assertThat(savedLog.getOldEndTime()).isEqualTo(nearEndTime);
+                assertThat(savedLog.getNewEndTime()).isEqualTo(nearEndTime.plusSeconds(30));
+                assertThat(savedLog.getSession()).isEqualTo(testSession);
+                assertThat(savedLog.getTriggeredByParticipant()).isEqualTo(testParticipant);
 
-        AuctionExtensionLog savedLog = logCaptor.getValue();
-        assertThat(savedLog.getOldEndTime()).isEqualTo(nearEndTime);
-        assertThat(savedLog.getNewEndTime()).isEqualTo(nearEndTime.plusSeconds(30));
-        assertThat(savedLog.getSession()).isEqualTo(testSession);
-        assertThat(savedLog.getTriggeredByParticipant()).isEqualTo(testParticipant);
+                verify(eventPublisher).publishEvent(any(BidPlacedEvent.class));
+        }
 
-        // Verify broadcast still happens
-        verify(messagingTemplate).convertAndSend(
-                eq("/topic/auction/1"),
-                any(BidBroadcastResponse.class)
-        );
-    }
+        @Test
+        @DisplayName("updateSession - fail: rollback end_time for ACTIVE session")
+        void updateSession_fail_rollbackEndTime() {
+                // Arrange
+                hoang.com.auction_system_be.dto.request.AuctionSessionUpdateRequest request = hoang.com.auction_system_be.dto.request.AuctionSessionUpdateRequest.builder()
+                        .endTime(LocalDateTime.now().minusMinutes(1))
+                        .build();
+
+                when(auctionSessionRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(testSession));
+
+                // Act & Assert
+                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                    auctionSessionService.updateSession(1L, request);
+                });
+        }
+
+        @Test
+        @DisplayName("deleteSession - success")
+        void deleteSession_success() {
+                // Arrange
+                testSession.setStatus(SessionStatus.SCHEDULED);
+                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                when(authenticationService.getCurrentUserId()).thenReturn(1L);
+
+                // Act
+                auctionSessionService.deleteSession(1L);
+
+                // Assert
+                verify(auctionSessionRepository).delete(testSession);
+        }
+
+        @Test
+        @DisplayName("deleteSession - fail: ACTIVE session")
+        void deleteSession_fail_active() {
+                // Arrange
+                testSession.setStatus(SessionStatus.ACTIVE);
+                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+
+                // Act & Assert
+                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                    auctionSessionService.deleteSession(1L);
+                });
+        }
 }
