@@ -8,6 +8,7 @@ import CatalogPage from '../features/catalog/pages/CatalogPage';
 import ProductDetailPage from '../features/catalog/pages/ProductDetailPage';
 import CategoryManagement from '../features/staff/pages/CategoryManagement';
 import ItemApproval from '../features/staff/pages/ItemApproval';
+import UserManagement from '../features/staff/pages/UserManagement';
 import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
@@ -35,6 +36,7 @@ export default function AppRoutes() {
           <Route index element={<Navigate to="/admin/items" replace />} />
           <Route path="categories" element={<CategoryManagement />} />
           <Route path="items" element={<ItemApproval />} />
+          <Route path="users" element={<UserManagement />} />
         </Route>
 
         {/* Fallback Catch-all Route */}
