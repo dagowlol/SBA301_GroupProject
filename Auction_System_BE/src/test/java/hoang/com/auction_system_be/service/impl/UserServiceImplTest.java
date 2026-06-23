@@ -12,6 +12,8 @@ import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.mapper.UserMapper;
 import hoang.com.auction_system_be.repository.UserRepository;
+import hoang.com.auction_system_be.service.user.UserServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

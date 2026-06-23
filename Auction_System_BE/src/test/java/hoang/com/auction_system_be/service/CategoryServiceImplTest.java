@@ -7,6 +7,8 @@ import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.mapper.CategoryMapper;
 import hoang.com.auction_system_be.repository.CategoryRepository;
+import hoang.com.auction_system_be.service.category.CategoryServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,9 +1,8 @@
 package hoang.com.auction_system_be.service.impl.system;
 
-import hoang.com.auction_system_be.service.system.*;
+import hoang.com.auction_system_be.service.auth.JwtServiceImpl;
 
 import hoang.com.auction_system_be.security.UserDetailsImpl;
-import hoang.com.auction_system_be.service.impl.system.JwtServiceImpl;
 import io.jsonwebtoken.security.SignatureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ public class JwtServiceImplTest {
     private UserDetails userDetails;
 
     // 256-bit secret key in base64
-    private final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"; 
+    private final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     @BeforeEach
     void setUp() {
@@ -41,7 +40,7 @@ public class JwtServiceImplTest {
         // Use UserDetailsImpl to cover the extra claims mapping
         userDetails = mock(UserDetailsImpl.class);
         lenient().when(userDetails.getUsername()).thenReturn("test@example.com");
-        
+
         Collection<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
         lenient().doReturn(authorities).when(userDetails).getAuthorities();
         lenient().when(((UserDetailsImpl) userDetails).getId()).thenReturn(1L);
@@ -53,12 +52,12 @@ public class JwtServiceImplTest {
 
         assertNotNull(token);
         assertFalse(token.isEmpty());
-        
+
         String username = jwtService.extractUsername(token);
         assertEquals("test@example.com", username);
-        
+
         assertTrue(jwtService.isTokenValid(token, userDetails));
-        
+
         List<SimpleGrantedAuthority> extractedAuthorities = jwtService.extractAuthorities(token);
         assertEquals(1, extractedAuthorities.size());
         assertEquals("ROLE_USER", extractedAuthorities.get(0).getAuthority());
@@ -70,23 +69,23 @@ public class JwtServiceImplTest {
         String token = jwtService.generateRefreshToken(userDetails, csrfToken);
 
         assertNotNull(token);
-        
+
         String username = jwtService.extractUsername(token);
         assertEquals("test@example.com", username);
-        
+
         String extractedCsrf = jwtService.extractCsrfToken(token);
         assertEquals(csrfToken, extractedCsrf);
-        
+
         assertTrue(jwtService.isTokenValid(token, userDetails));
     }
 
     @Test
     void isTokenValid_False_WhenUsernameDiffers() {
         String token = jwtService.generateToken(userDetails);
-        
+
         UserDetails anotherUser = mock(UserDetails.class);
         when(anotherUser.getUsername()).thenReturn("different@example.com");
-        
+
         assertFalse(jwtService.isTokenValid(token, anotherUser));
     }
 
@@ -99,7 +98,7 @@ public class JwtServiceImplTest {
 
         String token = jwtService.generateToken(userNoRoles);
         List<SimpleGrantedAuthority> authorities = jwtService.extractAuthorities(token);
-        
+
         assertTrue(authorities.isEmpty());
     }
 
@@ -109,11 +108,10 @@ public class JwtServiceImplTest {
 
         // Create a new JwtService with a different key
         JwtServiceImpl anotherJwtService = new JwtServiceImpl();
-        ReflectionTestUtils.setField(anotherJwtService, "jwtSecretKey", "505E635266556A586E3272357538782F413F4428472B4B6250645367566B5971");
+        ReflectionTestUtils.setField(anotherJwtService, "jwtSecretKey",
+                "505E635266556A586E3272357538782F413F4428472B4B6250645367566B5971");
         ReflectionTestUtils.setField(anotherJwtService, "jwtIssuer", "test-issuer");
 
-        assertThrows(SignatureException.class, () -> 
-            anotherJwtService.extractUsername(token)
-        );
+        assertThrows(SignatureException.class, () -> anotherJwtService.extractUsername(token));
     }
 }
