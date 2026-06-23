@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8080/api';
+const BASE_URL = 'http://localhost:8080/api/v1';
 
 /**
  * Custom wrapper for standard fetch to handle JSON requests, error boundaries,
@@ -24,7 +24,7 @@ export async function apiRequest(path, options = {}) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
-    
+
     // For DELETE or empty responses
     if (response.status === 204 || path.includes('delete') || options.method === 'DELETE') {
       const data = await response.json().catch(() => ({}));
