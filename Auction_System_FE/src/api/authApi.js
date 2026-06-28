@@ -1,32 +1,32 @@
 import { apiRequest } from './apiInstance';
 
 export const authApi = {
-  register: (data) => apiRequest('/v1/auth/register', {
+  register: (data) => apiRequest('/auth/register', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
 
-  verifyRegisterOtp: (data) => apiRequest('/v1/auth/register/verify-otp', {
+  verifyRegisterOtp: (data) => apiRequest('/auth/register/verify-otp', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
 
-  login: (data) => apiRequest('/v1/auth/login', {
+  login: (data) => apiRequest('/auth/login', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
 
-  verifyLoginOtp: (data) => apiRequest('/v1/auth/login/verify-otp', {
+  verifyLoginOtp: (data) => apiRequest('/auth/login/verify-otp', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
 
-  resendOtp: (data) => apiRequest('/v1/auth/resend-otp', {
+  resendOtp: (data) => apiRequest('/auth/resend-otp', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
 
-  logout: () => apiRequest('/v1/auth/logout', {
+  logout: () => apiRequest('/auth/logout', {
     method: 'POST',
   }),
 };

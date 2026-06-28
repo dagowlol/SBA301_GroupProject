@@ -1,8 +1,6 @@
 package hoang.com.auction_system_be.service.impl.system;
 
-import hoang.com.auction_system_be.service.system.*;
-
-import hoang.com.auction_system_be.service.impl.system.CookieServiceImpl;
+import hoang.com.auction_system_be.service.auth.CookieServiceImpl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;

@@ -3,7 +3,7 @@ package hoang.com.auction_system_be.aspect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hoang.com.auction_system_be.entity.IdempotencyRecord;
 import hoang.com.auction_system_be.repository.IdempotencyRepository;
-import hoang.com.auction_system_be.service.AuthenticationService;
+import hoang.com.auction_system_be.service.auth.SecurityContextService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ import java.util.Optional;
 public class IdempotencyAspect {
 
     IdempotencyRepository idempotencyRepository;
-    AuthenticationService authenticationService;
+    SecurityContextService authenticationService;
     ObjectMapper objectMapper = new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
     @Around("@annotation(hoang.com.auction_system_be.annotation.Idempotent)")

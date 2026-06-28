@@ -1,10 +1,10 @@
 package hoang.com.auction_system_be.service.impl.system;
 
-import hoang.com.auction_system_be.service.system.*;
+import hoang.com.auction_system_be.service.auth.RefreshTokenServiceImpl;
 
 import hoang.com.auction_system_be.entity.RefreshToken;
 import hoang.com.auction_system_be.repository.RefreshTokenRepository;
-import hoang.com.auction_system_be.service.impl.system.RefreshTokenServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +67,7 @@ public class RefreshTokenServiceImplTest {
 
         ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository, times(1)).save(captor.capture());
-        
+
         RefreshToken savedToken = captor.getValue();
         assertEquals(token, savedToken.getToken());
         assertEquals(email, savedToken.getUserEmail());
@@ -78,57 +78,57 @@ public class RefreshTokenServiceImplTest {
     @Test
     void isRefreshTokenValid_True_WhenTokenIsValid() {
         when(refreshTokenRepository.findByToken("valid-token")).thenReturn(Optional.of(validToken));
-        
+
         boolean isValid = refreshTokenService.isRefreshTokenValid("valid-token");
-        
+
         assertTrue(isValid);
     }
 
     @Test
     void isRefreshTokenValid_False_WhenTokenNotFound() {
         when(refreshTokenRepository.findByToken("non-existent-token")).thenReturn(Optional.empty());
-        
+
         boolean isValid = refreshTokenService.isRefreshTokenValid("non-existent-token");
-        
+
         assertFalse(isValid);
     }
 
     @Test
     void isRefreshTokenValid_False_WhenTokenIsExpired() {
         when(refreshTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(expiredToken));
-        
+
         boolean isValid = refreshTokenService.isRefreshTokenValid("expired-token");
-        
+
         assertFalse(isValid);
     }
 
     @Test
     void isRefreshTokenValid_False_WhenTokenIsRevoked() {
         when(refreshTokenRepository.findByToken("revoked-token")).thenReturn(Optional.of(revokedToken));
-        
+
         boolean isValid = refreshTokenService.isRefreshTokenValid("revoked-token");
-        
+
         assertFalse(isValid);
     }
 
     @Test
     void revokeToken_Success_WhenTokenExists() {
         when(refreshTokenRepository.findByToken("valid-token")).thenReturn(Optional.of(validToken));
-        
+
         refreshTokenService.revokeToken("valid-token");
-        
+
         ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository, times(1)).save(captor.capture());
-        
+
         assertTrue(captor.getValue().isRevoked());
     }
 
     @Test
     void revokeToken_DoesNothing_WhenTokenNotFound() {
         when(refreshTokenRepository.findByToken("non-existent-token")).thenReturn(Optional.empty());
-        
+
         refreshTokenService.revokeToken("non-existent-token");
-        
+
         verify(refreshTokenRepository, never()).save(any());
     }
 }

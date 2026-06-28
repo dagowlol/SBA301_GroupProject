@@ -50,14 +50,17 @@ public enum ErrorCode {
     SESSION_CANNOT_ROLLBACK_END_TIME(6008, "Cannot set end time to a past value for an active session", HttpStatus.BAD_REQUEST),
     SESSION_ITEM_LOCKED(6009, "Cannot change item of an active session", HttpStatus.BAD_REQUEST),
     SEARCH_KEYWORD_TOO_SHORT(6010, "Search keyword must be at least 2 characters long", HttpStatus.BAD_REQUEST),
+    TOO_MANY_REQUESTS(6005, "Too many requests, please slow down", HttpStatus.TOO_MANY_REQUESTS),
 
     // Payment
     PAYMENT_NOT_FOUND(5001, "Payment not found", HttpStatus.NOT_FOUND),
     INVALID_PAYMENT_STATUS(5002, "Invalid payment status for this operation", HttpStatus.BAD_REQUEST),
-    
     // System
     SYSTEM_BUSY(8001, "System is busy. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE),
-    SYSTEM_ERROR(8002, "System error occurred.", HttpStatus.INTERNAL_SERVER_ERROR);
+    SYSTEM_ERROR(8002, "System error occurred.", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // Dispute
+    DISPUTE_NOT_FOUND(7001, "Dispute not found", HttpStatus.NOT_FOUND);
 
     private final int code;
     private final String message;
