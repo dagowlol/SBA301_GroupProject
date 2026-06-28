@@ -33,17 +33,31 @@ public enum ErrorCode {
     // ─── Item ─────────────────────────────────────────────────────────────
     ITEM_NOT_FOUND(4001, "Item not found", HttpStatus.NOT_FOUND),
     INVALID_ITEM_STATUS(4002, "Invalid item status for this operation", HttpStatus.BAD_REQUEST),
+    ITEM_NOT_APPROVED(4003, "Item must be in APPROVED status to create an auction session", HttpStatus.UNPROCESSABLE_ENTITY),
+    ITEM_ALREADY_SOLD(4004, "Item has already been sold", HttpStatus.CONFLICT),
+
+    // ─── Idempotency ──────────────────────────────────────────────────────
+    DUPLICATE_REQUEST(7001, "Duplicate request detected. The same operation was already processed.", HttpStatus.OK),
 
     // Auction Session
     SESSION_NOT_FOUND(6001, "Auction session not found", HttpStatus.NOT_FOUND),
     SESSION_NOT_ACTIVE(6002, "Auction session is not active", HttpStatus.BAD_REQUEST),
     INVALID_BID_AMOUNT(6003, "Bid amount is too low", HttpStatus.BAD_REQUEST),
     AUCTION_ENDED(6004, "Auction has ended", HttpStatus.BAD_REQUEST),
+    SESSION_ALREADY_ACTIVE(6005, "Cannot modify a session that is already ACTIVE", HttpStatus.BAD_REQUEST),
+    SESSION_CONFLICT(6006, "Item already has an active or scheduled session", HttpStatus.CONFLICT),
+    SESSION_INVALID_END_TIME(6007, "End time must be after start time", HttpStatus.BAD_REQUEST),
+    SESSION_CANNOT_ROLLBACK_END_TIME(6008, "Cannot set end time to a past value for an active session", HttpStatus.BAD_REQUEST),
+    SESSION_ITEM_LOCKED(6009, "Cannot change item of an active session", HttpStatus.BAD_REQUEST),
+    SEARCH_KEYWORD_TOO_SHORT(6010, "Search keyword must be at least 2 characters long", HttpStatus.BAD_REQUEST),
     TOO_MANY_REQUESTS(6005, "Too many requests, please slow down", HttpStatus.TOO_MANY_REQUESTS),
 
     // Payment
     PAYMENT_NOT_FOUND(5001, "Payment not found", HttpStatus.NOT_FOUND),
     INVALID_PAYMENT_STATUS(5002, "Invalid payment status for this operation", HttpStatus.BAD_REQUEST),
+    // System
+    SYSTEM_BUSY(8001, "System is busy. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE),
+    SYSTEM_ERROR(8002, "System error occurred.", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Dispute
     DISPUTE_NOT_FOUND(7001, "Dispute not found", HttpStatus.NOT_FOUND);
