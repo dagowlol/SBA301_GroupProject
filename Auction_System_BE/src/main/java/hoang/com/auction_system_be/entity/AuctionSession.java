@@ -24,7 +24,7 @@ import java.util.List;
         @Index(name = "idx_session_status_endtime", columnList = "status, end_time"),
         @Index(name = "idx_session_list_keyset", columnList = "deleted_at, status, id DESC")
 })
-@SQLDelete(sql = "UPDATE auction_sessions SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(sql = "UPDATE auction_sessions SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter

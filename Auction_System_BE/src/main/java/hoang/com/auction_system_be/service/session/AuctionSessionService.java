@@ -8,6 +8,7 @@ import hoang.com.auction_system_be.dto.response.AuctionSessionListResponse;
 import hoang.com.auction_system_be.dto.response.AuctionSessionResponse;
 import hoang.com.auction_system_be.dto.response.CursorPageResponse;
 import hoang.com.auction_system_be.enums.SessionStatus;
+import java.util.List;
 
 public interface AuctionSessionService {
 
@@ -27,4 +28,8 @@ public interface AuctionSessionService {
     AuctionSessionResponse updateSession(Long id, AuctionSessionUpdateRequest request);
 
     void deleteSession(Long id);
+
+    List<AuctionSessionListResponse> getDeletedSessions();
+
+    void restoreSession(Long id);
 }

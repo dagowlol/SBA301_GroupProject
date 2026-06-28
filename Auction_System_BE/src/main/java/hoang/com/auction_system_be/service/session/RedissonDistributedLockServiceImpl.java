@@ -1,4 +1,4 @@
-package hoang.com.auction_system_be.service.impl;
+package hoang.com.auction_system_be.service.session;
 
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
