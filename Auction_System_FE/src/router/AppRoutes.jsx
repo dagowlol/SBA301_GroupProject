@@ -14,6 +14,7 @@ import UserManagement from '../features/staff/pages/UserManagement';
 import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
+import CreateItemRequest from '../features/user/pages/CreateItemRequest';
 
 import HomePage from '../features/catalog/pages/HomePage';
 
@@ -27,6 +28,10 @@ export default function AppRoutes() {
           <Route path="auction" element={<CatalogPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="auction/:sessionId" element={<AuctionRoom />} />
+          
+          <Route path="user/items/create" element={<CreateItemRequest />} />
+          <Route path="user/items" element={<div>My Items Page - <a href="/user/items/create">Create New</a></div>} />
+          
           <Route element={<GuestRoute />}>
             <Route path="register" element={<RegisterPage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />

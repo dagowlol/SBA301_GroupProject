@@ -8,10 +8,19 @@ export async function apiRequest(path, options = {}) {
   const url = `${BASE_URL}${path}`;
   const storedToken = sessionStorage.getItem('accessToken');
   const headers = {
-    'Content-Type': 'application/json',
     ...(storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {}),
     ...options.headers,
   };
+
+  // Only set application/json if not using FormData and not explicitly overridden
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  // If headers['Content-Type'] is explicitly set to null/undefined, delete it
+  if (!headers['Content-Type']) {
+      delete headers['Content-Type'];
+  }
 
   const config = {
     ...options,
