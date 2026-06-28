@@ -22,7 +22,9 @@ export async function apiRequest(path, options = {}) {
     const response = await fetch(url, config);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      error.code = errorData.code;
+      throw error;
     }
 
     // For DELETE or empty responses
