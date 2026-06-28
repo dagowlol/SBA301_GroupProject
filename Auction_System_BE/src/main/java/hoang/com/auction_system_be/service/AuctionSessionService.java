@@ -4,7 +4,9 @@ import hoang.com.auction_system_be.dto.request.AuctionSessionRequest;
 import hoang.com.auction_system_be.dto.request.AuctionSessionUpdateRequest;
 import hoang.com.auction_system_be.dto.request.PlaceBidRequest;
 import hoang.com.auction_system_be.dto.response.AuctionSessionDetailResponse;
+import hoang.com.auction_system_be.dto.response.AuctionSessionListResponse;
 import hoang.com.auction_system_be.dto.response.AuctionSessionResponse;
+import hoang.com.auction_system_be.dto.response.CursorPageResponse;
 import hoang.com.auction_system_be.enums.SessionStatus;
 
 public interface AuctionSessionService {
@@ -17,7 +19,8 @@ public interface AuctionSessionService {
 
     AuctionSessionResponse createSession(AuctionSessionRequest request);
 
-    hoang.com.auction_system_be.dto.response.CursorPageResponse<hoang.com.auction_system_be.dto.response.AuctionSessionListResponse> getSessions(Long cursor, int size, String search, SessionStatus status);
+    CursorPageResponse<AuctionSessionListResponse> getSessions(Long cursor, int size, String search,
+            SessionStatus status);
 
     AuctionSessionResponse getSessionById(Long id);
 
