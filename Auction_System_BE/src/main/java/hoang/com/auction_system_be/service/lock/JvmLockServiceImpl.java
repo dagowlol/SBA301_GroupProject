@@ -1,4 +1,4 @@
-package hoang.com.auction_system_be.service.impl;
+package hoang.com.auction_system_be.service.session;
 
 import hoang.com.auction_system_be.service.DistributedLockService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -53,6 +53,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.warn("Invalid JWT token: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
+            String origin = request.getHeader("Origin");
+            if (origin != null) {
+                response.setHeader("Access-Control-Allow-Origin", origin);
+            } else {
+                response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+            }
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "*");
             response.getWriter()
                     .write("{\"status\":\"FAILURE\",\"message\":\"Invalid or expired token\",\"httpStatus\":401}");
             return;

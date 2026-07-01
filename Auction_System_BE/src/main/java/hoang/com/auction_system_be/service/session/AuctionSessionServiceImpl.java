@@ -42,6 +42,8 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.sql.Timestamp;
 import java.util.stream.Collectors;
 
 @Service
@@ -274,11 +276,16 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
 
                 Pageable pageable = PageRequest.of(0, size + 1);
 
+                boolean hasCursor = cursor != null;
+                Long safeCursor = hasCursor ? cursor : 0L;
+
                 boolean hasStatus = status != null;
+                SessionStatus safeStatus = hasStatus ? status : SessionStatus.SCHEDULED;
+
                 boolean hasSearch = !cleanSearch.isEmpty();
 
                 List<AuctionSessionListResponse> sessions = auctionSessionRepository.findOptimizedSessions(
-                        cursor, hasStatus, status, hasSearch, cleanSearch, pageable);
+                        hasCursor, safeCursor, hasStatus, safeStatus, hasSearch, cleanSearch, pageable);
 
                 boolean hasNext = sessions.size() > size;
                 if (hasNext) {
@@ -316,40 +323,44 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
 
                 boolean isActive = session.getStatus() == SessionStatus.ACTIVE;
 
-                if (request.getEndTime() != null) {
-                        if (isActive) {
-                                if (!request.getEndTime().isAfter(LocalDateTime.now())) {
-                                        throw new AppException(ErrorCode.SESSION_CANNOT_ROLLBACK_END_TIME);
-                                }
-                        } else {
-                                if (!request.getEndTime().isAfter(session.getStartTime())) {
-                                        throw new AppException(ErrorCode.SESSION_INVALID_END_TIME);
-                                }
+                // 1. Effective State & Time Calculation
+                LocalDateTime effectiveEndTime = request.getEndTime() != null ? request.getEndTime() : session.getEndTime();
+                SessionStatus effectiveStatus = request.getStatus() != null ? request.getStatus() : session.getStatus();
+
+                // 2. Strict End Time Validation for SCHEDULED and ACTIVE
+                if (effectiveStatus == SessionStatus.SCHEDULED || effectiveStatus == SessionStatus.ACTIVE) {
+                        if (!effectiveEndTime.isAfter(LocalDateTime.now())) {
+                                throw new AppException(ErrorCode.SESSION_CANNOT_ACTIVATE_PAST_END_TIME);
                         }
+                        if (!effectiveEndTime.isAfter(session.getStartTime())) {
+                                throw new AppException(ErrorCode.SESSION_INVALID_END_TIME);
+                        }
+                }
+
+                // 3. Apply Updates
+                if (request.getEndTime() != null) {
                         session.setEndTime(request.getEndTime());
                 }
 
-                if (!isActive) {
-                        if (request.getReservePrice() != null) {
-                                session.setReservePrice(request.getReservePrice());
-                        }
-                        if (request.getMinimumIncrement() != null) {
-                                session.setMinimumIncrement(request.getMinimumIncrement());
-                        }
-                        if (request.getAntiSnipeWindowSeconds() != null) {
-                                session.setAntiSnipeWindowSeconds(request.getAntiSnipeWindowSeconds());
-                        }
-                        if (request.getAntiSnipeExtensionSeconds() != null) {
-                                session.setAntiSnipeExtensionSeconds(request.getAntiSnipeExtensionSeconds());
-                        }
-                }
-
                 if (request.getStatus() != null && request.getStatus() != session.getStatus()) {
-                        if (request.getStatus() == SessionStatus.CANCELLED
-                                        && request.getCancellationReason() != null) {
+                        if (request.getStatus() == SessionStatus.CANCELLED && request.getCancellationReason() != null) {
                                 session.setCancellationReason(request.getCancellationReason());
                         }
                         session.setStatus(request.getStatus());
+                }
+
+                // 4. Financial & Strategy Parameters
+                if (request.getReservePrice() != null) {
+                        session.setReservePrice(request.getReservePrice());
+                }
+                if (request.getMinimumIncrement() != null) {
+                        session.setMinimumIncrement(request.getMinimumIncrement());
+                }
+                if (request.getAntiSnipeWindowSeconds() != null) {
+                        session.setAntiSnipeWindowSeconds(request.getAntiSnipeWindowSeconds());
+                }
+                if (request.getAntiSnipeExtensionSeconds() != null) {
+                        session.setAntiSnipeExtensionSeconds(request.getAntiSnipeExtensionSeconds());
                 }
 
                 AuctionSession updated = auctionSessionRepository.save(session);
@@ -452,5 +463,47 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 if (participant == null || participant.getUser() == null) return null;
                 User winner = participant.getUser();
                 return winner.getFirstName() + " " + winner.getLastName();
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<AuctionSessionListResponse> getDeletedSessions() {
+                List<Object[]> rows = auctionSessionRepository.findDeletedSessionsRaw();
+                List<AuctionSessionListResponse> result = new ArrayList<>();
+                for (Object[] row : rows) {
+                        result.add(AuctionSessionListResponse.builder()
+                                        .id(((Number) row[0]).longValue())
+                                        .itemId(((Number) row[1]).longValue())
+                                        .itemName((String) row[2])
+                                        .itemDescription((String) row[3])
+                                        .reservePrice(row[4] != null ? new BigDecimal(row[4].toString()) : null)
+                                        .currentHighestBid(row[5] != null ? new BigDecimal(row[5].toString()) : null)
+                                        .status(SessionStatus.valueOf((String) row[6]))
+                                        .startTime(row[7] instanceof Timestamp ? ((Timestamp) row[7]).toLocalDateTime() : (LocalDateTime) row[7])
+                                        .endTime(row[8] instanceof Timestamp ? ((Timestamp) row[8]).toLocalDateTime() : (LocalDateTime) row[8])
+                                        .build());
+                }
+                return result;
+        }
+
+        @Override
+        @Transactional
+        @Caching(evict = {
+            @CacheEvict(value = "auction_session_detail", key = "'basic_' + #id"),
+            @CacheEvict(value = "auction_session_detail", key = "'detail_' + #id")
+        })
+        public void restoreSession(Long id) {
+                int updated = auctionSessionRepository.restoreSession(id);
+                if (updated == 0) {
+                        throw new AppException(ErrorCode.SESSION_NOT_FOUND);
+                }
+                log.info("Restored auction session id={}", id);
+                Long staffId = authenticationService.getCurrentUserId();
+                if (staffId != null) {
+                        eventPublisher.publishEvent(new AuditLogEvent(this, staffId,
+                                        AuditLogEvent.ACTION_SESSION_UPDATED,
+                                        AuditLogEvent.ENTITY_AUCTION_SESSION, id,
+                                        "Restored session id=" + id));
+                }
         }
 }

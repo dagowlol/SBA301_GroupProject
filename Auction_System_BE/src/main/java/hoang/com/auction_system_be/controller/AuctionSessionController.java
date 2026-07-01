@@ -1,6 +1,5 @@
 package hoang.com.auction_system_be.controller;
 
-import hoang.com.auction_system_be.annotation.Idempotent;
 import hoang.com.auction_system_be.dto.request.AuctionSessionRequest;
 import hoang.com.auction_system_be.dto.request.AuctionSessionUpdateRequest;
 import hoang.com.auction_system_be.dto.response.ApiResponse;
@@ -9,109 +8,103 @@ import hoang.com.auction_system_be.dto.response.AuctionSessionListResponse;
 import hoang.com.auction_system_be.dto.response.AuctionSessionResponse;
 import hoang.com.auction_system_be.dto.response.CursorPageResponse;
 import hoang.com.auction_system_be.enums.SessionStatus;
-import hoang.com.auction_system_be.service.impl.AuctionSessionServiceImpl;
+import hoang.com.auction_system_be.service.session.AuctionSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/sessions")
+@RequestMapping("/api/v1/auction-sessions")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Tag(name = "Auction Session Controller", description = "APIs for auction session lifecycle management (Staff/Admin)")
+@Tag(name = "Auction Session Controller", description = "APIs for auction session operations")
 public class AuctionSessionController {
+    AuctionSessionService auctionSessionService;
 
-        AuctionSessionServiceImpl auctionSessionService;
+    // ─── Public endpoints ─────────────────────────────────────────────────
+    @GetMapping("/{id}/detail")
+    @Operation(summary = "Get auction session detail", description = "Returns auction session details including item info, current price, winner, and latest 10 bid logs.")
+    public ApiResponse<AuctionSessionDetailResponse> getAuctionSessionDetail(
+            @PathVariable Long id) {
+        return ApiResponse.<AuctionSessionDetailResponse>builder()
+                .result(auctionSessionService.getAuctionSessionDetail(id))
+                .build();
+    }
 
-        // ─── Public / Authenticated READ endpoints ────────────────────────────
+    // ─── Staff / Admin CRUD ───────────────────────────────────────────────
+    @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "List auction sessions", description = "Returns a cursor-paginated list of auction sessions with optional search and status filter.")
+    public ApiResponse<CursorPageResponse<AuctionSessionListResponse>> getSessions(
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) SessionStatus status) {
+        return ApiResponse.<CursorPageResponse<AuctionSessionListResponse>>builder()
+                .result(auctionSessionService.getSessions(cursor, size, search, status))
+                .build();
+    }
 
-        @GetMapping("/{id}/detail")
-        @Operation(summary = "Get real-time session detail", description = "Returns session info + current price + winner + latest 10 bids (used by WebSocket room).")
-        public ApiResponse<AuctionSessionDetailResponse> getAuctionSessionDetail(@PathVariable Long id) {
-                return ApiResponse.<AuctionSessionDetailResponse>builder()
-                                .result(auctionSessionService.getAuctionSessionDetail(id))
-                                .build();
-        }
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "Get session by ID", description = "Returns full details of a single auction session by its ID.")
+    public ApiResponse<AuctionSessionResponse> getSessionById(@PathVariable Long id) {
+        return ApiResponse.<AuctionSessionResponse>builder()
+                .result(auctionSessionService.getSessionById(id))
+                .build();
+    }
 
-        // ─── Staff/Admin CRUD endpoints ───────────────────────────────────────
+    @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create auction session", description = "Creates a new auction session for an approved item.")
+    public ApiResponse<AuctionSessionResponse> createSession(
+            @RequestBody AuctionSessionRequest request) {
+        return ApiResponse.<AuctionSessionResponse>builder()
+                .result(auctionSessionService.createSession(request))
+                .build();
+    }
 
-        @PostMapping
-        @PreAuthorize("hasAnyAuthority('AUCTION_MANAGER', 'ADMIN')")
-        @Idempotent
-        @Operation(summary = "Create auction session", description = """
-                        Creates a new SCHEDULED session for an APPROVED item.
-                        - Requires **Idempotency-Key** header (UUID) to prevent double-submit.
-                        - Returns **201 Created** with a **Location** header pointing to the new resource.
-                        - start_time must be ≥ 5 minutes from now (scheduler buffer).
-                        """)
-        public ResponseEntity<ApiResponse<AuctionSessionResponse>> createSession(
-                        @RequestBody @Valid AuctionSessionRequest request,
-                        UriComponentsBuilder ucb) {
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "Update auction session", description = "Updates an existing auction session (end time, reserve price, status, etc.).")
+    public ApiResponse<AuctionSessionResponse> updateSession(
+            @PathVariable Long id,
+            @RequestBody AuctionSessionUpdateRequest request) {
+        return ApiResponse.<AuctionSessionResponse>builder()
+                .result(auctionSessionService.updateSession(id, request))
+                .build();
+    }
 
-                AuctionSessionResponse created = auctionSessionService.createSession(request);
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "Delete auction session", description = "Soft-deletes an auction session. Active sessions cannot be deleted.")
+    public ApiResponse<Void> deleteSession(@PathVariable Long id) {
+        auctionSessionService.deleteSession(id);
+        return ApiResponse.<Void>builder().build();
+    }
 
-                URI location = ucb.path("/api/v1/sessions/{id}")
-                                .buildAndExpand(created.getId())
-                                .toUri();
+    @GetMapping("/deleted")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "List deleted auction sessions", description = "Returns a list of soft-deleted auction sessions.")
+    public ApiResponse<List<AuctionSessionListResponse>> getDeletedSessions() {
+        return ApiResponse.<List<AuctionSessionListResponse>>builder()
+                .result(auctionSessionService.getDeletedSessions())
+                .build();
+    }
 
-                ApiResponse<AuctionSessionResponse> body = ApiResponse.<AuctionSessionResponse>builder()
-                                .result(created)
-                                .message("Auction session created successfully")
-                                .build();
-
-                return ResponseEntity.created(location).body(body);
-        }
-
-        @GetMapping
-        @PreAuthorize("hasAnyAuthority('AUCTION_MANAGER', 'ADMIN')")
-        @Operation(summary = "Get list of sessions", description = "Keyset paginated list. Supports fuzzy search by item name and filter by status.")
-        public ApiResponse<CursorPageResponse<AuctionSessionListResponse>> getSessions(
-                        @RequestParam(required = false) Long cursor,
-                        @RequestParam(defaultValue = "10") int size,
-                        @RequestParam(required = false) String search,
-                        @RequestParam(required = false) SessionStatus status) {
-                return ApiResponse.<CursorPageResponse<AuctionSessionListResponse>>builder()
-                                .result(auctionSessionService.getSessions(cursor, size, search, status))
-                                .build();
-        }
-
-        @GetMapping("/{id}")
-        @PreAuthorize("hasAnyAuthority('AUCTION_MANAGER', 'ADMIN')")
-        @Operation(summary = "Get session by ID", description = "Full configuration detail of a specific session for Staff/Admin.")
-        public ApiResponse<AuctionSessionResponse> getSessionById(@PathVariable Long id) {
-                return ApiResponse.<AuctionSessionResponse>builder()
-                                .result(auctionSessionService.getSessionById(id))
-                                .build();
-        }
-
-        @PutMapping("/{id}")
-        @PreAuthorize("hasAnyAuthority('AUCTION_MANAGER', 'ADMIN')")
-        @Operation(summary = "Update session", description = "Update config or transition status. When ACTIVE, only end_time extension is allowed.")
-        public ApiResponse<AuctionSessionResponse> updateSession(
-                        @PathVariable Long id,
-                        @RequestBody @Valid AuctionSessionUpdateRequest request) {
-                return ApiResponse.<AuctionSessionResponse>builder()
-                                .result(auctionSessionService.updateSession(id, request))
-                                .message("Auction session updated successfully")
-                                .build();
-        }
-
-        @DeleteMapping("/{id}")
-        @PreAuthorize("hasAnyAuthority('AUCTION_MANAGER', 'ADMIN')")
-        @Operation(summary = "Soft-delete session", description = "Sets deleted_at. Cannot delete an ACTIVE session.")
-        public ApiResponse<Void> deleteSession(@PathVariable Long id) {
-                auctionSessionService.deleteSession(id);
-                return ApiResponse.<Void>builder()
-                                .message("Auction session deleted successfully")
-                                .build();
-        }
+    @PatchMapping("/{id}/restore")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "Restore auction session", description = "Restores a soft-deleted auction session.")
+    public ApiResponse<Void> restoreSession(@PathVariable Long id) {
+        auctionSessionService.restoreSession(id);
+        return ApiResponse.<Void>builder().build();
+    }
 }
