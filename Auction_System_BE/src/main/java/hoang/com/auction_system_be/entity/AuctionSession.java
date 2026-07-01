@@ -17,9 +17,14 @@ import java.util.List;
 @Table(name = "auction_sessions", indexes = {
         @Index(name = "idx_session_item", columnList = "item_id"),
         @Index(name = "idx_session_status", columnList = "status"),
-        @Index(name = "idx_session_time", columnList = "start_time, end_time")
+        @Index(name = "idx_session_time", columnList = "start_time, end_time"),
+        @Index(name = "idx_session_deleted_status_start", columnList = "deleted_at, status, start_time"),
+        @Index(name = "idx_session_item_status", columnList = "item_id, status"),
+        @Index(name = "idx_session_status_starttime", columnList = "status, start_time"),
+        @Index(name = "idx_session_status_endtime", columnList = "status, end_time"),
+        @Index(name = "idx_session_list_keyset", columnList = "deleted_at, status, id DESC")
 })
-@SQLDelete(sql = "UPDATE auction_sessions SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLDelete(sql = "UPDATE auction_sessions SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND version = ?")
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter

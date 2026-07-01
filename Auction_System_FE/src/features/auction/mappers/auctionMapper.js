@@ -22,6 +22,8 @@ export const auctionMapper = {
       itemImage: raw.itemImage || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=60',
       description: description,
       endTime: raw.endTime,
+      reservePrice: parseFloat(raw.reservePrice) || 0,
+      minimumIncrement: parseFloat(raw.minimumIncrement) || 0,
       currentPrice: parseFloat(raw.currentPrice) || 0,
       currentWinnerName: raw.currentWinnerName || null,
       recentBids: recentBidsRaw.map((b, idx) => ({
