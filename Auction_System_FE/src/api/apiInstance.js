@@ -18,11 +18,20 @@ export async function apiRequest(path, options = {}) {
   const csrfToken = getCookie('csrf_token');
 
   const headers = {
-    'Content-Type': 'application/json',
     ...(storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {}),
     ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
     ...options.headers,
   };
+
+  // Only set application/json if not using FormData and not explicitly overridden
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  // If headers['Content-Type'] is explicitly set to null/undefined, delete it
+  if (!headers['Content-Type']) {
+      delete headers['Content-Type'];
+  }
 
   const config = {
     credentials: 'include', // Ensure cookies (refresh_token, csrf_token) are sent
