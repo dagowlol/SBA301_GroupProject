@@ -1,4 +1,12 @@
-package hoang.com.auction_system_be.service.session;
+package hoang.com.auction_system_be.service.lock;
+
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
@@ -7,13 +15,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 @Service
 @ConditionalOnProperty(name = "app.lock.type", havingValue = "redis", matchIfMissing = true)

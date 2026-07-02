@@ -57,6 +57,8 @@ public enum ErrorCode {
     SESSION_INVALID_STATUS_TRANSITION(6013, "Invalid session status transition", HttpStatus.BAD_REQUEST),
     SESSION_CANNOT_REDUCE_END_TIME(6014, "Cannot reduce the end time of an active auction session", HttpStatus.BAD_REQUEST),
     TOO_MANY_REQUESTS(6015, "Too many requests, please slow down", HttpStatus.TOO_MANY_REQUESTS),
+    INVALID_AUTO_BID_MAX_AMOUNT(6016, "Mức giá tối đa phải lớn hơn giá hiện tại cộng với bước giá tối thiểu", HttpStatus.BAD_REQUEST),
+    INVALID_AUTO_BID_INCREMENT(6017, "Bước giá tự động tăng phải lớn hơn hoặc bằng bước giá tối thiểu của phòng đấu giá", HttpStatus.BAD_REQUEST),
 
     // Payment
     PAYMENT_NOT_FOUND(5001, "Payment not found", HttpStatus.NOT_FOUND),

@@ -34,6 +34,9 @@ public class AuctionSessionMapper {
                 .currentPrice(session.getCurrentHighestBid())
                 .currentWinnerName(currentWinnerName)
                 .bidLogs(bidLogs)
+                .status(session.getStatus())
+                .minimumIncrement(session.getMinimumIncrement())
+                .reservePrice(session.getReservePrice())
                 .build();
     }
 

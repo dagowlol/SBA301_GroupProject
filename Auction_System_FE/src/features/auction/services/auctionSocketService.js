@@ -77,9 +77,10 @@ export const auctionSocketService = {
    * @param {function} onBidReceived - Callback triggered when a new bid is broadcasted
    * @param {function} onErrorReceived - Callback triggered when an error occurs for the user
    */
-  subscribeAuction: (sessionId, onBidReceived, onErrorReceived) => {
+  subscribeAuction: (sessionId, onBidReceived, onErrorReceived, onAutoBidLimitReached) => {
     const topicDest = `/topic/auction/${sessionId}`;
     const errorDest = `/user/queue/errors`;
+    const limitDest = `/user/queue/auto-bid/limit-reached`;
 
     const registerSub = (dest, callback) => {
       let stompSub = null;
@@ -107,9 +108,20 @@ export const auctionSocketService = {
       }
     });
 
+    if (onAutoBidLimitReached) {
+      registerSub(limitDest, (message) => {
+        try {
+          const payload = JSON.parse(message.body);
+          onAutoBidLimitReached(payload);
+        } catch (err) {
+          console.error('Failed to parse auto-bid limit message:', err);
+        }
+      });
+    }
+
     // Return an unsubscribe handler
     return () => {
-      [topicDest, errorDest].forEach((dest) => {
+      [topicDest, errorDest, limitDest].forEach((dest) => {
         const subObj = currentSubscriptions[dest];
         if (subObj) {
           if (subObj.stompSub) {

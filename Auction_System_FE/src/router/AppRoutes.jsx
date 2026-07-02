@@ -13,6 +13,9 @@ import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
 import CreateItemRequest from '../features/user/pages/CreateItemRequest';
 import SessionManagement from '../features/staff/pages/SessionManagement';
+import BidMonitoring from '../features/staff/pages/BidMonitoring';
+// import AutoBid from '../features/staff/pages/AutoBid';
+import UserManagement from '../features/staff/pages/UserManagement';
 
 import HomePage from '../features/catalog/pages/HomePage';
 
@@ -42,6 +45,9 @@ export default function AppRoutes() {
           <Route path="categories" element={<CategoryManagement />} />
           <Route path="items" element={<ItemApproval />} />
           <Route path="sessions" element={<SessionManagement />} />
+          <Route path="bid-monitoring" element={<BidMonitoring />} />
+          {/* <Route path="autobid" element={<AutoBid />} /> */}
+          <Route path="users" element={<UserManagement />} />
         </Route>
 
         {/* Fallback Catch-all Route */}
