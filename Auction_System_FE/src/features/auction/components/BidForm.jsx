@@ -1,25 +1,31 @@
 import { useState, useContext } from 'react';
-import { Form, Button, Alert } from 'react-bootstrap';
-import { Hammer, LogIn } from 'lucide-react';
+import { Form, Button, Alert, InputGroup, Spinner } from 'react-bootstrap';
+import { Hammer, LogIn, Cpu, XCircle } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
 
 /**
  * BidForm Component.
  * Handlers bid amount inputs, validations, and placement commands.
- *
- * @param {Object} props
- * @param {number} props.currentPrice - Current highest bid amount or starting price
- * @param {function} props.onPlaceBid - Callback function when bid is valid and submitted
- * @param {boolean} props.isEnded - Whether the auction has ended
  */
-export default function BidForm({ currentPrice, onPlaceBid, isEnded }) {
+export default function BidForm({ 
+  currentPrice, 
+  minimumIncrement, 
+  onPlaceBid, 
+  isEnded,
+  autoBidConfig,
+  onConfigureAutoBid,
+  onDisableAutoBid
+}) {
   const { isAuthenticated, openAuthModal } = useContext(AuthContext);
   const [bidValue, setBidValue] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const minBidAllowed = currentPrice > 0 ? currentPrice + 1 : 1; // Assuming +1 increment fallback
+  const minBidAllowed = currentPrice 
+    ? currentPrice + minimumIncrement 
+    : minimumIncrement;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -30,50 +36,46 @@ export default function BidForm({ currentPrice, onPlaceBid, isEnded }) {
 
     const value = parseFloat(bidValue);
     if (isNaN(value)) {
-      setErrorMsg('Please enter a valid numeric amount.');
+      setErrorMsg('Vui lòng nhập số tiền hợp lệ.');
       return;
     }
 
-    if (value <= 0) {
-      setErrorMsg('Bid amount must be a positive value.');
+    if (value < minBidAllowed) {
+      setErrorMsg(`Giá đặt phải từ $${minBidAllowed.toLocaleString()} trở lên.`);
       return;
     }
 
-    if (value <= currentPrice) {
-      setErrorMsg(`Your bid must be greater than the current price of $${currentPrice.toLocaleString()}.`);
-      return;
+    setSubmitting(true);
+    try {
+      const success = onPlaceBid(value);
+      if (success) {
+        setBidValue('');
+      } else {
+        setErrorMsg('Mất kết nối WebSocket. Vui lòng tải lại trang.');
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'Đặt giá thất bại.');
+    } finally {
+      setSubmitting(false);
     }
-
-    onPlaceBid(value);
-    setBidValue('');
-  };
-
-  const handleInputChange = (e) => {
-    const val = e.target.value;
-    
-    // Prevent typing non-numeric negative values in input
-    if (val !== '' && parseFloat(val) < 0) return;
-    
-    setBidValue(val);
-    if (errorMsg) setErrorMsg('');
   };
 
   if (isEnded) {
     return (
-      <Alert variant="secondary" className="text-center py-3 mb-0 shadow-xs">
-        <p className="fw-semibold mb-0 text-muted">Bidding is closed as the auction has ended.</p>
+      <Alert variant="secondary" className="text-center py-3 mb-0 shadow-sm rounded-4 border-0">
+        <p className="fw-semibold mb-0 text-muted">Phiên đấu giá đã kết thúc. Đóng đặt giá.</p>
       </Alert>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="border p-4 rounded bg-white shadow-sm text-center">
-        <h5 className="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2">
+      <div className="border p-4 rounded-4 bg-white shadow-sm text-center">
+        <h5 className="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2" style={{ color: '#004e64' }}>
           <Hammer size={18} style={{ color: '#004e64' }} />
-          <span>Place Your Bid</span>
+          <span>Tham Gia Đấu Giá</span>
         </h5>
-        <p className="text-muted small mb-4">You must be logged in to bid on this live session.</p>
+        <p className="text-muted small mb-4">Vui lòng đăng nhập để tham gia đấu giá trực tiếp.</p>
         <Button 
           variant="dark" 
           onClick={openAuthModal}
@@ -81,54 +83,91 @@ export default function BidForm({ currentPrice, onPlaceBid, isEnded }) {
           style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
         >
           <LogIn size={16} />
-          <span>Sign In to Place Bid</span>
+          <span>Đăng nhập để đặt giá</span>
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="border p-4 rounded bg-white shadow-sm">
-      <h5 className="fw-bold mb-3 d-flex align-items-center gap-2">
-        <Hammer size={18} style={{ color: '#004e64' }} />
-        <span>Place Your Bid</span>
-      </h5>
+    <div className="border p-4 rounded-4 bg-white shadow-sm">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: '#004e64' }}>
+          <Hammer size={18} style={{ color: '#004e64' }} />
+          <span>Tham Gia Đấu Giá</span>
+        </h5>
+        <Button 
+          variant="outline-primary" 
+          size="sm" 
+          className="d-flex align-items-center gap-1 px-3 py-1 rounded-pill"
+          onClick={onConfigureAutoBid}
+          style={{ fontSize: '0.8rem', fontWeight: 600 }}
+        >
+          <Cpu size={14} />
+          <span>Auto-Bid</span>
+        </Button>
+      </div>
+
+      {/* Robot Status (AC3) */}
+      {autoBidConfig && autoBidConfig.isActive && (
+        <div className="alert alert-info py-2 px-3 rounded-4 d-flex justify-content-between align-items-center mb-3 border-0 small">
+          <div className="d-flex align-items-center gap-2 text-info-emphasis">
+            <Cpu size={16} className="text-info animate-pulse" />
+            <span className="fw-medium">
+              Robot đang bật - Giới hạn: {autoBidConfig.maxBidAmount.toLocaleString('vi-VN')} VNĐ
+            </span>
+          </div>
+          <Button 
+            variant="link" 
+            className="text-danger p-0 d-flex align-items-center gap-1 text-decoration-none fw-bold shadow-none"
+            onClick={onDisableAutoBid}
+            style={{ fontSize: '0.8rem' }}
+          >
+            <XCircle size={14} />
+            <span>Hủy chế độ tự động</span>
+          </Button>
+        </div>
+      )}
 
       {errorMsg && (
-        <Alert variant="danger" className="py-2 small mb-3">
+        <Alert variant="danger" className="py-2 small mb-3 border-0">
           {errorMsg}
         </Alert>
       )}
 
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="bidAmountInput">
-          <Form.Label className="small text-muted">
-            Bid Amount (USD) - Must be greater than ${currentPrice.toLocaleString()}
-          </Form.Label>
-          <Form.Control
-            type="number"
-            step="0.01"
-            placeholder={`Enter $${minBidAllowed.toLocaleString()} or more...`}
-            value={bidValue}
-            onChange={handleInputChange}
-            required
-            disabled={isEnded}
-            style={{ fontSize: '1.05rem', fontWeight: 500 }}
-          />
+          <InputGroup size="lg" className="shadow-xs rounded-3 overflow-hidden">
+            <InputGroup.Text className="bg-white text-muted fw-bold border-end-0 ps-3">$</InputGroup.Text>
+            <Form.Control
+              type="number"
+              step="0.01"
+              placeholder={`Nhập $${minBidAllowed.toLocaleString()} hoặc nhiều hơn...`}
+              value={bidValue}
+              onChange={(e) => setBidValue(e.target.value)}
+              required
+              disabled={isEnded || submitting}
+              style={{ fontSize: '1rem', fontWeight: 500 }}
+            />
+          </InputGroup>
+          <Form.Text className="text-muted small mt-2 ms-1 d-block">
+            Bước giá tối thiểu: <strong>${minimumIncrement.toLocaleString()}</strong>
+          </Form.Text>
         </Form.Group>
         
         <Button 
           variant="dark" 
           type="submit" 
-          disabled={isEnded}
-          className="w-100 py-2 text-uppercase fw-semibold"
+          disabled={isEnded || submitting}
+          className="w-100 py-3 text-uppercase fw-bold rounded-3 shadow-xs"
           style={{ 
             backgroundColor: '#004e64', 
             borderColor: '#004e64', 
+            fontSize: '0.9rem',
             transition: 'all 0.2s ease'
           }}
         >
-          Confirm Bid
+          {submitting ? <Spinner size="sm" animation="border" /> : 'Xác Nhận Đặt Giá'}
         </Button>
       </Form>
     </div>

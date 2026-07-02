@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { auctionSocketService } from '../services/auctionSocketService';
 
-export function useBidWebSocket(sessionId) {
+export function useBidWebSocket(sessionId, onLimitReached) {
   const [latestBid, setLatestBid] = useState(null);
   const [wsError, setWsError] = useState(null);
   const isSubscribedRef = useRef(false);
@@ -25,6 +25,11 @@ export function useBidWebSocket(sessionId) {
         },
         (errorObj) => {
           setWsError(errorObj.message || 'An error occurred while placing your bid.');
+        },
+        (limitPayload) => {
+          if (onLimitReached) {
+            onLimitReached(limitPayload);
+          }
         }
       );
     });

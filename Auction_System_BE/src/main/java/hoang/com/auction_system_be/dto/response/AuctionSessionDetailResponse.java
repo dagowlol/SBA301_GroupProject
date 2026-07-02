@@ -1,6 +1,7 @@
 package hoang.com.auction_system_be.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import hoang.com.auction_system_be.enums.SessionStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -25,4 +26,7 @@ public class AuctionSessionDetailResponse {
     BigDecimal currentPrice;
     String currentWinnerName;
     List<BidLogResponse> bidLogs;
+    SessionStatus status;
+    BigDecimal minimumIncrement;
+    BigDecimal reservePrice;
 }

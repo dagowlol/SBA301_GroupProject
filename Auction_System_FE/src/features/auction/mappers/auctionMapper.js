@@ -26,6 +26,7 @@ export const auctionMapper = {
       minimumIncrement: parseFloat(raw.minimumIncrement) || 0,
       currentPrice: parseFloat(raw.currentPrice) || 0,
       currentWinnerName: raw.currentWinnerName || null,
+      status: raw.status || 'ACTIVE',
       recentBids: recentBidsRaw.map((b, idx) => ({
         bidId: b.bidId || idx,
         bidderName: b.bidderName || b.bidder || 'Anonymous',

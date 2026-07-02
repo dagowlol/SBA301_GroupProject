@@ -29,6 +29,7 @@ public class SecurityConfig {
                         "/api/v1/auth/**",
                         "/api/v1/payments/status",
                         "/api/v1/payments/vnpay/ipn",
+                        "/ws-auction/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/v3/api-docs/**"

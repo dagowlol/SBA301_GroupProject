@@ -40,7 +40,6 @@ public class AuctionSessionController {
 
     // ─── Staff / Admin CRUD ───────────────────────────────────────────────
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
     @Operation(summary = "List auction sessions", description = "Returns a cursor-paginated list of auction sessions with optional search and status filter.")
     public ApiResponse<CursorPageResponse<AuctionSessionListResponse>> getSessions(
             @RequestParam(required = false) Long cursor,
@@ -53,7 +52,6 @@ public class AuctionSessionController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
     @Operation(summary = "Get session by ID", description = "Returns full details of a single auction session by its ID.")
     public ApiResponse<AuctionSessionResponse> getSessionById(@PathVariable Long id) {
         return ApiResponse.<AuctionSessionResponse>builder()

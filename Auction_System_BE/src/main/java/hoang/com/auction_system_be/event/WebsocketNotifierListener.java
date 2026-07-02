@@ -60,4 +60,15 @@ public class WebsocketNotifierListener {
                 "ENDED");
         log.info("Broadcast SESSION_ENDED via event for session id={}", event.getSessionId());
     }
+
+    @Async
+    @EventListener
+    public void onAutoBidLimitReached(AutoBidLimitReachedEvent event) {
+        log.info("Sending auto-bid limit reached message to user={}", event.getUserId());
+        messagingTemplate.convertAndSendToUser(
+                event.getUserId().toString(),
+                "/queue/auto-bid/limit-reached",
+                new hoang.com.auction_system_be.dto.response.AutoBidLimitReachedPayload(event.getSessionId(), event.getMaxBidAmount())
+        );
+    }
 }

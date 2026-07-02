@@ -30,6 +30,10 @@ public interface AuctionSessionRepository extends JpaRepository<AuctionSession, 
         @Query("SELECT s FROM AuctionSession s WHERE s.id = :id")
         Optional<AuctionSession> findByIdWithPessimisticLock(@Param("id") Long id);
 
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("SELECT s FROM AuctionSession s WHERE s.id = :id")
+        Optional<AuctionSession> findByIdForUpdate(@Param("id") Long id);
+
         @EntityGraph(attributePaths = {
                         "item", "item.images",
                         "currentWinnerParticipant", "currentWinnerParticipant.user",

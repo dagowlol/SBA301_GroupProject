@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import hoang.com.auction_system_be.service.DistributedLockService;
+import hoang.com.auction_system_be.service.autobid.AutoBidService;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -64,6 +65,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
         ApplicationEventPublisher eventPublisher;
         TransactionTemplate transactionTemplate;
         DistributedLockService lockService;
+        AutoBidService autoBidService;
 
         // ─── WebSocket / Bid Logic ────────────────────────────────────────────
 
@@ -114,6 +116,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                     sessionId, request.getUserId(), request.getBidAmount());
 
             broadcastBidEvent(session, user, request.getBidAmount(), now);
+            autoBidService.triggerAutoBids(sessionId);
 
         } catch (AppException e) {
             log.warn("Bid validation failed for session {}: {}", sessionId, e.getMessage());

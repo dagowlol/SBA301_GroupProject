@@ -1,14 +1,17 @@
 import { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { Container, Row, Col, Spinner, Alert, Card, Button, Badge, ListGroup, Form, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Spinner, Alert, Badge, Button, ListGroup, Card } from 'react-bootstrap';
 import { ArrowLeft, Crown, Clock, HelpCircle, AlertCircle } from 'lucide-react';
+import { message } from 'antd';
 
 import { AuthContext } from '../../../context/AuthContext';
 import { useAuctionSessionDetail } from '../hooks/useAuctionSessionDetail';
 import { useBidWebSocket } from '../hooks/useBidWebSocket';
 import CountdownTimer from '../components/CountdownTimer';
+import BidForm from '../components/BidForm';
+import AutoBidModal from '../components/AutoBidModal';
+import { auctionApi } from '../../../api/auctionApi';
 
 export default function AuctionRoom() {
   const { sessionId } = useParams();
@@ -17,8 +20,14 @@ export default function AuctionRoom() {
   const queryClient = useQueryClient();
 
   // Hooks
+  const [autoBidConfig, setAutoBidConfig] = useState(null);
+  const [autoBidModalOpen, setAutoBidModalOpen] = useState(false);
+
   const { data: sessionDetail, isLoading, error } = useAuctionSessionDetail(sessionId);
-  const { latestBid, wsError, placeBid, clearWsError } = useBidWebSocket(sessionId);
+  const { latestBid, wsError, placeBid, clearWsError } = useBidWebSocket(sessionId, (limitPayload) => {
+    message.warning('Robot đã tắt - Tài khoản của bạn đã chạm hạn mức tối đa của Auto-Bid.');
+    setAutoBidConfig(prev => prev ? { ...prev, isActive: false } : null);
+  });
 
   const [isTimeUp, setIsTimeUp] = useState(false);
 
@@ -40,36 +49,41 @@ export default function AuctionRoom() {
     }
   }, [latestBid, sessionId, queryClient]);
 
-  // Derived states
-  const isEnded = isTimeUp || sessionDetail?.status !== 'ACTIVE';
-  
-  const minRequiredBid = sessionDetail 
-    ? (sessionDetail.currentPrice || sessionDetail.reservePrice) + (sessionDetail.minimumIncrement || 0)
-    : 0;
-
-  // React Hook Form
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting }
-  } = useForm({
-    defaultValues: { amount: '' }
-  });
-
-  const onSubmit = async (data) => {
-    if (!user || !user.id) {
-      alert('Vui lòng đăng nhập để đặt giá.');
-      return;
+  // Load Auto-Bid configuration
+  useEffect(() => {
+    if (sessionId && user?.id) {
+      auctionApi.getAutoBidConfig(sessionId)
+        .then(config => {
+          if (config && config.id) {
+            setAutoBidConfig(config);
+          }
+        })
+        .catch(err => console.error("Error loading auto-bid config:", err));
     }
-    const success = placeBid(user.id, data.amount);
-    if (!success) {
-      alert('Mất kết nối WebSocket. Vui lòng tải lại trang.');
-    } else {
-      reset({ amount: '' });
+  }, [sessionId, user]);
+
+  const handleDisableAutoBid = async () => {
+    if (!autoBidConfig) return;
+    try {
+      const updated = await auctionApi.saveAutoBidConfig(sessionId, {
+        maxBidAmount: autoBidConfig.maxBidAmount,
+        bidIncrement: autoBidConfig.bidIncrement,
+        isActive: false
+      });
+      setAutoBidConfig(updated);
+      message.success('Đã hủy chế độ đặt giá tự động.');
+    } catch (err) {
+      message.error('Không thể hủy chế độ tự động: ' + err.message);
     }
   };
 
+  const handleConfigSaved = (newConfig) => {
+    setAutoBidConfig(newConfig);
+  };
+
+  // Derived states
+  const isEnded = isTimeUp || sessionDetail?.status !== 'ACTIVE';
+  
   const handleTimeUp = () => setIsTimeUp(true);
 
   if (isLoading) {
@@ -165,56 +179,17 @@ export default function AuctionRoom() {
           </Card>
 
           {/* Bid Form */}
-          <Card className="border shadow-sm rounded-4 mb-4 border-light">
-            <Card.Body className="p-4 p-xl-5">
-              <h5 className="fw-bold mb-4 d-flex align-items-center gap-2" style={{ color: '#004e64' }}>
-                Tham gia đấu giá
-              </h5>
-              <Form onSubmit={handleSubmit(onSubmit)}>
-                <Form.Group className="mb-4">
-                  <InputGroup size="lg" className="shadow-sm">
-                    <InputGroup.Text className="bg-white text-muted fw-bold border-end-0 ps-4">$</InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      step="0.01"
-                      className="border-start-0 font-monospace fw-semibold"
-                      style={{ boxShadow: 'none' }}
-                      placeholder={`Min: ${minRequiredBid.toFixed(2)}`}
-                      isInvalid={!!errors.amount}
-                      disabled={isEnded}
-                      {...register('amount', {
-                        required: "Vui lòng nhập số tiền",
-                        min: {
-                          value: minRequiredBid,
-                          message: `Giá đặt phải từ $${minRequiredBid.toFixed(2)} trở lên`
-                        }
-                      })}
-                    />
-                    <Form.Control.Feedback type="invalid" className="ps-2">
-                      {errors.amount?.message}
-                    </Form.Control.Feedback>
-                  </InputGroup>
-                  <Form.Text className="text-muted small mt-2 ms-2 d-flex gap-2">
-                    <span>Bước giá tối thiểu: <strong>${sessionDetail.minimumIncrement?.toFixed(2) || '0.00'}</strong></span>
-                  </Form.Text>
-                </Form.Group>
-                
-                <Button 
-                  type="submit" 
-                  size="lg"
-                  className="w-100 fw-bold py-3 rounded-3 shadow-sm text-uppercase tracking-wider transition-all" 
-                  style={{ backgroundColor: '#004e64', borderColor: '#004e64', fontSize: '0.95rem' }}
-                  disabled={isEnded || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <Spinner size="sm" animation="border" role="status" />
-                  ) : (
-                    isEnded ? 'Phiên Đã Đóng' : 'Place Bid'
-                  )}
-                </Button>
-              </Form>
-            </Card.Body>
-          </Card>
+          <div className="mb-4">
+            <BidForm
+              currentPrice={sessionDetail.currentPrice}
+              minimumIncrement={sessionDetail.minimumIncrement}
+              onPlaceBid={(amount) => placeBid(user?.id, amount)}
+              isEnded={isEnded}
+              autoBidConfig={autoBidConfig}
+              onConfigureAutoBid={() => setAutoBidModalOpen(true)}
+              onDisableAutoBid={handleDisableAutoBid}
+            />
+          </div>
 
           {/* Bid Logs */}
           <div>
@@ -248,6 +223,15 @@ export default function AuctionRoom() {
           </div>
         </Col>
       </Row>
+
+      <AutoBidModal
+        open={autoBidModalOpen}
+        onClose={() => setAutoBidModalOpen(false)}
+        sessionId={sessionId}
+        currentPrice={sessionDetail.currentPrice}
+        minimumIncrement={sessionDetail.minimumIncrement}
+        onConfigSaved={handleConfigSaved}
+      />
     </Container>
   );
 }
