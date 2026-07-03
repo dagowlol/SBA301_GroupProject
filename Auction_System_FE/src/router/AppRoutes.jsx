@@ -16,6 +16,7 @@ import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
 
 import HomePage from '../features/catalog/pages/HomePage';
+import MyAccountPage from '../features/user/pages/MyAccountPage';
 
 export default function AppRoutes() {
   return (
@@ -27,6 +28,7 @@ export default function AppRoutes() {
           <Route path="auction" element={<CatalogPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="auction/:sessionId" element={<AuctionRoom />} />
+          <Route path="my-account" element={<MyAccountPage />} />
           <Route element={<GuestRoute />}>
             <Route path="register" element={<RegisterPage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />
