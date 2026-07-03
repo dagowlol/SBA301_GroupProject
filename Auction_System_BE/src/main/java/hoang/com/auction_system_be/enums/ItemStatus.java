@@ -4,6 +4,9 @@ public enum ItemStatus {
     PENDING,
     APPROVED,
     REJECTED,
+    ACTIVE,
     SOLD,
-    ACTIVE
+    PAID,
+    SHIPPING,
+    DELIVERED
 }

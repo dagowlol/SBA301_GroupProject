@@ -3,13 +3,16 @@ import { Container, Row, Col, Nav, Card, Spinner, Button } from 'react-bootstrap
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../../context/AuthContext';
 import { userApi } from '../../../api/userApi';
-import { LogOut, User, Gavel, Upload, DollarSign, Settings } from 'lucide-react';
+import { LogOut, User, Gavel, Upload, DollarSign, Settings, MapPin, Key } from 'lucide-react';
+import ChangePasswordModal from './ChangePasswordModal';
+import EditAddressTab from './EditAddressTab';
 
 const TABS = [
   { id: 'auction-item', label: 'Auction Item', icon: Gavel },
   { id: 'upload-item', label: 'Upload item', icon: Upload },
   { id: 'earning-report', label: 'Earning Report', icon: DollarSign },
   { id: 'account-setting', label: 'Account Setting', icon: Settings },
+  { id: 'edit-address', label: 'Edit Address', icon: MapPin },
 ];
 
 export default function MyAccountPage() {
@@ -20,6 +23,7 @@ export default function MyAccountPage() {
   const currentTab = searchParams.get('tab') || 'auction-item';
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -59,6 +63,8 @@ export default function MyAccountPage() {
         return <div><h4>Earning Report</h4><p className="text-muted">Content for Earning Report will be implemented here.</p></div>;
       case 'account-setting':
         return <div><h4>Account Setting</h4><p className="text-muted">Content for Account Setting will be implemented here.</p></div>;
+      case 'edit-address':
+        return <EditAddressTab user={user} />;
       default:
         return <div>Tab not found</div>;
     }
@@ -101,14 +107,24 @@ export default function MyAccountPage() {
                   </>
                 )}
                 
-                <Button 
-                  variant="outline-danger" 
-                  size="sm" 
-                  className="w-100 d-flex align-items-center justify-content-center gap-2"
-                  onClick={handleLogout}
-                >
-                  <LogOut size={16} /> Logout
-                </Button>
+                <div className="d-flex flex-column gap-2 mt-3">
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    className="w-100 d-flex align-items-center justify-content-center gap-2"
+                    onClick={() => setShowPasswordModal(true)}
+                  >
+                    <Key size={16} /> Change Password
+                  </Button>
+                  <Button 
+                    variant="outline-danger" 
+                    size="sm" 
+                    className="w-100 d-flex align-items-center justify-content-center gap-2"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={16} /> Logout
+                  </Button>
+                </div>
               </Card.Body>
             </Card>
 
@@ -151,6 +167,12 @@ export default function MyAccountPage() {
           </Col>
         </Row>
       </Container>
+      
+      {/* Change Password Modal */}
+      <ChangePasswordModal 
+        show={showPasswordModal} 
+        onHide={() => setShowPasswordModal(false)} 
+      />
     </div>
   );
 }

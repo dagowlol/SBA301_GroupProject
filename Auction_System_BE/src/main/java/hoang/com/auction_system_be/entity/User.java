@@ -37,9 +37,6 @@ public class User extends BaseEntity {
     @Column(name = "phone_number", length = 20)
     String phoneNumber;
 
-    @Column(name = "password")
-    String password;
-
     @Column(columnDefinition = "TEXT")
     String address;
     @Enumerated(EnumType.STRING)
