@@ -28,6 +28,9 @@ public class AutoBidConfig extends BaseEntity {
     @Column(name = "max_bid_amount", nullable = false, precision = 18, scale = 2)
     BigDecimal maxBidAmount;
 
+    @Column(name = "bid_increment", precision = 18, scale = 2)
+    BigDecimal bidIncrement;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     boolean isActive = true;

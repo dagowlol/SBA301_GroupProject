@@ -26,6 +26,14 @@ export const itemApi = {
   }),
 
   /**
+   * Submits a new item using FormData (for file uploads)
+   */
+  createWithFormData: (formData) => apiRequest('/items', {
+    method: 'POST',
+    body: formData,
+  }),
+
+  /**
    * Approves an item
    */
   approve: (id) => apiRequest(`/items/${id}/approve`, {
