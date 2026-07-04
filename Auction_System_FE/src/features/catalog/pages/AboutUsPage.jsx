@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import './AboutUsPage.css';
+import '../styles/AboutUsPage.css';
 
 export default function AboutUsPage() {
   return (
