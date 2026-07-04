@@ -18,6 +18,7 @@ import BidMonitoring from '../features/staff/pages/BidMonitoring';
 import UserManagement from '../features/staff/pages/UserManagement';
 
 import HomePage from '../features/catalog/pages/HomePage';
+import AboutUsPage from '../features/catalog/pages/AboutUsPage';
 
 export default function AppRoutes() {
   return (
@@ -26,6 +27,7 @@ export default function AppRoutes() {
         {/* Public User Routes */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="about-us" element={<AboutUsPage />} />
           <Route path="auction" element={<CatalogPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="auction/:sessionId" element={<AuctionRoom />} />
