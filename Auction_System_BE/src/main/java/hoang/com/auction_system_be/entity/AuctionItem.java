@@ -71,4 +71,7 @@ public class AuctionItem extends BaseEntity {
     @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
     @Builder.Default
     List<AuctionSession> sessions = new ArrayList<>();
+
+    @OneToOne(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    Shipping shipping;
 }

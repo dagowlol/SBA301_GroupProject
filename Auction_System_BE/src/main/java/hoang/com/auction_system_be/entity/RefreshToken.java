@@ -17,7 +17,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RefreshToken extends BaseEntity {
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, length = 1000)
     String token;
     @Column(name = "user_email", nullable = false, length = 255)
     String userEmail;

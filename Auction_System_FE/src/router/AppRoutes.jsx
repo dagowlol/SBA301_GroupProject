@@ -18,6 +18,7 @@ import BidMonitoring from '../features/staff/pages/BidMonitoring';
 import UserManagement from '../features/staff/pages/UserManagement';
 
 import HomePage from '../features/catalog/pages/HomePage';
+import MyAccountPage from '../features/user/pages/MyAccountPage';
 
 export default function AppRoutes() {
   return (
@@ -29,10 +30,9 @@ export default function AppRoutes() {
           <Route path="auction" element={<CatalogPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="auction/:sessionId" element={<AuctionRoom />} />
-          
+          <Route path="my-account" element={<MyAccountPage />} />
           <Route path="user/items/create" element={<CreateItemRequest />} />
           <Route path="user/items" element={<div>My Items Page - <a href="/user/items/create">Create New</a></div>} />
-          
           <Route element={<GuestRoute />}>
             <Route path="register" element={<RegisterPage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />

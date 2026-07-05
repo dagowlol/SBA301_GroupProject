@@ -1,5 +1,6 @@
 package hoang.com.auction_system_be.controller;
 
+import hoang.com.auction_system_be.dto.request.ChangePasswordRequest;
 import hoang.com.auction_system_be.dto.request.RoleAssignRequest;
 import hoang.com.auction_system_be.dto.request.UserCreateRequest;
 import hoang.com.auction_system_be.dto.request.UserStatusUpdateRequest;
@@ -86,6 +87,15 @@ public class UserController {
         userService.deleteUser(id);
         return ApiResponse.<Void>builder()
                 .message("User deleted successfully")
+                .build();
+    }
+
+    @PutMapping("/password")
+    @Operation(summary = "Change password for the authenticated user")
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+        return ApiResponse.<Void>builder()
+                .message("Password changed successfully. A notification email has been sent.")
                 .build();
     }
 }
