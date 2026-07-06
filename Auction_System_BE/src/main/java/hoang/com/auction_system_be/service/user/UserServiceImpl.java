@@ -1,5 +1,6 @@
 package hoang.com.auction_system_be.service.user;
 
+import hoang.com.auction_system_be.dto.request.ChangePasswordRequest;
 import hoang.com.auction_system_be.dto.request.RoleAssignRequest;
 import hoang.com.auction_system_be.dto.request.UserCreateRequest;
 import hoang.com.auction_system_be.dto.request.UserStatusUpdateRequest;
@@ -11,6 +12,7 @@ import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.mapper.UserMapper;
 import hoang.com.auction_system_be.repository.UserRepository;
 import hoang.com.auction_system_be.service.auth.SecurityContextService;
+import hoang.com.auction_system_be.service.common.mail.MailService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,6 +31,7 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     UserMapper userMapper;
     SecurityContextService securityContextService;
+    MailService mailService;
 
     @Override
     public UserResponse createUser(UserCreateRequest request) {
@@ -43,7 +46,7 @@ public class UserServiceImpl implements UserService {
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .address(request.getAddress())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
                 // role and status will use defaults (USER and ACTIVE) defined in entity
                 .build();
 
@@ -111,4 +114,17 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        User user = securityContextService.getCurrentUserEntity();
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPasswordHash())) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        mailService.sendPasswordChangedEmail(user.getEmail());
+    }
 }
