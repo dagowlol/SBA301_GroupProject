@@ -51,4 +51,20 @@ public class MailServiceImpl implements MailService {
                 Auction System Team
                 """.formatted(otp);
     }
+
+    @Async
+    @Override
+    public void sendPasswordChangedEmail(String toEmail) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("Thông báo: Mật khẩu của bạn đã được thay đổi");
+            message.setText("Xin chào,\n\nMật khẩu tài khoản của bạn trên hệ thống Auction System vừa được thay đổi thành công.\nNếu bạn không thực hiện yêu cầu này, vui lòng liên hệ ngay với bộ phận hỗ trợ.\n\nTrân trọng,\nAuction System Team");
+            mailSender.send(message);
+            log.info("Password changed email sent to: {}", toEmail);
+        } catch (Exception e) {
+            log.warn("Failed to send password changed email to {}: {}", toEmail, e.getMessage());
+        }
+    }
 }

@@ -26,4 +26,9 @@ export const userApi = {
   }),
   
   deleteUser: (id) => apiRequest(`/users/${id}`, { method: 'DELETE' }),
+
+  changePassword: (data) => apiRequest(`/users/password`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
 };

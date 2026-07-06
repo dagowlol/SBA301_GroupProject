@@ -58,12 +58,12 @@ export default function MainLayout() {
                     Staff Portal
                   </Button>
                   <Button 
-                    variant="outline-danger" 
-                    className="px-3 py-2 rounded-pill fw-bold" 
-                    style={{ fontSize: '0.9rem' }}
-                    onClick={logout}
+                    variant="dark" 
+                    className="px-4 py-2 rounded-pill fw-bold" 
+                    style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
+                    onClick={() => navigate('/my-account')}
                   >
-                    Logout
+                    Account
                   </Button>
                 </>
               ) : (
