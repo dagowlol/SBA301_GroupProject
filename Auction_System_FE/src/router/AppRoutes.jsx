@@ -12,6 +12,7 @@ import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
 import CreateItemRequest from '../features/user/pages/CreateItemRequest';
+import EarningReportTab from '../features/user/components/EarningReportTab';
 import SessionManagement from '../features/staff/pages/SessionManagement';
 import BidMonitoring from '../features/staff/pages/BidMonitoring';
 // import AutoBid from '../features/staff/pages/AutoBid';
@@ -32,6 +33,7 @@ export default function AppRoutes() {
           
           <Route path="user/items/create" element={<CreateItemRequest />} />
           <Route path="user/items" element={<div>My Items Page - <a href="/user/items/create">Create New</a></div>} />
+          <Route path="user/earnings" element={<EarningReportTab />} />
           
           <Route element={<GuestRoute />}>
             <Route path="register" element={<RegisterPage />} />

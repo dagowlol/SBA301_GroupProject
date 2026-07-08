@@ -1,0 +1,666 @@
+/* ============================================================
+   EarningReportTab — Styles
+   ============================================================ */
+
+/* ─── Container chính ─────────────────────────────────────────── */
+.earning-report {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 6px 16px rgba(0, 0, 0, 0.04);
+  padding: 32px;
+  min-height: 80vh;
+}
+
+.earning-report__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.earning-report__title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.earning-report__subtitle {
+  font-size: 0.85rem;
+  color: #8b8fa3;
+  margin: 4px 0 0;
+  font-weight: 400;
+}
+
+.earning-report__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.earning-report__export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e5ea;
+  background: #fff;
+  color: #495057;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.earning-report__export-btn:hover {
+  border-color: #004e64;
+  color: #004e64;
+  background: #f0fafb;
+}
+
+/* ─── Summary Cards ───────────────────────────────────────────── */
+.earning-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 36px;
+}
+
+.earning-card {
+  position: relative;
+  border-radius: 14px;
+  padding: 24px 24px 24px 28px;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.165, 0.84, 0.44, 1),
+              box-shadow 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.earning-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Left accent bar */
+.earning-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Card — Tổng doanh thu (Green) */
+.earning-card--revenue {
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+}
+.earning-card--revenue::before {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+}
+.earning-card--revenue .earning-card__value {
+  color: #15803d;
+}
+.earning-card--revenue .earning-card__icon {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #16a34a;
+}
+
+/* Card — Sản phẩm thành công (Blue) */
+.earning-card--products {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+}
+.earning-card--products::before {
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+}
+.earning-card--products .earning-card__value {
+  color: #1d4ed8;
+}
+.earning-card--products .earning-card__icon {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #2563eb;
+}
+
+/* Card — Tiền chờ thanh toán (Orange) */
+.earning-card--pending {
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+}
+.earning-card--pending::before {
+  background: linear-gradient(180deg, #f97316, #ea580c);
+}
+.earning-card--pending .earning-card__value {
+  color: #c2410c;
+}
+.earning-card--pending .earning-card__icon {
+  background: linear-gradient(135deg, #ffedd5, #fed7aa);
+  color: #ea580c;
+}
+
+.earning-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.earning-card__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #8b8fa3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.earning-card__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.earning-card__value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.earning-card__suffix {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.earning-card:nth-child(2) .earning-card__value {
+  animation-delay: 0.1s;
+}
+.earning-card:nth-child(3) .earning-card__value {
+  animation-delay: 0.2s;
+}
+
+/* ─── Filter Bar ──────────────────────────────────────────────── */
+.earning-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.earning-filters__tabs {
+  display: flex;
+  gap: 4px;
+  background: #f1f3f5;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.earning-filters__tab {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.earning-filters__tab:hover {
+  color: #374151;
+}
+
+.earning-filters__tab--active {
+  background: #ffffff;
+  color: #004e64;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.earning-filters__search {
+  position: relative;
+}
+
+.earning-filters__search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.earning-filters__search-input {
+  padding: 9px 14px 9px 40px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  width: 260px;
+  background: #fafbfc;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.earning-filters__search-input:focus {
+  border-color: #004e64;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 78, 100, 0.08);
+}
+
+/* ─── Data Table ──────────────────────────────────────────────── */
+.earning-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #f1f3f5;
+}
+
+.earning-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 780px;
+}
+
+.earning-table thead {
+  background: #f8f9fb;
+}
+
+.earning-table th {
+  padding: 14px 16px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8b8fa3;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid #f1f3f5;
+  white-space: nowrap;
+}
+
+.earning-table td {
+  padding: 16px 16px;
+  font-size: 0.88rem;
+  color: #374151;
+  border-bottom: 1px solid #f7f8f9;
+  vertical-align: middle;
+}
+
+.earning-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.earning-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.earning-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Alignment helpers */
+.earning-table .col-left { text-align: left; }
+.earning-table .col-right { text-align: right; }
+.earning-table .col-center { text-align: center; }
+
+/* Product name */
+.earning-table__product {
+  font-weight: 600;
+  color: #1a1a2e;
+  max-width: 240px;
+}
+
+/* Invoice ID */
+.earning-table__invoice {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 500;
+  font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
+}
+
+/* Price */
+.earning-table__price {
+  font-weight: 700;
+  color: #004e64;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Buyer masked */
+.earning-table__buyer {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Date */
+.earning-table__date {
+  font-size: 0.84rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* ─── Status Badges ───────────────────────────────────────────── */
+.earning-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.earning-badge--success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.earning-badge--pending {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.earning-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.earning-badge--success .earning-badge__dot {
+  background: #22c55e;
+}
+
+.earning-badge--pending .earning-badge__dot {
+  background: #f97316;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ─── Load More ───────────────────────────────────────────────── */
+.earning-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 8px;
+}
+
+.earning-load-more__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 28px;
+  border-radius: 24px;
+  border: 1.5px solid #e2e5ea;
+  background: #fff;
+  color: #495057;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.earning-load-more__btn:hover:not(:disabled) {
+  border-color: #004e64;
+  color: #004e64;
+  background: #f0fafb;
+}
+
+.earning-load-more__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Empty & Loading States ──────────────────────────────────── */
+.earning-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+}
+
+.earning-empty__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #f3f4f6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: #d1d5db;
+}
+
+.earning-empty__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.earning-empty__text {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.earning-loading {
+  text-align: center;
+  padding: 48px 20px;
+}
+
+.earning-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #004e64;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Responsive: Tablet (≤ 992px) ────────────────────────────── */
+@media (max-width: 992px) {
+  .earning-report {
+    padding: 24px;
+    border-radius: 12px;
+  }
+
+  .earning-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .earning-summary .earning-card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .earning-card__value {
+    font-size: 1.5rem;
+  }
+}
+
+/* ─── Responsive: Mobile (≤ 768px) ────────────────────────────── */
+@media (max-width: 768px) {
+  .earning-report {
+    padding: 20px 16px;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: auto;
+  }
+
+  .earning-report__header {
+    margin-bottom: 24px;
+  }
+
+  .earning-report__title {
+    font-size: 1.35rem;
+  }
+
+  .earning-summary {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .earning-summary .earning-card:last-child {
+    grid-column: auto;
+  }
+
+  .earning-card {
+    padding: 20px 20px 20px 24px;
+  }
+
+  .earning-card__value {
+    font-size: 1.4rem;
+  }
+
+  .earning-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .earning-filters__tabs {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .earning-filters__search-input {
+    width: 100%;
+  }
+
+  /* ── Mobile: Table → Card List ──────────────────────────────── */
+  .earning-table-wrapper {
+    border: none;
+    overflow: visible;
+  }
+
+  .earning-table {
+    min-width: auto;
+  }
+
+  .earning-table thead {
+    display: none;
+  }
+
+  .earning-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .earning-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #f1f3f5;
+    border-radius: 12px;
+    padding: 16px;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .earning-table tbody tr:hover {
+    background: #fafbfc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .earning-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: none;
+    font-size: 0.85rem;
+  }
+
+  .earning-table td::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    margin-right: 12px;
+  }
+
+  /* Override alignments for mobile card layout */
+  .earning-table .col-left,
+  .earning-table .col-right,
+  .earning-table .col-center {
+    text-align: right;
+  }
+
+  .earning-table__product {
+    max-width: none;
+  }
+
+  /* Price row highlight */
+  .earning-table td[data-label="Giá chốt"] {
+    padding-top: 8px;
+    margin-top: 4px;
+    border-top: 1px dashed #f1f3f5;
+  }
+}
+
+/* ─── Responsive: Small Mobile (≤ 480px) ──────────────────────── */
+@media (max-width: 480px) {
+  .earning-report {
+    padding: 16px 12px;
+  }
+
+  .earning-report__title {
+    font-size: 1.2rem;
+  }
+
+  .earning-card {
+    padding: 16px 16px 16px 20px;
+  }
+
+  .earning-card__value {
+    font-size: 1.25rem;
+  }
+
+  .earning-card__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .earning-filters__tab {
+    padding: 7px 14px;
+    font-size: 0.78rem;
+  }
+}
