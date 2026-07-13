@@ -1,0 +1,48 @@
+.about-us-page {
+  background-color: #ffffff;
+}
+
+.about-top-section {
+  background-color: #f1f2f4; /* Light grey background for the top section */
+  min-height: 400px;
+  overflow: hidden;
+}
+
+/* Dotted pattern for the top left */
+.dotted-bg-top-left {
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  width: 60%;
+  height: 120%;
+  background-image: radial-gradient(#d1d1d1 2px, transparent 2px);
+  background-size: 20px 20px;
+  opacity: 0.6;
+  z-index: 0;
+  transform: rotate(-10deg);
+  border-radius: 0 0 50% 0; /* rough approximation of the sweeping shape */
+  clip-path: ellipse(80% 60% at 20% 40%);
+}
+
+.z-1 {
+  z-index: 1;
+}
+
+/* Dotted circle pattern for the bottom left */
+.dotted-bg-circle {
+  position: absolute;
+  top: 10px;
+  left: -30px;
+  width: 250px;
+  height: 250px;
+  background-image: radial-gradient(#a3b9c9 2px, transparent 2px);
+  background-size: 10px 10px;
+  border-radius: 50%;
+  opacity: 0.8;
+  z-index: 0;
+  background-color: #e6eef2;
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
