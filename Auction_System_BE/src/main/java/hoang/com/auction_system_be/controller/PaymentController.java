@@ -26,4 +26,12 @@ public class PaymentController {
                 .result(corePaymentService.getPaymentStatus(vnp_TransactionNo))
                 .build();
     }
+
+    @Operation(summary = "Get my payment for session", description = "Retrieve final payment details for the winner of a session")
+    @GetMapping("/session/{sessionId}/my")
+    public ApiResponse<PaymentResponse> getMyPayment(@PathVariable Long sessionId) {
+        return ApiResponse.<PaymentResponse>builder()
+                .result(corePaymentService.getMyPaymentForSession(sessionId))
+                .build();
+    }
 }

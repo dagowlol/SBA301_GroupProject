@@ -2,6 +2,7 @@ package hoang.com.auction_system_be.controller;
 
 import hoang.com.auction_system_be.dto.request.ItemRejectRequest;
 import hoang.com.auction_system_be.dto.request.ItemRequest;
+import hoang.com.auction_system_be.dto.request.UpdateItemRequest;
 import hoang.com.auction_system_be.dto.response.ApiResponse;
 import hoang.com.auction_system_be.dto.response.ItemResponse;
 import hoang.com.auction_system_be.dto.response.PageResponse;
@@ -31,6 +32,16 @@ public class AuctionItemController {
                         @RequestBody @Valid ItemRequest request) {
                 return ApiResponse.<ItemResponse>builder()
                                 .result(auctionItemService.createItem(request))
+                                .build();
+        }
+
+        @PatchMapping("/{id}/update")
+        @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+        @Operation(summary = "Update an item", description = "Admin or Auction Manager updates a pending item.")
+        public ApiResponse<ItemResponse> updateItem(
+                        @PathVariable Long id, @RequestBody UpdateItemRequest request) {
+                return ApiResponse.<ItemResponse>builder()
+                                .result(auctionItemService.updateItem(id, request))
                                 .build();
         }
 
@@ -67,4 +78,30 @@ public class AuctionItemController {
                                 .result(auctionItemService.getItems(page, size, name, categoryId, status))
                                 .build();
         }
+
+        @GetMapping("/my-uploaded")
+        @Operation(summary = "Get user's uploaded items", description = "Get items uploaded by the authenticated user with pagination and filters.")
+        public ApiResponse<PageResponse<ItemResponse>> getMyUploadedItems(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        @RequestParam(required = false) String name,
+                        @RequestParam(required = false) Long categoryId,
+                        @RequestParam(required = false) ItemStatus status) {
+                return ApiResponse.<PageResponse<ItemResponse>>builder()
+                                .result(auctionItemService.getMyUploadedItems(page, size, name, categoryId, status))
+                                .build();
+        }
+
+        @GetMapping("/my-won")
+        @Operation(summary = "Get user's won items", description = "Get items won by the authenticated user with pagination and filters.")
+        public ApiResponse<PageResponse<ItemResponse>> getMyWonItems(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        @RequestParam(required = false) String name,
+                        @RequestParam(required = false) Long categoryId) {
+                return ApiResponse.<PageResponse<ItemResponse>>builder()
+                                .result(auctionItemService.getMyWonItems(page, size, name, categoryId))
+                                .build();
+        }
 }
+

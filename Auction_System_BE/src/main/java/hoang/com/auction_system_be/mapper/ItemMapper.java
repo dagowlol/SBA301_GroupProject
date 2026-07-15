@@ -42,6 +42,21 @@ public class ItemMapper {
             builder.rejectionReason(item.getRejectionReason());
         }
 
+        if (item.getSessions() != null && !item.getSessions().isEmpty()) {
+            builder.sessionId(item.getSessions().get(0).getId());
+        }
+
+        if (item.getImages() != null && !item.getImages().isEmpty()) {
+            item.getImages().stream()
+                    .filter(img -> img.isPrimary())
+                    .findFirst()
+                    .ifPresentOrElse(
+                            img -> builder.imageUrl(img.getImageUrl()),
+                            () -> builder.imageUrl(item.getImages().get(0).getImageUrl())
+                    );
+        }
+
         return builder.build();
     }
 }
+
