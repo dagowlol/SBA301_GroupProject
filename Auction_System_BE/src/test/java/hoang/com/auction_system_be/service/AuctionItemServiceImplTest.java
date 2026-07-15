@@ -91,9 +91,11 @@ class AuctionItemServiceImplTest {
                 .build();
 
         itemRequest = ItemRequest.builder()
-                .name("Test Item")
+                .itemName("Test Item")
                 .categoryId(1L)
                 .startingPrice(new BigDecimal("100"))
+                .reservePrice(new BigDecimal("200"))
+                .minIncrement(new BigDecimal("10"))
                 .build();
 
         itemResponse = ItemResponse.builder()

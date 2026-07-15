@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("/api/v1/items")
@@ -26,10 +27,10 @@ public class AuctionItemController {
 
         AuctionItemService auctionItemService;
 
-        @PostMapping
+        @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @Operation(summary = "Submit a new item", description = "Seller submits a new item for approval.")
         public ApiResponse<ItemResponse> createItem(
-                        @RequestBody @Valid ItemRequest request) {
+                        @ModelAttribute @Valid ItemRequest request) {
                 return ApiResponse.<ItemResponse>builder()
                                 .result(auctionItemService.createItem(request))
                                 .build();
