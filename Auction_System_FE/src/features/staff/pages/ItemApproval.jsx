@@ -48,14 +48,9 @@ export default function ItemApproval() {
   const [categoryId, setCategoryId] = useState('');
   const [reserve, setReserve] = useState('');
   const [startingPrice, setStartingPrice] = useState('');
-
-  // Presentation / Mock UI states
-  const [artist, setArtist] = useState('');
-  const [image, setImage] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [minIncrement, setMinIncrement] = useState('');
+  const [condition, setCondition] = useState('NEW');
   const [status, setStatus] = useState('Pending');
-  const [submittedBy, setSubmittedBy] = useState('');
 
   // Error state for handling Spring Boot constraint exceptions
   const [error, setError] = useState('');
@@ -72,40 +67,27 @@ export default function ItemApproval() {
     setCategoryId(categories[0]?.id || '');
     setReserve('');
     setStartingPrice('');
-    setArtist('');
-    setImage('');
-
-    // Default start tomorrow, end in 10 days
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tenDaysLater = new Date();
-    tenDaysLater.setDate(tenDaysLater.getDate() + 10);
-
-    setStartTime(tomorrow.toISOString().substring(0, 16));
-    setEndTime(tenDaysLater.toISOString().substring(0, 16));
+    setMinIncrement('');
+    setCondition('NEW');
     setStatus('Pending');
-    setSubmittedBy(`seller_${Math.floor(Math.random() * 100)}`);
     setError('');
     setShowAddModal(true);
   };
 
   const handleOpenEdit = (item) => {
     setSelectedItem(item);
-    setTitle(item.title);
+    setTitle(item.title || item.name || '');
     setDescription(item.description);
 
     // Attempt to match categoryId
     const matchedCategory = categories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
     setCategoryId(item.categoryId || matchedCategory?.id || categories[0]?.id || '');
 
-    setReserve(item.reserve);
+    setReserve(item.reserve || item.reservePrice || '');
     setStartingPrice(item.startingPrice || '');
-    setArtist(item.artist);
-    setImage(item.image);
-    setStartTime(new Date(item.startTime).toISOString().substring(0, 16));
-    setEndTime(new Date(item.endTime).toISOString().substring(0, 16));
+    setMinIncrement(item.minIncrement || '');
+    setCondition(item.condition || 'NEW');
     setStatus(item.status);
-    setSubmittedBy(item.submittedBy);
     setError('');
     setShowEditModal(true);
   };
@@ -144,17 +126,14 @@ export default function ItemApproval() {
 
     try {
       await addItem({
-        title,
+        itemName: title,
         description,
         categoryId: parseInt(categoryId),
         startingPrice: parseFloat(startingPrice),
-        reserve: reserve ? parseFloat(reserve) : null,
-        artist: artist || 'Unknown Artist',
-        image: image || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=60',
-        startTime: new Date(startTime).toISOString(),
-        endTime: new Date(endTime).toISOString(),
-        status,
-        submittedBy
+        reservePrice: reserve ? parseFloat(reserve) : null,
+        minIncrement: minIncrement ? parseFloat(minIncrement) : null,
+        condition,
+        status
       });
       setShowAddModal(false);
     } catch (err) {
@@ -169,17 +148,14 @@ export default function ItemApproval() {
 
     try {
       await editItem(selectedItem.id, {
-        title,
+        itemName: title,
         description,
         categoryId: parseInt(categoryId),
         startingPrice: parseFloat(startingPrice),
-        reserve: reserve ? parseFloat(reserve) : null,
-        artist,
-        image,
-        startTime: new Date(startTime).toISOString(),
-        endTime: new Date(endTime).toISOString(),
-        status,
-        submittedBy
+        reservePrice: reserve ? parseFloat(reserve) : null,
+        minIncrement: minIncrement ? parseFloat(minIncrement) : null,
+        condition,
+        status
       });
       setShowEditModal(false);
     } catch (err) {
@@ -435,19 +411,20 @@ export default function ItemApproval() {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Artist / Creator</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g. Vincent Van Gogh"
-                    value={artist}
-                    onChange={(e) => setArtist(e.target.value)}
-                  />
+                  <Form.Label className="small fw-semibold">Condition</Form.Label>
+                  <Form.Select value={condition} onChange={(e) => setCondition(e.target.value)} required>
+                    <option value="NEW">New</option>
+                    <option value="LIKE_NEW">Like New</option>
+                    <option value="GOOD">Good</option>
+                    <option value="FAIR">Fair</option>
+                    <option value="POOR">Poor</option>
+                  </Form.Select>
                 </Form.Group>
               </Col>
             </Row>
 
             <Row className="g-3">
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Category</Form.Label>
                   <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
@@ -457,7 +434,7 @@ export default function ItemApproval() {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
                   <Form.Control
@@ -470,7 +447,7 @@ export default function ItemApproval() {
                   />
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
                   <Form.Control
@@ -479,19 +456,24 @@ export default function ItemApproval() {
                     placeholder="e.g. 500.00"
                     value={reserve}
                     onChange={(e) => setReserve(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold">Min Increment (USD)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 10.00"
+                    value={minIncrement}
+                    onChange={(e) => setMinIncrement(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
             </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="small fw-semibold">Image URL (Optional)</Form.Label>
-              <Form.Control
-                type="url"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-              />
-            </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label className="small fw-semibold">Description</Form.Label>
@@ -508,31 +490,6 @@ export default function ItemApproval() {
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Start Time</Form.Label>
-                  <Form.Control
-                    type="datetime-local"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">End Time</Form.Label>
-                  <Form.Control
-                    type="datetime-local"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Status</Form.Label>
                   <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
                     <option value="Pending">Pending</option>
@@ -540,16 +497,6 @@ export default function ItemApproval() {
                     <option value="Active">Active</option>
                     <option value="Rejected">Rejected</option>
                   </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Submitted By (Seller Name)</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={submittedBy}
-                    onChange={(e) => setSubmittedBy(e.target.value)}
-                  />
                 </Form.Group>
               </Col>
             </Row>
@@ -593,18 +540,20 @@ export default function ItemApproval() {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Artist / Creator</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={artist}
-                    onChange={(e) => setArtist(e.target.value)}
-                  />
+                  <Form.Label className="small fw-semibold">Condition</Form.Label>
+                  <Form.Select value={condition} onChange={(e) => setCondition(e.target.value)} required>
+                    <option value="NEW">New</option>
+                    <option value="LIKE_NEW">Like New</option>
+                    <option value="GOOD">Good</option>
+                    <option value="FAIR">Fair</option>
+                    <option value="POOR">Poor</option>
+                  </Form.Select>
                 </Form.Group>
               </Col>
             </Row>
 
             <Row className="g-3">
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Category</Form.Label>
                   <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
@@ -614,7 +563,7 @@ export default function ItemApproval() {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
                   <Form.Control
@@ -626,7 +575,7 @@ export default function ItemApproval() {
                   />
                 </Form.Group>
               </Col>
-              <Col md={4}>
+              <Col md={3}>
                 <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
                   <Form.Control
@@ -634,19 +583,23 @@ export default function ItemApproval() {
                     step="0.01"
                     value={reserve}
                     onChange={(e) => setReserve(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold">Min Increment (USD)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={minIncrement}
+                    onChange={(e) => setMinIncrement(e.target.value)}
+                    required
                   />
                 </Form.Group>
               </Col>
             </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="small fw-semibold">Image URL</Form.Label>
-              <Form.Control
-                type="url"
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-              />
-            </Form.Group>
 
             <Form.Group className="mb-3">
               <Form.Label className="small fw-semibold">Description</Form.Label>
@@ -662,31 +615,6 @@ export default function ItemApproval() {
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Start Time</Form.Label>
-                  <Form.Control
-                    type="datetime-local"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">End Time</Form.Label>
-                  <Form.Control
-                    type="datetime-local"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group className="mb-3">
                   <Form.Label className="small fw-semibold">Status</Form.Label>
                   <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
                     <option value="Pending">Pending</option>
@@ -694,16 +622,6 @@ export default function ItemApproval() {
                     <option value="Active">Active</option>
                     <option value="Rejected">Rejected</option>
                   </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Submitted By</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={submittedBy}
-                    onChange={(e) => setSubmittedBy(e.target.value)}
-                  />
                 </Form.Group>
               </Col>
             </Row>

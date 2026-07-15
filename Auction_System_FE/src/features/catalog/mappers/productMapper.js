@@ -80,6 +80,8 @@ export const productMapper = {
       type: type,
       startTime: item.startTime || item.createdAt || new Date().toISOString(),
       endTime: item.endTime || item.updatedAt || new Date().toISOString(),
+      minIncrement: item.minIncrement ? parseFloat(item.minIncrement) : 0,
+      condition: item.condition || 'NEW',
       rejectionReason: item.rejectionReason || '',
       bids: Array.isArray(item.bids) ? item.bids.map(b => ({
         bidder: b.bidder,
@@ -97,17 +99,14 @@ export const productMapper = {
   toRequestDto: (model) => {
     if (!model) return null;
     return {
-      name: model.title,
+      itemName: model.itemName || model.title,
       description: model.description || '',
       categoryId: parseInt(model.categoryId) || 1,
       startingPrice: parseFloat(model.startingPrice) || parseFloat(model.reserve) * 0.8 || 100,
-      reservePrice: parseFloat(model.reserve) || 0,
-      status: model.status ? model.status.toUpperCase() : undefined,
-      imageUrl: model.image || '',
-      startTime: model.startTime ? new Date(model.startTime).toISOString() : null,
-      endTime: model.endTime ? new Date(model.endTime).toISOString() : null,
-      artist: model.artist || '',
-      submittedBy: model.submittedBy || ''
+      reservePrice: parseFloat(model.reservePrice) || parseFloat(model.reserve) || 0,
+      minIncrement: parseFloat(model.minIncrement) || 1000,
+      condition: model.condition || 'NEW',
+      status: model.status ? model.status.toUpperCase() : undefined
     };
   }
 };
