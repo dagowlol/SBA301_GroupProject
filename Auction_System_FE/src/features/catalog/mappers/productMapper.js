@@ -11,6 +11,8 @@ const getMockImage = (title, categoryName) => {
   return 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=60'; // general art placeholder
 };
 
+import { resolveImageUrl } from '../../../utils/imageUtils';
+
 /**
  * Mapper utility to convert Product shapes between Frontend Models and Backend DTOs.
  */
@@ -40,7 +42,8 @@ export const productMapper = {
       category = item.categoryName || 'General';
       reserve = parseFloat(item.reservePrice) || parseFloat(item.startingPrice) || 0;
       submittedBy = item.sellerName || 'seller_current';
-      image = getMockImage(item.name, item.categoryName);
+      // Use real imageUrl from backend if available, fall back to mock
+      image = resolveImageUrl(item.imageUrl) || getMockImage(item.name, item.categoryName);
       categoryId = item.categoryId;
     } else {
       // Mock local items

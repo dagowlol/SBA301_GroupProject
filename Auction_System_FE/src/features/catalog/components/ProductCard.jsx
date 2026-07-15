@@ -1,6 +1,7 @@
 import { Card, Badge, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Clock, Flame, CalendarClock, ArrowRight } from 'lucide-react';
+import { resolveImageUrl } from '../../../utils/imageUtils';
 
 /**
  * ProductCard — Displays a single auction session.
@@ -78,7 +79,7 @@ export default function ProductCard({ session }) {
       <div className="position-relative" style={{ height: '220px', overflow: 'hidden' }}>
         <Card.Img
           variant="top"
-          src={getArtworkImage(session.itemName)}
+          src={resolveImageUrl(session.itemImage) || getArtworkImage(session.itemName)}
           alt={session.itemName}
           className="h-100 w-100 object-fit-cover"
           style={{ transition: 'transform 0.3s ease' }}

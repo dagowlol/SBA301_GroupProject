@@ -17,31 +17,31 @@ export default function MainLayout() {
       <Navbar bg="white" expand="lg" className="py-3 sticky-top border-bottom shadow-sm">
         <Container>
           <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 text-dark d-flex align-items-center" style={{ fontStyle: 'italic', position: 'relative' }}>
-            <span style={{ 
-              background: 'linear-gradient(180deg, #003d5b 0%, #0077b6 50%, #90e0ef 100%)', 
-              WebkitBackgroundClip: 'text', 
-              WebkitTextFillColor: 'transparent', 
-              letterSpacing: '2px', 
+            <span style={{
+              background: 'linear-gradient(180deg, #003d5b 0%, #0077b6 50%, #90e0ef 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '2px',
               fontWeight: 900,
               fontFamily: 'Impact, sans-serif'
             }}>ANNEXE</span>
           </Navbar.Brand>
-          
+
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          
+
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-between">
             <Nav className="mx-auto gap-4 text-dark fw-semibold" style={{ fontSize: '0.9rem' }}>
               <Nav.Link as={Link} to="/" className="text-dark hover-teal">Home</Nav.Link>
               <Nav.Link as={Link} to="/auction" className="text-dark hover-teal">Auction</Nav.Link>
-              <Nav.Link as={Link} to="/results" className="text-dark hover-teal">Results</Nav.Link>
-              <Nav.Link as={Link} to="/value-buy-sell" className="text-dark hover-teal">Value, Buy, Sell</Nav.Link>
+              {/* <Nav.Link as={Link} to="/results" className="text-dark hover-teal">Results</Nav.Link>
+              <Nav.Link as={Link} to="/value-buy-sell" className="text-dark hover-teal">Value, Buy, Sell</Nav.Link> */}
               <Nav.Link as={Link} to="/about-us" className="text-dark hover-teal">About Us</Nav.Link>
               <Nav.Link as={Link} to="/contact-us" className="text-dark hover-teal">Contact Us</Nav.Link>
             </Nav>
-            
+
             <div className="d-flex align-items-center gap-3">
-              <Button 
-                className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0" 
+              <Button
+                className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0"
                 style={{ backgroundColor: '#003d5b', width: '38px', height: '38px' }}
                 aria-label="Search"
               >
@@ -49,17 +49,17 @@ export default function MainLayout() {
               </Button>
               {isAuthenticated ? (
                 <>
-                  <Button 
-                    variant="dark" 
-                    className="px-4 py-2 rounded-pill fw-bold" 
+                  <Button
+                    variant="dark"
+                    className="px-4 py-2 rounded-pill fw-bold"
                     style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
                     onClick={() => navigate('/admin/items')}
                   >
                     Staff Portal
                   </Button>
-                  <Button 
-                    variant="dark" 
-                    className="px-4 py-2 rounded-pill fw-bold" 
+                  <Button
+                    variant="dark"
+                    className="px-4 py-2 rounded-pill fw-bold"
                     style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
                     onClick={() => navigate('/my-account')}
                   >
@@ -67,9 +67,9 @@ export default function MainLayout() {
                   </Button>
                 </>
               ) : (
-                <Button 
-                  variant="dark" 
-                  className="px-4 py-2 rounded-pill fw-bold" 
+                <Button
+                  variant="dark"
+                  className="px-4 py-2 rounded-pill fw-bold"
                   style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
                   onClick={openAuthModal}
                 >
@@ -94,7 +94,7 @@ export default function MainLayout() {
           <div className="row justify-content-between mb-5">
             {/* Left Column: Brand & Info */}
             <div className="col-lg-5 col-md-6 mb-4 mb-md-0">
-              <h2 className="fw-bold mb-4 text-white" style={{ lineHeight: '1.1', fontSize: '2.5rem' }}>Annexe<br/>Auction</h2>
+              <h2 className="fw-bold mb-4 text-white" style={{ lineHeight: '1.1', fontSize: '2.5rem' }}>Annexe<br />Auction</h2>
               <p className="text-light small opacity-75" style={{ lineHeight: '1.6', maxWidth: '350px' }}>
                 Wisma Geha, Jl. Timor No.25, RT.9/RW.4,<br />
                 Gondangdia, Kec. Menteng, Kota Jakarta<br />
@@ -115,7 +115,7 @@ export default function MainLayout() {
                     className="bg-transparent border-0 border-bottom border-light text-white rounded-0 shadow-none px-0 pb-2 me-4"
                     style={{ fontSize: '0.85rem' }}
                   />
-                  <Button 
+                  <Button
                     variant="outline-light"
                     className="px-4 py-1 border-light rounded-0 text-white"
                     style={{ fontSize: '0.85rem' }}

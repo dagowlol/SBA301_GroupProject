@@ -13,6 +13,7 @@ import BidForm from '../components/BidForm';
 import AutoBidModal from '../components/AutoBidModal';
 import { auctionApi } from '../../../api/auctionApi';
 import { paymentApi } from '../../../api/paymentApi';
+import { resolveImageUrl } from '../../../utils/imageUtils';
 
 export default function AuctionRoom() {
   const { sessionId } = useParams();
@@ -185,7 +186,7 @@ export default function AuctionRoom() {
         <Col lg={7}>
           <div className="border rounded-4 bg-white overflow-hidden shadow-sm d-flex justify-content-center align-items-center mb-4" style={{ height: '450px' }}>
             <img
-              src={sessionDetail.itemImage}
+              src={resolveImageUrl(sessionDetail.itemImage) || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80'}
               alt={sessionDetail.itemName}
               className="w-100 h-100 object-fit-contain p-3"
             />

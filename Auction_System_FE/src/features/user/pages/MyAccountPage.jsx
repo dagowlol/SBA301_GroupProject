@@ -10,7 +10,7 @@ import AuctionItemsTab from './AuctionItemsTab';
 
 const TABS = [
   { id: 'auction-item', label: 'Auction Item', icon: Gavel },
-  { id: 'upload-item', label: 'Upload item', icon: Upload },
+  // { id: 'upload-item', label: 'Upload item', icon: Upload },
   { id: 'earning-report', label: 'Earning Report', icon: DollarSign },
   { id: 'account-setting', label: 'Account Setting', icon: Settings },
   { id: 'edit-address', label: 'Edit Address', icon: MapPin },
@@ -20,7 +20,7 @@ export default function MyAccountPage() {
   const { user, logout } = useContext(AuthContext);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
   const currentTab = searchParams.get('tab') || 'auction-item';
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,8 +58,8 @@ export default function MyAccountPage() {
     switch (currentTab) {
       case 'auction-item':
         return <AuctionItemsTab />;
-      case 'upload-item':
-        return <div><h4>Upload Item</h4><p className="text-muted">Content for Upload Item will be implemented here.</p></div>;
+      // case 'upload-item':
+      //   return <div><h4>Upload Item</h4><p className="text-muted">Content for Upload Item will be implemented here.</p></div>;
       case 'earning-report':
         return <div><h4>Earning Report</h4><p className="text-muted">Content for Earning Report will be implemented here.</p></div>;
       case 'account-setting':
@@ -85,13 +85,13 @@ export default function MyAccountPage() {
             <Card className="border-0 shadow-sm mb-4">
               <Card.Body className="text-center p-4">
                 {/* User Info - Placeholder for Avatar */}
-                <div 
+                <div
                   className="rounded-circle bg-secondary-subtle d-inline-flex align-items-center justify-content-center mb-3"
                   style={{ width: '80px', height: '80px' }}
                 >
                   <User size={40} className="text-secondary" />
                 </div>
-                
+
                 {loading ? (
                   <Spinner animation="border" size="sm" />
                 ) : userInfo ? (
@@ -107,19 +107,19 @@ export default function MyAccountPage() {
                     <p className="text-muted small mb-3">No email found</p>
                   </>
                 )}
-                
+
                 <div className="d-flex flex-column gap-2 mt-3">
-                  <Button 
-                    variant="outline-primary" 
-                    size="sm" 
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
                     className="w-100 d-flex align-items-center justify-content-center gap-2"
                     onClick={() => setShowPasswordModal(true)}
                   >
                     <Key size={16} /> Change Password
                   </Button>
-                  <Button 
-                    variant="outline-danger" 
-                    size="sm" 
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
                     className="w-100 d-flex align-items-center justify-content-center gap-2"
                     onClick={handleLogout}
                   >
@@ -168,11 +168,11 @@ export default function MyAccountPage() {
           </Col>
         </Row>
       </Container>
-      
+
       {/* Change Password Modal */}
-      <ChangePasswordModal 
-        show={showPasswordModal} 
-        onHide={() => setShowPasswordModal(false)} 
+      <ChangePasswordModal
+        show={showPasswordModal}
+        onHide={() => setShowPasswordModal(false)}
       />
     </div>
   );
