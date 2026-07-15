@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { sessionApi } from '../../../api/sessionApi';
 import CountdownTimer from '../../auction/components/CountdownTimer';
+import { resolveImageUrl } from '../../../utils/imageUtils';
 
 /**
  * ProductDetailPage — Preview page for a SCHEDULED auction session.
@@ -116,7 +117,7 @@ export default function ProductDetailPage() {
   // Item info comes from session fields (itemName, itemDescription etc.)
   const itemName = session.itemName || session.item?.name || 'Sản phẩm đấu giá';
   const itemDescription = session.itemDescription || session.item?.description || '';
-  const itemImage = session.itemImage || getArtworkImage(itemName);
+  const itemImage = resolveImageUrl(session.itemImage) || getArtworkImage(itemName);
 
   return (
     <Container className="py-5">

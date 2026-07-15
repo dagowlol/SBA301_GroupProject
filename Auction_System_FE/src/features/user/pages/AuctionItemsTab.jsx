@@ -4,6 +4,7 @@ import { Spinner, Alert } from 'react-bootstrap';
 import { itemApi } from '../../../api/itemApi';
 import { categoryApi } from '../../../api/categoryApi';
 import { paymentApi } from '../../../api/paymentApi';
+import { resolveImageUrl } from '../../../utils/imageUtils';
 import {
   Upload, Trophy, Search, Filter, ChevronLeft, ChevronRight,
   Tag, DollarSign, Calendar, ArrowRight, Package, X, CreditCard, CheckCircle2, Clock, XCircle, RefreshCw
@@ -80,9 +81,9 @@ const ItemCard = ({ item, onClick }) => {
       }}
     >
       <div style={{ height: 180, overflow: 'hidden', background: '#f8fafc', position: 'relative' }}>
-        {item.imageUrl && !imgError ? (
+        {resolveImageUrl(item.imageUrl) && !imgError ? (
           <img
-            src={item.imageUrl}
+            src={resolveImageUrl(item.imageUrl)}
             alt={item.name}
             onError={() => setImgError(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
@@ -183,9 +184,9 @@ const WonItemCard = ({ item, payingId, onPay, onClick }) => {
         onClick={() => onClick(item)}
         style={{ height: 160, overflow: 'hidden', background: '#f8fafc', position: 'relative', cursor: 'pointer', flexShrink: 0 }}
       >
-        {item.imageUrl && !imgError ? (
+        {resolveImageUrl(item.imageUrl) && !imgError ? (
           <img
-            src={item.imageUrl}
+            src={resolveImageUrl(item.imageUrl)}
             alt={item.name}
             onError={() => setImgError(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
