@@ -92,7 +92,7 @@ public class UserController {
 
     @PutMapping("/password")
     @Operation(summary = "Change password for the authenticated user")
-    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+    public ApiResponse<Void> changePasswords(@Valid @RequestBody ChangePasswordRequest request) {
         userService.changePassword(request);
         return ApiResponse.<Void>builder()
                 .message("Password changed successfully. A notification email has been sent.")

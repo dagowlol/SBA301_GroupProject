@@ -8,6 +8,7 @@ import hoang.com.auction_system_be.enums.SessionStatus;
 import hoang.com.auction_system_be.event.AutoBidLimitReachedEvent;
 import hoang.com.auction_system_be.event.AutoBidTriggerEvent;
 import hoang.com.auction_system_be.event.BidPlacedEvent;
+import hoang.com.auction_system_be.event.SessionEndedEvent;
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.repository.*;
@@ -133,6 +134,7 @@ public class AutoBidServiceImpl implements AutoBidService {
             if (now.isAfter(session.getEndTime())) {
                 session.setStatus(SessionStatus.ENDED);
                 auctionSessionRepository.save(session);
+                eventPublisher.publishEvent(new SessionEndedEvent(this, session.getId()));
                 break;
             }
 

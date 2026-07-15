@@ -72,6 +72,18 @@ export const productService = {
   },
 
   /**
+   * Updates an item on the backend
+   * @param {number} id - Item ID
+   * @param {Object} itemModel - Item details from frontend form
+   * @returns {Promise<Object>} Updated mapped item response model
+   */
+  updateItem: async (id, itemModel) => {
+    const requestDto = productMapper.toRequestDto(itemModel);
+    const rawDto = await itemApi.update(id, requestDto);
+    return productMapper.toFrontendModel(rawDto);
+  },
+
+  /**
    * Processes a list of items to standardize them into Frontend models
    * @param {Object[]} rawItems - Raw item list
    * @returns {Object[]} Standardized items

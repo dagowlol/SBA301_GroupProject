@@ -101,7 +101,13 @@ export const productMapper = {
       description: model.description || '',
       categoryId: parseInt(model.categoryId) || 1,
       startingPrice: parseFloat(model.startingPrice) || parseFloat(model.reserve) * 0.8 || 100,
-      reservePrice: parseFloat(model.reserve) || 0
+      reservePrice: parseFloat(model.reserve) || 0,
+      status: model.status ? model.status.toUpperCase() : undefined,
+      imageUrl: model.image || '',
+      startTime: model.startTime ? new Date(model.startTime).toISOString() : null,
+      endTime: model.endTime ? new Date(model.endTime).toISOString() : null,
+      artist: model.artist || '',
+      submittedBy: model.submittedBy || ''
     };
   }
 };

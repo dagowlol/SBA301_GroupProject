@@ -47,4 +47,42 @@ export const itemApi = {
     method: 'PATCH',
     body: JSON.stringify({ rejectionReason }),
   }),
+
+  /**
+   * Updates an item (UpdateItemRequest DTO)
+   */
+  update: (id, itemRequestDto) => apiRequest(`/items/${id}/update`, {
+    method: 'PATCH',
+    body: JSON.stringify(itemRequestDto),
+  }),
+
+  /**
+   * Fetches user's uploaded items
+   */
+  getMyUploadedItems: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.page !== undefined) query.append('page', params.page);
+    if (params.size !== undefined) query.append('size', params.size);
+    if (params.name) query.append('name', params.name);
+    if (params.categoryId) query.append('categoryId', params.categoryId);
+    if (params.status) query.append('status', params.status);
+
+    const queryString = query.toString();
+    return apiRequest(`/items/my-uploaded${queryString ? `?${queryString}` : ''}`);
+  },
+
+  /**
+   * Fetches user's won items
+   */
+  getMyWonItems: (params = {}) => {
+    const query = new URLSearchParams();
+    if (params.page !== undefined) query.append('page', params.page);
+    if (params.size !== undefined) query.append('size', params.size);
+    if (params.name) query.append('name', params.name);
+    if (params.categoryId) query.append('categoryId', params.categoryId);
+
+    const queryString = query.toString();
+    return apiRequest(`/items/my-won${queryString ? `?${queryString}` : ''}`);
+  },
 };
+

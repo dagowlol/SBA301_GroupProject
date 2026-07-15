@@ -1,5 +1,6 @@
 package hoang.com.auction_system_be.dto.request;
 
+import hoang.com.auction_system_be.enums.ItemStatus;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -30,4 +31,6 @@ public class ItemRequest {
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than 0")
     BigDecimal reservePrice;
+
+    ItemStatus status;
 }

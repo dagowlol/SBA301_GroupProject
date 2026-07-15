@@ -91,8 +91,14 @@ export function AppContextProvider({ children }) {
     }
   };
 
-  const editItem = (id, updated) => {
-    setItems(prev => prev.map(item => (item.id === id ? { ...item, ...updated } : item)));
+  const editItem = async (id, updated) => {
+    try {
+      const edited = await productService.updateItem(id, updated);
+      setItems(prev => prev.map(item => (item.id === id ? edited : item)));
+    } catch (err) {
+      console.error("Failed to edit item via Service", err);
+      throw err;
+    }
   };
 
   const deleteItem = (id) => {
@@ -143,7 +149,7 @@ export function AppContextProvider({ children }) {
   const placeBid = (id, amount, bidder = 'current_user') => {
     setItems(prev => prev.map(item => {
       if (item.id === id) {
-        const newBid = { bidder, amount, time: new Date().toISOString() };
+        const newBid = { bidder, amount, time: new Date().toISOString };
         return {
           ...item,
           currentBid: amount,

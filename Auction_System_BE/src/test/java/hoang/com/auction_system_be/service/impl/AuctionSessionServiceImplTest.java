@@ -57,6 +57,12 @@ class AuctionSessionServiceImplTest {
         @Spy
         BidMapper bidMapper = new BidMapper();
 
+        @Mock
+        org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+        @Mock
+        hoang.com.auction_system_be.service.autobid.AutoBidService autoBidService;
+
         @InjectMocks
         AuctionSessionServiceImpl auctionSessionService;
 
@@ -101,11 +107,7 @@ class AuctionSessionServiceImplTest {
                                 .user(testUser)
                                 .session(testSession)
                                 .build();
-                                
-                ReflectionTestUtils.setField(auctionSessionService, "antiShillWindowSeconds", 5);
-                ReflectionTestUtils.setField(auctionSessionService, "antiShillMaxBids", 4);
-                ReflectionTestUtils.setField(auctionSessionService, "antiSpamCooldownMillis", 500L);
-        }
+		}
 
         @Test
         @DisplayName("placeBid - success: valid bid is saved and broadcast")
@@ -116,7 +118,7 @@ class AuctionSessionServiceImplTest {
                                 .bidAmount(BigDecimal.valueOf(110))
                                 .build();
 
-                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
                 when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
                 when(auctionParticipantRepository.findByUserIdAndSessionId(1L, 1L))
                                 .thenReturn(Optional.of(testParticipant));
@@ -135,14 +137,15 @@ class AuctionSessionServiceImplTest {
                 assertThat(testSession.getCurrentWinnerParticipant()).isEqualTo(testParticipant);
                 assertThat(testSession.getBidCount()).isEqualTo(1);
 
-                // Verify broadcast
-                ArgumentCaptor<BidBroadcastResponse> broadcastCaptor = ArgumentCaptor
-                                .forClass(BidBroadcastResponse.class);
-                verify(messagingTemplate).convertAndSend(
-                                eq("/topic/auction/1"),
-                                broadcastCaptor.capture());
+                // Verify event published
+                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-                BidBroadcastResponse broadcast = broadcastCaptor.getValue();
+                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                assertThat(event.getSessionId()).isEqualTo("1");
+                assertThat(event.isError()).isFalse();
+                BidBroadcastResponse broadcast = event.getBroadcastResponse();
                 assertThat(broadcast.getSessionId()).isEqualTo(1L);
                 assertThat(broadcast.getCurrentPrice()).isEqualByComparingTo(BigDecimal.valueOf(110));
                 assertThat(broadcast.getWinnerName()).isEqualTo("John Doe");
@@ -159,23 +162,24 @@ class AuctionSessionServiceImplTest {
                                 .bidAmount(BigDecimal.valueOf(110))
                                 .build();
 
-                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
 
-                // Act
-                auctionSessionService.placeBid(1L, request);
+                // Act & Assert
+                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                        auctionSessionService.placeBid(1L, request);
+                });
 
-                // Assert - no bid saved, error sent to user
+                // Assert - no bid saved
                 verify(bidRepository, never()).save(any(Bid.class));
                 verify(auctionSessionRepository, never()).save(any(AuctionSession.class));
 
-                ArgumentCaptor<ErrorSocketResponse> errorCaptor = ArgumentCaptor.forClass(ErrorSocketResponse.class);
-                verify(messagingTemplate).convertAndSendToUser(
-                                eq("1"),
-                                eq("/queue/errors"),
-                                errorCaptor.capture());
+                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-                assertThat(errorCaptor.getValue().getMessage())
-                                .isEqualTo("Auction session is not active");
+                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                assertThat(event.isError()).isTrue();
+                assertThat(event.getErrorMsg()).isEqualTo("Auction session is not active");
         }
 
         @Test
@@ -187,58 +191,24 @@ class AuctionSessionServiceImplTest {
                                 .bidAmount(BigDecimal.valueOf(105)) // needs at least 110 (100 + 10 increment)
                                 .build();
 
-                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
 
-                // Act
-                auctionSessionService.placeBid(1L, request);
+                // Act & Assert
+                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                        auctionSessionService.placeBid(1L, request);
+                });
 
-                // Assert - no bid saved, error sent to user
+                // Assert - no bid saved
                 verify(bidRepository, never()).save(any(Bid.class));
                 verify(auctionSessionRepository, never()).save(any(AuctionSession.class));
 
-                ArgumentCaptor<ErrorSocketResponse> errorCaptor = ArgumentCaptor.forClass(ErrorSocketResponse.class);
-                verify(messagingTemplate).convertAndSendToUser(
-                                eq("1"),
-                                eq("/queue/errors"),
-                                errorCaptor.capture());
+                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-                assertThat(errorCaptor.getValue().getMessage())
-                                .isEqualTo("Bid amount is too low");
-        }
-
-        @Test
-        @DisplayName("placeBid - fail: anti-spam prevents bidding within 500ms")
-        void placeBid_fail_spam() {
-                // Arrange
-                PlaceBidRequest request = PlaceBidRequest.builder()
-                                .userId(1L)
-                                .bidAmount(BigDecimal.valueOf(110))
-                                .build();
-
-                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
-                when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-                
-                Bid lastBid = Bid.builder()
-                                .bidTimestamp(LocalDateTime.now().minusNanos(100_000_000)) // 100ms ago
-                                .build();
-                                
-                when(bidRepository.findTopByParticipantUserIdAndParticipantSessionIdOrderByBidTimestampDesc(1L, 1L))
-                                .thenReturn(Optional.of(lastBid));
-
-                // Act
-                auctionSessionService.placeBid(1L, request);
-
-                // Assert
-                verify(bidRepository, never()).save(any(Bid.class));
-                
-                ArgumentCaptor<ErrorSocketResponse> errorCaptor = ArgumentCaptor.forClass(ErrorSocketResponse.class);
-                verify(messagingTemplate).convertAndSendToUser(
-                                eq("1"),
-                                eq("/queue/errors"),
-                                errorCaptor.capture());
-
-                assertThat(errorCaptor.getValue().getMessage())
-                                .isEqualTo("Too many requests, please slow down");
+                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                assertThat(event.isError()).isTrue();
+                assertThat(event.getErrorMsg()).isEqualTo("Bid amount is too low");
         }
 
         @Test
@@ -247,13 +217,14 @@ class AuctionSessionServiceImplTest {
                 // Arrange - session ends in 20 seconds (within 30s anti-snipe window)
                 LocalDateTime nearEndTime = LocalDateTime.now().plusSeconds(20);
                 testSession.setEndTime(nearEndTime);
+                testSession.setAntiSnipeWindowSeconds(30);
 
                 PlaceBidRequest request = PlaceBidRequest.builder()
                                 .userId(1L)
                                 .bidAmount(BigDecimal.valueOf(110))
                                 .build();
 
-                when(auctionSessionRepository.findById(1L)).thenReturn(Optional.of(testSession));
+                when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
                 when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
                 when(auctionParticipantRepository.findByUserIdAndSessionId(1L, 1L))
                                 .thenReturn(Optional.of(testParticipant));
@@ -284,9 +255,13 @@ class AuctionSessionServiceImplTest {
                 assertThat(savedLog.getSession()).isEqualTo(testSession);
                 assertThat(savedLog.getTriggeredByParticipant()).isEqualTo(testParticipant);
 
-                // Verify broadcast still happens
-                verify(messagingTemplate).convertAndSend(
-                                eq("/topic/auction/1"),
-                                any(BidBroadcastResponse.class));
+                // Verify event published
+                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                assertThat(event.getSessionId()).isEqualTo("1");
+                assertThat(event.isError()).isFalse();
         }
 }

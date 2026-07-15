@@ -89,7 +89,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
     setApiError('');
     try {
       const payload = {
-        endTime: new Date(data.endTime).toISOString(),
+        endTime: data.endTime,
         reservePrice: data.reservePrice ? Number(data.reservePrice) : null,
         minimumIncrement: data.minimumIncrement ? Number(data.minimumIncrement) : null,
         antiSnipeWindowSeconds: Number(data.antiSnipeWindowSeconds),
@@ -99,7 +99,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
           cancellationReason: data.status === 'CANCELLED' ? data.cancellationReason : null
         } : {
           itemId: Number(data.itemId),
-          startTime: new Date(data.startTime).toISOString()
+          startTime: data.startTime
         })
       };
 

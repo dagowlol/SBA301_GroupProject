@@ -11,6 +11,7 @@ import ItemApproval from '../features/staff/pages/ItemApproval';
 import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
 import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
+import PaymentResultPage from '../features/auction/pages/PaymentResultPage';
 import CreateItemRequest from '../features/user/pages/CreateItemRequest';
 import SessionManagement from '../features/staff/pages/SessionManagement';
 import BidMonitoring from '../features/staff/pages/BidMonitoring';
@@ -36,6 +37,7 @@ export default function AppRoutes() {
           <Route path="contact-us" element={<ContactUsPage />} />
           
           <Route path="my-account" element={<MyAccountPage />} />
+          <Route path="payment-result" element={<PaymentResultPage />} />
           <Route path="user/items/create" element={<CreateItemRequest />} />
           <Route path="user/items" element={<div>My Items Page - <a href="/user/items/create">Create New</a></div>} />
           <Route element={<GuestRoute />}>

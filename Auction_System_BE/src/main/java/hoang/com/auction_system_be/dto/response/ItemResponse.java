@@ -2,6 +2,7 @@ package hoang.com.auction_system_be.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import hoang.com.auction_system_be.enums.ItemStatus;
+import hoang.com.auction_system_be.enums.PaymentStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -31,4 +32,9 @@ public class ItemResponse {
     String rejectionReason;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+    Long sessionId;
+    String imageUrl;
+    // Payment info (only populated for won items)
+    Long paymentId;
+    PaymentStatus paymentStatus;
 }

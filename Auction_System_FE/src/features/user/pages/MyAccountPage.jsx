@@ -6,6 +6,7 @@ import { userApi } from '../../../api/userApi';
 import { LogOut, User, Gavel, Upload, DollarSign, Settings, MapPin, Key } from 'lucide-react';
 import ChangePasswordModal from './ChangePasswordModal';
 import EditAddressTab from './EditAddressTab';
+import AuctionItemsTab from './AuctionItemsTab';
 
 const TABS = [
   { id: 'auction-item', label: 'Auction Item', icon: Gavel },
@@ -56,7 +57,7 @@ export default function MyAccountPage() {
   const renderTabContent = () => {
     switch (currentTab) {
       case 'auction-item':
-        return <div><h4>Auction Items</h4><p className="text-muted">Content for Auction Items will be implemented here.</p></div>;
+        return <AuctionItemsTab />;
       case 'upload-item':
         return <div><h4>Upload Item</h4><p className="text-muted">Content for Upload Item will be implemented here.</p></div>;
       case 'earning-report':

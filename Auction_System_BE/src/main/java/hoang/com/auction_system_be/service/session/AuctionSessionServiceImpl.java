@@ -88,126 +88,126 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                 .map(bidMapper::toBidLogResponse)
                                 .collect(Collectors.toList());
 
+                log.info("session status {}", session.getStatus());
                 return auctionSessionMapper.toDetailResponse(session, imageUrl, currentWinnerName, bidLogs);
         }
 
-    @Override
-    @Transactional
-    @Caching(evict = {
-        @CacheEvict(value = "auction_session_detail", key = "'basic_' + #sessionId"),
-        @CacheEvict(value = "auction_session_detail", key = "'detail_' + #sessionId")
-    })
-    public void placeBid(Long sessionId, PlaceBidRequest request) {
-        try {
-            AuctionSession session = getSessionWithLock(sessionId);
-            validateSessionStateAndBidAmount(session, request.getBidAmount());
+        @Override
+        @Transactional
+        @Caching(evict = {
+                        @CacheEvict(value = "auction_session_detail", key = "'basic_' + #sessionId"),
+                        @CacheEvict(value = "auction_session_detail", key = "'detail_' + #sessionId")
+        })
+        public void placeBid(Long sessionId, PlaceBidRequest request) {
+                try {
+                        AuctionSession session = getSessionWithLock(sessionId);
+                        validateSessionStateAndBidAmount(session, request.getBidAmount());
 
-            User user = userRepository.findById(request.getUserId())
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-            
-            AuctionParticipant participant = resolveParticipant(user, session);
-            
-            LocalDateTime now = LocalDateTime.now();
-            saveBidRecord(participant, request.getBidAmount(), now);
-            
-            updateSessionAndHandleAntiSnipe(session, participant, request.getBidAmount(), now);
+                        User user = userRepository.findById(request.getUserId())
+                                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-            log.info("Bid placed successfully - session: {}, user: {}, amount: {}",
-                    sessionId, request.getUserId(), request.getBidAmount());
+                        AuctionParticipant participant = resolveParticipant(user, session);
 
-            broadcastBidEvent(session, user, request.getBidAmount(), now);
-            autoBidService.triggerAutoBids(sessionId);
+                        LocalDateTime now = LocalDateTime.now();
+                        saveBidRecord(participant, request.getBidAmount(), now);
 
-        } catch (AppException e) {
-            log.warn("Bid validation failed for session {}: {}", sessionId, e.getMessage());
-            eventPublisher.publishEvent(new BidPlacedEvent(this, request.getUserId().toString(),
-                    e.getErrorCode().getMessage()));
-            throw e;
-        }
-    }
+                        updateSessionAndHandleAntiSnipe(session, participant, request.getBidAmount(), now);
 
-    private AuctionSession getSessionWithLock(Long sessionId) {
-        return auctionSessionRepository.findByIdWithPessimisticLock(sessionId)
-                .orElseThrow(() -> new AppException(ErrorCode.SESSION_NOT_FOUND));
-    }
+                        log.info("Bid placed successfully - session: {}, user: {}, amount: {}",
+                                        sessionId, request.getUserId(), request.getBidAmount());
 
-    private void validateSessionStateAndBidAmount(AuctionSession session, BigDecimal bidAmount) {
-        if (session.getStatus() != SessionStatus.ACTIVE) {
-            throw new AppException(ErrorCode.SESSION_NOT_ACTIVE);
-        }
-        if (LocalDateTime.now().isAfter(session.getEndTime())) {
-            session.setStatus(SessionStatus.ENDED);
-            auctionSessionRepository.save(session);
-            throw new AppException(ErrorCode.AUCTION_ENDED);
+                        broadcastBidEvent(session, user, request.getBidAmount(), now);
+                        autoBidService.triggerAutoBids(sessionId);
+
+                } catch (AppException e) {
+                        log.warn("Bid validation failed for session {}: {}", sessionId, e.getMessage());
+                        eventPublisher.publishEvent(new BidPlacedEvent(this, request.getUserId().toString(),
+                                        e.getErrorCode().getMessage()));
+                        throw e;
+                }
         }
 
-        BigDecimal currentPrice = session.getCurrentHighestBid() != null
-                ? session.getCurrentHighestBid()
-                : session.getItem().getStartingPrice();
-
-        BigDecimal minimumBid = currentPrice.add(session.getMinimumIncrement());
-
-        if (bidAmount.compareTo(minimumBid) < 0) {
-            throw new AppException(ErrorCode.INVALID_BID_AMOUNT);
-        }
-    }
-
-    private AuctionParticipant resolveParticipant(User user, AuctionSession session) {
-        return auctionParticipantRepository
-                .findByUserIdAndSessionId(user.getId(), session.getId())
-                .orElseGet(() -> auctionParticipantRepository.save(
-                        auctionSessionMapper.toParticipant(user, session)
-                ));
-    }
-
-    private void saveBidRecord(AuctionParticipant participant, BigDecimal bidAmount, LocalDateTime now) {
-        Bid bid = bidMapper.toBid(participant, bidAmount, now);
-        bidRepository.save(bid);
-    }
-
-    private void updateSessionAndHandleAntiSnipe(AuctionSession session, AuctionParticipant participant, BigDecimal bidAmount, LocalDateTime now) {
-        session.setCurrentHighestBid(bidAmount);
-        session.setCurrentWinnerParticipant(participant);
-        session.setBidCount(session.getBidCount() + 1);
-
-        LocalDateTime oldEndTime = session.getEndTime();
-        long secondsRemaining = Duration.between(now, oldEndTime).getSeconds();
-
-        if (secondsRemaining <= session.getAntiSnipeWindowSeconds()) {
-            LocalDateTime newEndTime = oldEndTime.plusSeconds(session.getAntiSnipeExtensionSeconds());
-            session.setEndTime(newEndTime);
-
-            AuctionExtensionLog extensionLog = auctionSessionMapper.toExtensionLog(
-                    session, participant, oldEndTime, newEndTime,
-                    "Anti-snipe: bid placed within window");
-            auctionExtensionLogRepository.save(extensionLog);
-
-            log.info("Anti-snipe triggered for session {}: extended from {} to {}",
-                    session.getId(), oldEndTime, newEndTime);
+        private AuctionSession getSessionWithLock(Long sessionId) {
+                return auctionSessionRepository.findByIdWithPessimisticLock(sessionId)
+                                .orElseThrow(() -> new AppException(ErrorCode.SESSION_NOT_FOUND));
         }
 
-        auctionSessionRepository.save(session);
-    }
+        private void validateSessionStateAndBidAmount(AuctionSession session, BigDecimal bidAmount) {
+                if (session.getStatus() != SessionStatus.ACTIVE) {
+                        throw new AppException(ErrorCode.SESSION_NOT_ACTIVE);
+                }
+                if (LocalDateTime.now().isAfter(session.getEndTime())) {
+                        session.setStatus(SessionStatus.ENDED);
+                        auctionSessionRepository.save(session);
+                        throw new AppException(ErrorCode.AUCTION_ENDED);
+                }
 
-    private void broadcastBidEvent(AuctionSession session, User user, BigDecimal bidAmount, LocalDateTime now) {
-        String winnerName = user.getFirstName() + " " + user.getLastName();
-        BidBroadcastResponse broadcastResponse = bidMapper.toBidBroadcastResponse(
-                session.getId(), bidAmount, winnerName, session.getEndTime(), now);
+                BigDecimal currentPrice = session.getCurrentHighestBid() != null
+                                ? session.getCurrentHighestBid()
+                                : session.getItem().getStartingPrice();
 
-        eventPublisher.publishEvent(
-                new BidPlacedEvent(this, String.valueOf(session.getId()), broadcastResponse));
-    }
+                BigDecimal minimumBid = currentPrice.add(session.getMinimumIncrement());
+
+                if (bidAmount.compareTo(minimumBid) < 0) {
+                        throw new AppException(ErrorCode.INVALID_BID_AMOUNT);
+                }
+        }
+
+        private AuctionParticipant resolveParticipant(User user, AuctionSession session) {
+                return auctionParticipantRepository
+                                .findByUserIdAndSessionId(user.getId(), session.getId())
+                                .orElseGet(() -> auctionParticipantRepository.save(
+                                                auctionSessionMapper.toParticipant(user, session)));
+        }
+
+        private void saveBidRecord(AuctionParticipant participant, BigDecimal bidAmount, LocalDateTime now) {
+                Bid bid = bidMapper.toBid(participant, bidAmount, now);
+                bidRepository.save(bid);
+        }
+
+        private void updateSessionAndHandleAntiSnipe(AuctionSession session, AuctionParticipant participant,
+                        BigDecimal bidAmount, LocalDateTime now) {
+                session.setCurrentHighestBid(bidAmount);
+                session.setCurrentWinnerParticipant(participant);
+                session.setBidCount(session.getBidCount() + 1);
+
+                LocalDateTime oldEndTime = session.getEndTime();
+                long secondsRemaining = Duration.between(now, oldEndTime).getSeconds();
+
+                if (secondsRemaining <= session.getAntiSnipeWindowSeconds()) {
+                        LocalDateTime newEndTime = oldEndTime.plusSeconds(session.getAntiSnipeExtensionSeconds());
+                        session.setEndTime(newEndTime);
+
+                        AuctionExtensionLog extensionLog = auctionSessionMapper.toExtensionLog(
+                                        session, participant, oldEndTime, newEndTime,
+                                        "Anti-snipe: bid placed within window");
+                        auctionExtensionLogRepository.save(extensionLog);
+
+                        log.info("Anti-snipe triggered for session {}: extended from {} to {}",
+                                        session.getId(), oldEndTime, newEndTime);
+                }
+
+                auctionSessionRepository.save(session);
+        }
+
+        private void broadcastBidEvent(AuctionSession session, User user, BigDecimal bidAmount, LocalDateTime now) {
+                String winnerName = user.getFirstName() + " " + user.getLastName();
+                BidBroadcastResponse broadcastResponse = bidMapper.toBidBroadcastResponse(
+                                session.getId(), bidAmount, winnerName, session.getEndTime(), now);
+
+                eventPublisher.publishEvent(
+                                new BidPlacedEvent(this, String.valueOf(session.getId()), broadcastResponse));
+        }
 
         // ─── Staff/Admin CRUD ─────────────────────────────────────────────────
 
         @Override
-    public AuctionSessionResponse createSession(AuctionSessionRequest request) {
-        return lockService.executeWithLock("item:" + request.getItemId(), () -> {
-            return transactionTemplate.execute(status -> doCreateSession(request));
-        });
-    }
+        public AuctionSessionResponse createSession(AuctionSessionRequest request) {
+                return lockService.executeWithLock("item:" + request.getItemId(), () -> {
+                        return transactionTemplate.execute(status -> doCreateSession(request));
+                });
+        }
 
-        
         private AuctionSessionResponse doCreateSession(AuctionSessionRequest request) {
                 Long itemId = request.getItemId();
 
@@ -274,7 +274,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 String cleanSearch = (search != null) ? search.trim() : "";
 
                 if (!cleanSearch.isEmpty() && cleanSearch.length() < 2) {
-                        throw new AppException(ErrorCode.SEARCH_KEYWORD_TOO_SHORT); 
+                        throw new AppException(ErrorCode.SEARCH_KEYWORD_TOO_SHORT);
                 }
 
                 Pageable pageable = PageRequest.of(0, size + 1);
@@ -288,7 +288,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 boolean hasSearch = !cleanSearch.isEmpty();
 
                 List<AuctionSessionListResponse> sessions = auctionSessionRepository.findOptimizedSessions(
-                        hasCursor, safeCursor, hasStatus, safeStatus, hasSearch, cleanSearch, pageable);
+                                hasCursor, safeCursor, hasStatus, safeStatus, hasSearch, cleanSearch, pageable);
 
                 boolean hasNext = sessions.size() > size;
                 if (hasNext) {
@@ -317,8 +317,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
         @Override
         @Transactional
         @Caching(evict = {
-            @CacheEvict(value = "auction_session_detail", key = "'basic_' + #id"),
-            @CacheEvict(value = "auction_session_detail", key = "'detail_' + #id")
+                        @CacheEvict(value = "auction_session_detail", key = "'basic_' + #id"),
+                        @CacheEvict(value = "auction_session_detail", key = "'detail_' + #id")
         })
         public AuctionSessionResponse updateSession(Long id, AuctionSessionUpdateRequest request) {
                 AuctionSession session = auctionSessionRepository.findByIdWithDetails(id)
@@ -327,7 +327,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 boolean isActive = session.getStatus() == SessionStatus.ACTIVE;
 
                 // 1. Effective State & Time Calculation
-                LocalDateTime effectiveEndTime = request.getEndTime() != null ? request.getEndTime() : session.getEndTime();
+                LocalDateTime effectiveEndTime = request.getEndTime() != null ? request.getEndTime()
+                                : session.getEndTime();
                 SessionStatus effectiveStatus = request.getStatus() != null ? request.getStatus() : session.getStatus();
 
                 // 2. Strict End Time Validation for SCHEDULED and ACTIVE
@@ -371,7 +372,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
 
                 Long staffId = authenticationService.getCurrentUserId();
                 if (staffId != null) {
-                        String details = String.format("status=%s, endTime=%s", updated.getStatus(), updated.getEndTime());
+                        String details = String.format("status=%s, endTime=%s", updated.getStatus(),
+                                        updated.getEndTime());
                         eventPublisher.publishEvent(
                                         new AuditLogEvent(this, staffId, AuditLogEvent.ACTION_SESSION_UPDATED,
                                                         AuditLogEvent.ENTITY_AUCTION_SESSION, id, details));
@@ -391,8 +393,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
         @Override
         @Transactional
         @Caching(evict = {
-            @CacheEvict(value = "auction_session_detail", key = "'basic_' + #id"),
-            @CacheEvict(value = "auction_session_detail", key = "'detail_' + #id")
+                        @CacheEvict(value = "auction_session_detail", key = "'basic_' + #id"),
+                        @CacheEvict(value = "auction_session_detail", key = "'detail_' + #id")
         })
         public void deleteSession(Long id) {
                 AuctionSession session = auctionSessionRepository.findById(id)
@@ -452,18 +454,21 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                 .updatedAt(s.getUpdatedAt())
                                 .build();
         }
+
         private String resolvePrimaryImageUrl(AuctionItem item) {
-                if (item.getImages() == null) return null;
+                if (item.getImages() == null)
+                        return null;
                 return item.getImages().stream()
-                        .filter(ItemImage::isPrimary)
-                        .findFirst()
-                        .or(() -> item.getImages().stream().findFirst())
-                        .map(ItemImage::getImageUrl)
-                        .orElse(null);
+                                .filter(ItemImage::isPrimary)
+                                .findFirst()
+                                .or(() -> item.getImages().stream().findFirst())
+                                .map(ItemImage::getImageUrl)
+                                .orElse(null);
         }
 
         private String resolveWinnerName(AuctionParticipant participant) {
-                if (participant == null || participant.getUser() == null) return null;
+                if (participant == null || participant.getUser() == null)
+                        return null;
                 User winner = participant.getUser();
                 return winner.getFirstName() + " " + winner.getLastName();
         }
@@ -482,8 +487,10 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                         .reservePrice(row[4] != null ? new BigDecimal(row[4].toString()) : null)
                                         .currentHighestBid(row[5] != null ? new BigDecimal(row[5].toString()) : null)
                                         .status(SessionStatus.valueOf((String) row[6]))
-                                        .startTime(row[7] instanceof Timestamp ? ((Timestamp) row[7]).toLocalDateTime() : (LocalDateTime) row[7])
-                                        .endTime(row[8] instanceof Timestamp ? ((Timestamp) row[8]).toLocalDateTime() : (LocalDateTime) row[8])
+                                        .startTime(row[7] instanceof Timestamp ? ((Timestamp) row[7]).toLocalDateTime()
+                                                        : (LocalDateTime) row[7])
+                                        .endTime(row[8] instanceof Timestamp ? ((Timestamp) row[8]).toLocalDateTime()
+                                                        : (LocalDateTime) row[8])
                                         .build());
                 }
                 return result;
@@ -492,8 +499,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
         @Override
         @Transactional
         @Caching(evict = {
-            @CacheEvict(value = "auction_session_detail", key = "'basic_' + #id"),
-            @CacheEvict(value = "auction_session_detail", key = "'detail_' + #id")
+                        @CacheEvict(value = "auction_session_detail", key = "'basic_' + #id"),
+                        @CacheEvict(value = "auction_session_detail", key = "'detail_' + #id")
         })
         public void restoreSession(Long id) {
                 int updated = auctionSessionRepository.restoreSession(id);
