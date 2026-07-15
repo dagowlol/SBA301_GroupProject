@@ -1,35 +1,35 @@
 import { useContext, useState, useMemo } from 'react';
 import { AppContext } from '../../../context/AppContext';
-import { 
-  Table, 
-  Button, 
-  Form, 
-  InputGroup, 
-  Modal, 
-  Badge, 
-  Alert, 
-  Row, 
-  Col 
+import {
+  Table,
+  Button,
+  Form,
+  InputGroup,
+  Modal,
+  Badge,
+  Alert,
+  Row,
+  Col
 } from 'react-bootstrap';
-import { 
-  Search, 
-  Edit2, 
-  Trash2, 
-  Check, 
-  X, 
-  Plus, 
-  AlertCircle 
+import {
+  Search,
+  Edit2,
+  Trash2,
+  Check,
+  X,
+  Plus,
+  AlertCircle
 } from 'lucide-react';
 
 export default function ItemApproval() {
-  const { 
-    items, 
-    categories, 
-    approveItem, 
-    rejectItem, 
-    addItem, 
-    editItem, 
-    deleteItem 
+  const {
+    items,
+    categories,
+    approveItem,
+    rejectItem,
+    addItem,
+    editItem,
+    deleteItem
   } = useContext(AppContext);
 
   // Search, Status, and Sort state
@@ -48,7 +48,7 @@ export default function ItemApproval() {
   const [categoryId, setCategoryId] = useState('');
   const [reserve, setReserve] = useState('');
   const [startingPrice, setStartingPrice] = useState('');
-  
+
   // Presentation / Mock UI states
   const [artist, setArtist] = useState('');
   const [image, setImage] = useState('');
@@ -56,7 +56,7 @@ export default function ItemApproval() {
   const [endTime, setEndTime] = useState('');
   const [status, setStatus] = useState('Pending');
   const [submittedBy, setSubmittedBy] = useState('');
-  
+
   // Error state for handling Spring Boot constraint exceptions
   const [error, setError] = useState('');
 
@@ -74,13 +74,13 @@ export default function ItemApproval() {
     setStartingPrice('');
     setArtist('');
     setImage('');
-    
+
     // Default start tomorrow, end in 10 days
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tenDaysLater = new Date();
     tenDaysLater.setDate(tenDaysLater.getDate() + 10);
-    
+
     setStartTime(tomorrow.toISOString().substring(0, 16));
     setEndTime(tenDaysLater.toISOString().substring(0, 16));
     setStatus('Pending');
@@ -93,11 +93,11 @@ export default function ItemApproval() {
     setSelectedItem(item);
     setTitle(item.title);
     setDescription(item.description);
-    
+
     // Attempt to match categoryId
     const matchedCategory = categories.find(c => c.name.toLowerCase() === item.category.toLowerCase());
     setCategoryId(item.categoryId || matchedCategory?.id || categories[0]?.id || '');
-    
+
     setReserve(item.reserve);
     setStartingPrice(item.startingPrice || '');
     setArtist(item.artist);
@@ -205,8 +205,8 @@ export default function ItemApproval() {
     // Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.title.toLowerCase().includes(q) || 
+      result = result.filter(item =>
+        item.title.toLowerCase().includes(q) ||
         item.artist.toLowerCase().includes(q) ||
         item.category.toLowerCase().includes(q)
       );
@@ -250,8 +250,8 @@ export default function ItemApproval() {
           <h2 className="fw-bold text-dark mb-1">Auction Item Management</h2>
           <p className="text-muted small m-0">Manage items, approve submissions, search and sort</p>
         </div>
-        <Button 
-          variant="dark" 
+        <Button
+          variant="dark"
           onClick={handleOpenAdd}
           className="d-flex align-items-center gap-1 text-uppercase fw-semibold"
           style={{ backgroundColor: '#004e64', borderColor: '#004e64', fontSize: '0.85rem' }}
@@ -279,9 +279,9 @@ export default function ItemApproval() {
         </Col>
 
         <Col md={3} sm={6}>
-          <Form.Select 
-            size="sm" 
-            value={statusFilter} 
+          <Form.Select
+            size="sm"
+            value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="All">All Status</option>
@@ -293,9 +293,9 @@ export default function ItemApproval() {
         </Col>
 
         <Col md={4} sm={6}>
-          <Form.Select 
-            size="sm" 
-            value={sortBy} 
+          <Form.Select
+            size="sm"
+            value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
             <option value="title_a_z">Title A-Z</option>
@@ -308,8 +308,8 @@ export default function ItemApproval() {
 
       {/* Pending Items Banner */}
       {pendingCount > 0 && (
-        <Alert 
-          variant="warning" 
+        <Alert
+          variant="warning"
           className="d-flex align-items-center gap-2 py-3 border-0 border-start border-4 border-warning mb-4 rounded-0 shadow-xs"
           style={{ backgroundColor: '#fffbf2' }}
         >
@@ -344,7 +344,7 @@ export default function ItemApproval() {
                 <td className="text-end py-3">${item.startingPrice || 0}</td>
                 <td className="text-end fw-semibold py-3">${item.reserve}</td>
                 <td className="text-center py-3">
-                  <Badge 
+                  <Badge
                     className={`px-3 py-2 text-uppercase rounded-pill ${getBadgeStyle(item.status)}`}
                     style={{ fontSize: '0.75rem', fontWeight: '500' }}
                   >
@@ -361,18 +361,18 @@ export default function ItemApproval() {
                   <div className="d-flex gap-2 justify-content-center">
                     {item.status === 'Pending' && (
                       <>
-                        <Button 
-                          variant="link" 
-                          size="sm" 
+                        <Button
+                          variant="link"
+                          size="sm"
                           className="text-success p-0 hover-opacity"
                           title="Approve"
                           onClick={() => handleApprove(item.id)}
                         >
                           <Check size={18} />
                         </Button>
-                        <Button 
-                          variant="link" 
-                          size="sm" 
+                        <Button
+                          variant="link"
+                          size="sm"
                           className="text-danger p-0 hover-opacity"
                           title="Reject"
                           onClick={() => handleReject(item.id)}
@@ -381,18 +381,18 @@ export default function ItemApproval() {
                         </Button>
                       </>
                     )}
-                    <Button 
-                      variant="link" 
-                      size="sm" 
+                    <Button
+                      variant="link"
+                      size="sm"
                       className="text-info p-0 hover-opacity"
                       title="Edit"
                       onClick={() => handleOpenEdit(item)}
                     >
                       <Edit2 size={16} />
                     </Button>
-                    <Button 
-                      variant="link" 
-                      size="sm" 
+                    <Button
+                      variant="link"
+                      size="sm"
                       className="text-danger p-0 hover-opacity"
                       title="Delete"
                       onClick={() => handleDelete(item.id)}
@@ -419,7 +419,7 @@ export default function ItemApproval() {
         <Form onSubmit={handleAddSubmit}>
           <Modal.Body className="p-4">
             {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
-            
+
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -558,10 +558,10 @@ export default function ItemApproval() {
             <Button variant="secondary" size="sm" onClick={() => setShowAddModal(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="dark" 
-              size="sm" 
-              type="submit" 
+            <Button
+              variant="dark"
+              size="sm"
+              type="submit"
               style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
             >
               Submit Item
@@ -712,10 +712,10 @@ export default function ItemApproval() {
             <Button variant="secondary" size="sm" onClick={() => setShowEditModal(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="dark" 
-              size="sm" 
-              type="submit" 
+            <Button
+              variant="dark"
+              size="sm"
+              type="submit"
               style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
             >
               Save Changes
