@@ -409,22 +409,38 @@ export default function AuctionItemsTab() {
         </p>
       </div>
 
-      <div style={{ display: 'inline-flex', background: '#f3f4f6', borderRadius: 10, padding: 4, gap: 2, marginBottom: 20 }}>
-        {[
-          { id: 'uploaded', label: 'Uploaded Items', icon: Upload },
-          { id: 'won', label: 'Won Items', icon: Trophy },
-        ].map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => handleViewModeChange(id)} style={{
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 20 }}>
+        <div style={{ display: 'inline-flex', background: '#f3f4f6', borderRadius: 10, padding: 4, gap: 2 }}>
+          {[
+            { id: 'uploaded', label: 'Uploaded Items', icon: Upload },
+            { id: 'won', label: 'Won Items', icon: Trophy },
+          ].map(({ id, label, icon: Icon }) => (
+            <button key={id} onClick={() => handleViewModeChange(id)} style={{
+              display: 'flex', alignItems: 'center', gap: 7, padding: '8px 18px', borderRadius: 8, border: 'none',
+              background: viewMode === id ? '#004e64' : 'transparent',
+              color: viewMode === id ? '#fff' : '#6b7280',
+              fontWeight: viewMode === id ? 600 : 500, fontSize: '0.85rem', cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: viewMode === id ? '0 2px 8px rgba(0,78,100,0.25)' : 'none',
+            }}>
+              <Icon size={15} />{label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => navigate('/user/items/create')}
+          style={{
             display: 'flex', alignItems: 'center', gap: 7, padding: '8px 18px', borderRadius: 8, border: 'none',
-            background: viewMode === id ? '#004e64' : 'transparent',
-            color: viewMode === id ? '#fff' : '#6b7280',
-            fontWeight: viewMode === id ? 600 : 500, fontSize: '0.85rem', cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: viewMode === id ? '0 2px 8px rgba(0,78,100,0.25)' : 'none',
-          }}>
-            <Icon size={15} />{label}
-          </button>
-        ))}
+            background: 'linear-gradient(135deg, #004e64 0%, #006e8a 100%)',
+            color: '#fff', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,78,100,0.25)', transition: 'opacity 0.2s ease',
+            fontFamily: 'inherit',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+        >
+          <Upload size={15} /> Submit Item for Auction
+        </button>
       </div>
 
       <div style={{

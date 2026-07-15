@@ -63,14 +63,40 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         AuctionItem item = AuctionItem.builder()
-                .name(request.getName())
+                .name(request.getItemName())
                 .description(request.getDescription())
-                .startingPrice(request.getStartingPrice())
+                .startingPrice(request.getStartingPrice() != null ? request.getStartingPrice() : request.getReservePrice())
                 .reservePrice(request.getReservePrice())
                 .category(category)
                 .seller(seller)
                 .status(ItemStatus.PENDING)
                 .build();
+
+        List<ItemImage> itemImages = new ArrayList<>();
+        if (request.getImages() != null) {
+            for (int i = 0; i < request.getImages().size(); i++) {
+                org.springframework.web.multipart.MultipartFile file = request.getImages().get(i);
+                if (file != null && !file.isEmpty()) {
+                    String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                    try {
+                        java.nio.file.Path uploadPath = java.nio.file.Paths.get("uploads");
+                        if (!java.nio.file.Files.exists(uploadPath)) {
+                            java.nio.file.Files.createDirectories(uploadPath);
+                        }
+                        java.nio.file.Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
+                    } catch (Exception e) {
+                        log.error("Failed to save image: " + file.getOriginalFilename(), e);
+                    }
+                    itemImages.add(ItemImage.builder()
+                            .item(item)
+                            .imageUrl("/uploads/" + fileName)
+                            .isPrimary(i == 0)
+                            .sortOrder(i)
+                            .build());
+                }
+            }
+        }
+        item.setImages(itemImages);
 
         AuctionItem savedItem = itemRepository.save(item);
         log.info("Created new item with id: {} by seller id: {}", savedItem.getId(), sellerId);
