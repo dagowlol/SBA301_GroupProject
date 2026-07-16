@@ -15,9 +15,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -81,21 +85,44 @@ public class AuctionSessionScheduler {
 
                 List<Long> sessionIds = page.getContent();
                 if (sessionIds.isEmpty()) {
-                    break; 
+                    break;
                 }
+
+                // Fetch sessions to check reserve price
+                List<hoang.com.auction_system_be.entity.AuctionSession> sessions =
+                        auctionSessionRepository.findAllById(sessionIds);
+
+                // Determine final status per session
+                Map<Long, SessionStatus> statusMap = sessions.stream()
+                        .collect(Collectors.toMap(
+                                hoang.com.auction_system_be.entity.AuctionSession::getId,
+                                s -> isReserveMet(s) ? SessionStatus.ENDED : SessionStatus.RESERVE_NOT_MET
+                        ));
+
+                List<Long> endedIds = new ArrayList<>();
+                List<Long> reserveNotMetIds = new ArrayList<>();
+                statusMap.forEach((id, status) -> {
+                    if (status == SessionStatus.ENDED) endedIds.add(id);
+                    else reserveNotMetIds.add(id);
+                });
 
                 AtomicInteger updated = new AtomicInteger(0);
 
                 transactionTemplate.executeWithoutResult(status -> {
-                    int updatedCount = auctionSessionRepository.updateStatusForIds(SessionStatus.ENDED, sessionIds);
-                    updated.set(updatedCount);
+                    if (!endedIds.isEmpty()) {
+                        updated.addAndGet(auctionSessionRepository.updateStatusForIds(SessionStatus.ENDED, endedIds));
+                    }
+                    if (!reserveNotMetIds.isEmpty()) {
+                        updated.addAndGet(auctionSessionRepository.updateStatusForIds(SessionStatus.RESERVE_NOT_MET, reserveNotMetIds));
+                    }
 
-                    if (updatedCount == 0) {
-                        log.warn("Found {} IDs but updated 0 records to ENDED. Breaking transaction...", sessionIds.size());
+                    if (updated.get() == 0) {
+                        log.warn("Found {} IDs but updated 0 records. Breaking transaction...", sessionIds.size());
                         return;
                     }
 
-                    log.info("Scheduler closed {} active sessions to ENDED. IDs: {}", updatedCount, sessionIds);
+                    log.info("Scheduler closed {} active sessions. Ended: {}, Reserve not met: {}",
+                            updated.get(), endedIds.size(), reserveNotMetIds.size());
                     sessionIds.forEach(id -> eventPublisher.publishEvent(new SessionEndedEvent(this, id)));
                 });
 
@@ -105,8 +132,23 @@ public class AuctionSessionScheduler {
 
             } catch (Exception e) {
                 log.error("Error occurred while closing expired sessions: {}", e.getMessage(), e);
-                break; 
+                break;
             }
         }
+    }
+
+    private boolean isReserveMet(hoang.com.auction_system_be.entity.AuctionSession session) {
+        BigDecimal highestBid = session.getCurrentHighestBid();
+        BigDecimal reservePrice = session.getReservePrice();
+
+        // No bids placed → reserve not met
+        if (highestBid == null) {
+            return false;
+        }
+        // No reserve price set → any bid is sufficient
+        if (reservePrice == null) {
+            return true;
+        }
+        return highestBid.compareTo(reservePrice) >= 0;
     }
 }

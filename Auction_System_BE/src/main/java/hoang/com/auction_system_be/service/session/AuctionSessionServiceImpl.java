@@ -137,7 +137,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                         throw new AppException(ErrorCode.SESSION_NOT_ACTIVE);
                 }
                 if (LocalDateTime.now().isAfter(session.getEndTime())) {
-                        session.setStatus(SessionStatus.ENDED);
+                        boolean reserveMet = isReserveMet(session);
+                        session.setStatus(reserveMet ? SessionStatus.ENDED : SessionStatus.RESERVE_NOT_MET);
                         auctionSessionRepository.save(session);
                         throw new AppException(ErrorCode.AUCTION_ENDED);
                 }
@@ -151,6 +152,14 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 if (bidAmount.compareTo(minimumBid) < 0) {
                         throw new AppException(ErrorCode.INVALID_BID_AMOUNT);
                 }
+        }
+
+        private boolean isReserveMet(AuctionSession session) {
+                BigDecimal highestBid = session.getCurrentHighestBid();
+                BigDecimal reservePrice = session.getReservePrice();
+                if (highestBid == null) return false;
+                if (reservePrice == null) return true;
+                return highestBid.compareTo(reservePrice) >= 0;
         }
 
         private AuctionParticipant resolveParticipant(User user, AuctionSession session) {

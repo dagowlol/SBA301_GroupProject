@@ -166,6 +166,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
                         <option value="SCHEDULED">Scheduled</option>
                         <option value="ACTIVE">Active</option>
                         <option value="ENDED">Ended</option>
+                        <option value="RESERVE_NOT_MET">Reserve Not Met</option>
                         <option value="CANCELLED">Cancelled</option>
                       </Form.Select>
                     </Form.Group>

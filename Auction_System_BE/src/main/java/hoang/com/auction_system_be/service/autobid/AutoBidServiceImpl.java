@@ -132,7 +132,8 @@ public class AutoBidServiceImpl implements AutoBidService {
         while (true) {
             LocalDateTime now = LocalDateTime.now();
             if (now.isAfter(session.getEndTime())) {
-                session.setStatus(SessionStatus.ENDED);
+                boolean reserveMet = isReserveMet(session);
+                session.setStatus(reserveMet ? SessionStatus.ENDED : SessionStatus.RESERVE_NOT_MET);
                 auctionSessionRepository.save(session);
                 eventPublisher.publishEvent(new SessionEndedEvent(this, session.getId()));
                 break;
@@ -258,5 +259,13 @@ public class AutoBidServiceImpl implements AutoBidService {
                 .bidIncrement(config.getBidIncrement())
                 .isActive(config.isActive())
                 .build();
+    }
+
+    private boolean isReserveMet(AuctionSession session) {
+        BigDecimal highestBid = session.getCurrentHighestBid();
+        BigDecimal reservePrice = session.getReservePrice();
+        if (highestBid == null) return false;
+        if (reservePrice == null) return true;
+        return highestBid.compareTo(reservePrice) >= 0;
     }
 }

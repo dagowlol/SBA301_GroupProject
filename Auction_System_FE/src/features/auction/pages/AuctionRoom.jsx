@@ -223,6 +223,46 @@ export default function AuctionRoom() {
               <div className="fw-bold display-4 font-monospace mb-3" style={{ color: '#004e64', letterSpacing: '-1px' }}>
                 ${sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
+
+              {/* Reserve Price Indicator */}
+              {sessionDetail.reservePrice > 0 && (
+                <div className="mb-3">
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <span className="text-muted small fw-semibold">Giá dự định (Reserve)</span>
+                    <span className="font-monospace fw-bold" style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                      ${sessionDetail.reservePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  {isEnded ? (
+                    sessionDetail.status === 'RESERVE_NOT_MET' ? (
+                      <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#fef3c7' }}>
+                        <AlertCircle size={16} style={{ color: '#d97706' }} />
+                        <span className="small fw-semibold" style={{ color: '#92400e' }}>Chưa đạt giá dự định</span>
+                      </div>
+                    ) : (
+                      <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#d1fae5' }}>
+                        <Crown size={16} className="text-success" />
+                        <span className="small fw-semibold text-success">Đã đạt giá dự định</span>
+                      </div>
+                    )
+                  ) : (
+                    sessionDetail.currentPrice >= sessionDetail.reservePrice ? (
+                      <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#d1fae5' }}>
+                        <Crown size={16} className="text-success" />
+                        <span className="small fw-semibold text-success">Đã đạt giá dự định</span>
+                      </div>
+                    ) : (
+                      <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#fef3c7' }}>
+                        <AlertCircle size={16} style={{ color: '#d97706' }} />
+                        <span className="small fw-semibold" style={{ color: '#92400e' }}>
+                          Còn thiếu ${Math.max(0, sessionDetail.reservePrice - sessionDetail.currentPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })} nữa để đạt giá dự định
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+
               <div className="d-flex align-items-center gap-2 fw-medium px-3 py-2 rounded" style={{ backgroundColor: '#e9ecef' }}>
                 <Crown size={20} className="text-warning" style={{ fill: 'currentColor' }} />
                 <span className="text-dark">
@@ -263,6 +303,22 @@ export default function AuctionRoom() {
                     Đang chuẩn bị thông tin thanh toán...
                   </Button>
                 )}
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* Reserve Not Met Notice */}
+          {sessionDetail.status === 'RESERVE_NOT_MET' && (
+            <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ backgroundColor: '#fef3c7', border: '1px solid #fcd34d' }}>
+              <div style={{ height: '6px', backgroundColor: '#f59e0b', width: '100%' }}></div>
+              <Card.Body className="p-4">
+                <h5 className="fw-bold mb-2" style={{ color: '#92400e' }}>Phiên đấu giá không đạt giá dự định</h5>
+                <p className="text-muted small mb-3">
+                  Giá đặt cao nhất (<strong>${sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>)
+                  không đạt mức giá dự định
+                  (<strong>${sessionDetail.reservePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>).
+                  Phiên đấu giá đã kết thúc mà không có người thắng.
+                </p>
               </Card.Body>
             </Card>
           )}
