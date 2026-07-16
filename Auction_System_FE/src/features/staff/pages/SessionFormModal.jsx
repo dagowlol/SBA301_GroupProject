@@ -89,6 +89,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
     setApiError('');
     try {
       const payload = {
+        startTime: isEdit ? data.startTime : undefined,
         endTime: data.endTime,
         reservePrice: data.reservePrice ? Number(data.reservePrice) : null,
         minimumIncrement: data.minimumIncrement ? Number(data.minimumIncrement) : null,
@@ -144,7 +145,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label className="small fw-semibold text-muted mb-1">Start Time</Form.Label>
-                    <Form.Control type="datetime-local" {...register('startTime')} isInvalid={!!errors.startTime} disabled={isEdit} />
+                    <Form.Control type="datetime-local" {...register('startTime')} isInvalid={!!errors.startTime} disabled={isActive} />
                     <Form.Control.Feedback type="invalid">{errors.startTime?.message}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
