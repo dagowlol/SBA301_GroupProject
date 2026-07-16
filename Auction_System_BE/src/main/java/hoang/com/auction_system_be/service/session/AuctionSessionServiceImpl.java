@@ -82,7 +82,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 String currentWinnerName = resolveWinnerName(session.getCurrentWinnerParticipant());
 
                 List<Bid> recentBids = bidRepository
-                                .findTop10ByParticipantSessionIdOrderByBidTimestampDesc(sessionId);
+                                .findTop10ByParticipantSessionIdAndStatusNotOrderByBidTimestampDesc(sessionId, hoang.com.auction_system_be.enums.BidStatus.CANCELLED);
 
                 List<BidLogResponse> bidLogs = recentBids.stream()
                                 .map(bidMapper::toBidLogResponse)

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Spinner, Alert } from 'react-bootstrap';
+import { message } from 'antd';
 import { itemApi } from '../../../api/itemApi';
 import { categoryApi } from '../../../api/categoryApi';
 import { paymentApi } from '../../../api/paymentApi';
@@ -377,10 +378,10 @@ export default function AuctionItemsTab() {
       if (res && res.url) {
         window.location.href = res.url;
       } else {
-        alert('Không nhận được đường dẫn thanh toán.');
+        message.error('Không nhận được đường dẫn thanh toán.');
       }
     } catch (err) {
-      alert('Có lỗi xảy ra: ' + err.message);
+      message.error('Có lỗi xảy ra: ' + err.message);
     } finally {
       setPayingSessionId(null);
     }

@@ -88,6 +88,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse assignRole(Long id, RoleAssignRequest request) {
         securityContextService.checkAdminUser();
+        User currentUser = securityContextService.getCurrentUserEntity();
+        if (currentUser.getId().equals(id)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -98,6 +103,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse updateStatus(Long id, UserStatusUpdateRequest request) {
         securityContextService.checkAdminUser();
+        User currentUser = securityContextService.getCurrentUserEntity();
+        if (currentUser.getId().equals(id)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
