@@ -8,9 +8,9 @@ import AuthModal from '../features/auth/components/AuthModal';
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
+  const { isAuthenticated, user, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
   const isHome = location.pathname === '/';
-
+  console.log("user", user);
   return (
     <div className="d-flex flex-column min-vh-100 bg-light" style={{ border: '3px solid #a855f7' }}>
       {/* Header / Navbar */}
@@ -40,23 +40,25 @@ export default function MainLayout() {
             </Nav>
 
             <div className="d-flex align-items-center gap-3">
-              <Button
+              {/* <Button
                 className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0"
                 style={{ backgroundColor: '#003d5b', width: '38px', height: '38px' }}
                 aria-label="Search"
               >
                 <Search size={18} />
-              </Button>
+              </Button> */}
               {isAuthenticated ? (
                 <>
-                  <Button
-                    variant="dark"
-                    className="px-4 py-2 rounded-pill fw-bold"
-                    style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
-                    onClick={() => navigate('/admin/items')}
-                  >
-                    Staff Portal
-                  </Button>
+                  {user?.role && user.role !== 'USER' && (
+                    <Button
+                      variant="dark"
+                      className="px-4 py-2 rounded-pill fw-bold"
+                      style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
+                      onClick={() => navigate('/admin/items')}
+                    >
+                      Staff Portal
+                    </Button>
+                  )}
                   <Button
                     variant="dark"
                     className="px-4 py-2 rounded-pill fw-bold"

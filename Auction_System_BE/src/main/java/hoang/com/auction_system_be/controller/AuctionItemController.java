@@ -67,6 +67,16 @@ public class AuctionItemController {
                                 .build();
         }
 
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+        @Operation(summary = "Delete an item", description = "Admin or Auction Manager soft-deletes an auction item.")
+        public ApiResponse<Void> deleteItem(@PathVariable Long id) {
+                auctionItemService.deleteItem(id);
+                return ApiResponse.<Void>builder()
+                                .message("Item deleted successfully")
+                                .build();
+        }
+
         @GetMapping
         @Operation(summary = "Get list of items", description = "Get items with pagination, filtering and role-based access.")
         public ApiResponse<PageResponse<ItemResponse>> getItems(

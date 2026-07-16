@@ -103,11 +103,11 @@ export const productMapper = {
     if (!model) return null;
     return {
       itemName: model.itemName || model.title,
+      name: model.name || model.itemName || model.title,
       description: model.description || '',
       categoryId: parseInt(model.categoryId) || 1,
       startingPrice: parseFloat(model.startingPrice) || parseFloat(model.reserve) * 0.8 || 100,
       reservePrice: parseFloat(model.reservePrice) || parseFloat(model.reserve) || 0,
-      minIncrement: parseFloat(model.minIncrement) || 1000,
       condition: model.condition || 'NEW',
       status: model.status ? model.status.toUpperCase() : undefined
     };

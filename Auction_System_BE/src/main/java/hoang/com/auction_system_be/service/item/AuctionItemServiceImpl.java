@@ -359,5 +359,14 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                 .last(itemPage.isLast())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public void deleteItem(Long itemId) {
+        AuctionItem item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new AppException(ErrorCode.ITEM_NOT_FOUND));
+        itemRepository.delete(item);
+        log.info("Deleted item with id: {}", itemId);
+    }
 }
 

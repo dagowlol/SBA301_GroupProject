@@ -85,6 +85,14 @@ export const productService = {
   },
 
   /**
+   * Deletes an item from the backend
+   * @param {number} id - Item ID
+   */
+  deleteItem: async (id) => {
+    await itemApi.delete(id);
+  },
+
+  /**
    * Processes a list of items to standardize them into Frontend models
    * @param {Object[]} rawItems - Raw item list
    * @returns {Object[]} Standardized items
