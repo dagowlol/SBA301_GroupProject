@@ -4,6 +4,7 @@ import hoang.com.auction_system_be.dto.request.*;
 import hoang.com.auction_system_be.dto.response.ApiResponse;
 import hoang.com.auction_system_be.dto.response.AuthResponse;
 import hoang.com.auction_system_be.dto.response.TokenPair;
+import hoang.com.auction_system_be.dto.response.UserResponse;
 import hoang.com.auction_system_be.service.auth.AuthService;
 import hoang.com.auction_system_be.service.auth.CookieService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -126,6 +127,20 @@ public class AuthController {
         authService.logout(refreshToken, csrfTokenHeader);
         cookieService.clearCookies(response);
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully!"));
+    }
+
+    // ─── Current User ───────────────────────────────────────────────────
+
+    @Operation(summary = "Get current user", description = "Returns the authenticated user's data from the database in real time")
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        String email = auth.getName();
+        UserResponse userResponse = authService.getCurrentUser(email);
+        return ResponseEntity.ok(ApiResponse.success(userResponse));
     }
 
     private void checkAlreadyAuthenticated() {

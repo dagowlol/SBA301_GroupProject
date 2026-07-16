@@ -3,6 +3,7 @@ package hoang.com.auction_system_be.service.auth;
 import hoang.com.auction_system_be.dto.request.*;
 import hoang.com.auction_system_be.dto.response.AuthResponse;
 import hoang.com.auction_system_be.dto.response.TokenPair;
+import hoang.com.auction_system_be.dto.response.UserResponse;
 
 public interface AuthService {
     void registerWithOtp(RegisterRequest request);
@@ -22,5 +23,7 @@ public interface AuthService {
     AuthResponse refresh(String refreshToken, String csrfTokenHeader);
 
     void logout(String refreshToken, String csrfTokenHeader);
+
+    UserResponse getCurrentUser(String email);
 
 }

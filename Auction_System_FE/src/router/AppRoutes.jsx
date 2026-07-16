@@ -35,7 +35,7 @@ export default function AppRoutes() {
           <Route path="product/:id" element={<ProductDetailPage />} />
           <Route path="auction/:sessionId" element={<AuctionRoom />} />
           <Route path="contact-us" element={<ContactUsPage />} />
-          
+
           <Route path="my-account" element={<MyAccountPage />} />
           <Route path="payment-result" element={<PaymentResultPage />} />
           <Route path="user/items/create" element={<CreateItemRequest />} />

@@ -9,7 +9,8 @@ import {
   Badge,
   Alert,
   Row,
-  Col
+  Col,
+  Spinner
 } from 'react-bootstrap';
 import {
   Search,
@@ -25,6 +26,7 @@ export default function ItemApproval() {
   const {
     items,
     categories,
+    loading,
     approveItem,
     rejectItem,
     addItem,
@@ -220,6 +222,13 @@ export default function ItemApproval() {
 
   return (
     <div className="bg-white rounded p-4 shadow-sm border text-start">
+      {loading ? (
+        <div className="d-flex flex-column align-items-center justify-content-center py-5">
+          <Spinner animation="border" variant="primary" />
+          <span className="mt-3 text-muted">Loading auction items...</span>
+        </div>
+      ) : (
+      <>
       {/* Title Header */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
@@ -641,6 +650,8 @@ export default function ItemApproval() {
           </Modal.Footer>
         </Form>
       </Modal>
+      </>
+      )}
     </div>
   );
 }
