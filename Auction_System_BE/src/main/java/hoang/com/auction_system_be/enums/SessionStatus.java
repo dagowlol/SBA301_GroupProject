@@ -4,6 +4,7 @@ public enum SessionStatus {
     SCHEDULED,
     ACTIVE,
     ENDED,
+    RESERVE_NOT_MET,
     CANCELLED,
     POSTPONED
 }

@@ -5,6 +5,7 @@ import hoang.com.auction_system_be.entity.AuctionSession;
 import hoang.com.auction_system_be.entity.Payment;
 import hoang.com.auction_system_be.enums.PaymentStatus;
 import hoang.com.auction_system_be.enums.PaymentType;
+import hoang.com.auction_system_be.enums.SessionStatus;
 import hoang.com.auction_system_be.repository.AuctionSessionRepository;
 import hoang.com.auction_system_be.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,11 @@ public class WinnerPaymentServiceImpl implements WinnerPaymentService {
 
         if (session == null) {
             log.warn("Session with id {} not found when creating winner payment", sessionId);
+            return;
+        }
+
+        if (session.getStatus() != SessionStatus.ENDED) {
+            log.info("Session id {} has status {}. Skipping winner payment creation.", sessionId, session.getStatus());
             return;
         }
 

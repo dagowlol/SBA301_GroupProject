@@ -62,10 +62,11 @@ export default function ProductCard({ session }) {
 
   // Status badge config
   const badgeConfig = {
-    ACTIVE:    { bg: 'success',   label: '🔴 Live Now' },
-    SCHEDULED: { bg: 'warning',   label: '🗓 Upcoming' },
-    ENDED:     { bg: 'secondary', label: 'Ended' },
-    CANCELLED: { bg: 'danger',    label: 'Cancelled' },
+    ACTIVE:          { bg: 'success',   label: '🔴 Live Now' },
+    SCHEDULED:       { bg: 'warning',   label: '🗓 Upcoming' },
+    ENDED:           { bg: 'secondary', label: 'Ended' },
+    RESERVE_NOT_MET: { bg: 'warning',   label: 'Reserve Not Met' },
+    CANCELLED:       { bg: 'danger',    label: 'Cancelled' },
   };
   const badge = badgeConfig[session.status] ?? { bg: 'secondary', label: session.status };
 
