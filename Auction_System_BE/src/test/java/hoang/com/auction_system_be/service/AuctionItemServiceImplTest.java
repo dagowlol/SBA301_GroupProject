@@ -95,7 +95,7 @@ class AuctionItemServiceImplTest {
                 .categoryId(1L)
                 .startingPrice(new BigDecimal("100"))
                 .reservePrice(new BigDecimal("200"))
-                .minIncrement(new BigDecimal("10"))
+                // .minIncrement(new BigDecimal("10"))
                 .build();
 
         itemResponse = ItemResponse.builder()

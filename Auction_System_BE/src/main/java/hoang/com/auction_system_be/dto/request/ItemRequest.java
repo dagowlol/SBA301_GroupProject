@@ -34,10 +34,6 @@ public class ItemRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "Reserve price must be greater than 0")
     BigDecimal reservePrice;
 
-    @NotNull(message = "Minimum increment is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Minimum increment must be greater than 0")
-    BigDecimal minIncrement;
-
     String condition;
 
     ItemStatus status;

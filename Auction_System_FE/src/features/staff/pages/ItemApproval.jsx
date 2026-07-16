@@ -10,7 +10,9 @@ import {
   Alert,
   Row,
   Col,
-  Spinner
+  Spinner,
+  Toast,
+  ToastContainer
 } from 'react-bootstrap';
 import {
   Search,
@@ -42,6 +44,8 @@ export default function ItemApproval() {
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
 
   // Form states matching ItemRequest and ItemResponse
@@ -50,12 +54,22 @@ export default function ItemApproval() {
   const [categoryId, setCategoryId] = useState('');
   const [reserve, setReserve] = useState('');
   const [startingPrice, setStartingPrice] = useState('');
-  const [minIncrement, setMinIncrement] = useState('');
   const [condition, setCondition] = useState('NEW');
   const [status, setStatus] = useState('Pending');
 
   // Error state for handling Spring Boot constraint exceptions
   const [error, setError] = useState('');
+
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState('success');
+
+  const triggerToast = (message, variant = 'success') => {
+    setToastMessage(message);
+    setToastVariant(variant);
+    setShowToast(true);
+  };
 
   // Count pending items
   const pendingCount = useMemo(() => {
@@ -69,7 +83,6 @@ export default function ItemApproval() {
     setCategoryId(categories[0]?.id || '');
     setReserve('');
     setStartingPrice('');
-    setMinIncrement('');
     setCondition('NEW');
     setStatus('Pending');
     setError('');
@@ -87,7 +100,6 @@ export default function ItemApproval() {
 
     setReserve(item.reserve || item.reservePrice || '');
     setStartingPrice(item.startingPrice || '');
-    setMinIncrement(item.minIncrement || '');
     setCondition(item.condition || 'NEW');
     setStatus(item.status);
     setError('');
@@ -133,11 +145,11 @@ export default function ItemApproval() {
         categoryId: parseInt(categoryId),
         startingPrice: parseFloat(startingPrice),
         reservePrice: reserve ? parseFloat(reserve) : null,
-        minIncrement: minIncrement ? parseFloat(minIncrement) : null,
         condition,
         status
       });
       setShowAddModal(false);
+      triggerToast(`Item "${title}" has been submitted successfully.`);
     } catch (err) {
       setError(err.message || 'Failed to submit item to backend.');
     }
@@ -150,24 +162,37 @@ export default function ItemApproval() {
 
     try {
       await editItem(selectedItem.id, {
-        itemName: title,
+        name: title,
         description,
         categoryId: parseInt(categoryId),
         startingPrice: parseFloat(startingPrice),
         reservePrice: reserve ? parseFloat(reserve) : null,
-        minIncrement: minIncrement ? parseFloat(minIncrement) : null,
         condition,
         status
       });
       setShowEditModal(false);
+      triggerToast(`Item "${title}" has been updated successfully.`);
     } catch (err) {
       setError(err.message || 'Failed to update item on backend.');
     }
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this auction item?")) {
-      deleteItem(id);
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setError('');
+    try {
+      await deleteItem(itemToDelete.id);
+      triggerToast(`Item "${itemToDelete.title}" has been deleted successfully.`);
+    } catch (err) {
+      setError(err.message || 'Failed to delete item from backend.');
+    } finally {
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
     }
   };
 
@@ -228,430 +253,449 @@ export default function ItemApproval() {
           <span className="mt-3 text-muted">Loading auction items...</span>
         </div>
       ) : (
-      <>
-      {/* Title Header */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div>
-          <h2 className="fw-bold text-dark mb-1">Auction Item Management</h2>
-          <p className="text-muted small m-0">Manage items, approve submissions, search and sort</p>
-        </div>
-        <Button
-          variant="dark"
-          onClick={handleOpenAdd}
-          className="d-flex align-items-center gap-1 text-uppercase fw-semibold"
-          style={{ backgroundColor: '#004e64', borderColor: '#004e64', fontSize: '0.85rem' }}
-        >
-          <Plus size={16} />
-          <span>Add Item</span>
-        </Button>
-      </div>
-
-      {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
-
-      {/* Filter Bar (Search, Status, Sorting) */}
-      <Row className="g-3 mb-4">
-        <Col md={5} sm={12}>
-          <InputGroup size="sm">
-            <InputGroup.Text className="bg-light text-muted">
-              <Search size={16} />
-            </InputGroup.Text>
-            <Form.Control
-              placeholder="Search by title or artist..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </InputGroup>
-        </Col>
-
-        <Col md={3} sm={6}>
-          <Form.Select
-            size="sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="All">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Active">Active</option>
-            <option value="Rejected">Rejected</option>
-          </Form.Select>
-        </Col>
-
-        <Col md={4} sm={6}>
-          <Form.Select
-            size="sm"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="title_a_z">Title A-Z</option>
-            <option value="title_z_a">Title Z-A</option>
-            <option value="reserve_low">Reserve Price (Low to High)</option>
-            <option value="reserve_high">Reserve Price (High to Low)</option>
-          </Form.Select>
-        </Col>
-      </Row>
-
-      {/* Pending Items Banner */}
-      {pendingCount > 0 && (
-        <Alert
-          variant="warning"
-          className="d-flex align-items-center gap-2 py-3 border-0 border-start border-4 border-warning mb-4 rounded-0 shadow-xs"
-          style={{ backgroundColor: '#fffbf2' }}
-        >
-          <AlertCircle size={20} className="text-warning flex-shrink-0" />
-          <div className="text-dark small">
-            <span className="fw-bold">{pendingCount} items</span> awaiting approval from sellers
+        <>
+          {/* Title Header */}
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 className="fw-bold text-dark mb-1">Auction Item Management</h2>
+              <p className="text-muted small m-0">Manage items, approve submissions, search and sort</p>
+            </div>
+            <Button
+              variant="dark"
+              onClick={handleOpenAdd}
+              className="d-flex align-items-center gap-1 text-uppercase fw-semibold"
+              style={{ backgroundColor: '#004e64', borderColor: '#004e64', fontSize: '0.85rem' }}
+            >
+              <Plus size={16} />
+              <span>Add Item</span>
+            </Button>
           </div>
-        </Alert>
-      )}
 
-      {/* Items Table */}
-      {processedItems.length > 0 ? (
-        <Table responsive hover className="align-middle border rounded shadow-xs" style={{ fontSize: '0.92rem' }}>
-          <thead>
-            <tr className="text-white bg-dark-teal" style={{ backgroundColor: '#004e64' }}>
-              <th className="py-3 px-3">Title</th>
-              <th className="py-3">Artist</th>
-              <th className="py-3">Category</th>
-              <th className="py-3 text-end">Starting Price</th>
-              <th className="py-3 text-end">Reserve</th>
-              <th className="py-3 text-center">Status</th>
-              <th className="py-3 text-center">Submitted By</th>
-              <th className="py-3 text-center" style={{ width: '150px' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {processedItems.map((item) => (
-              <tr key={item.id}>
-                <td className="fw-bold text-dark py-3 px-3">{item.title}</td>
-                <td className="text-muted py-3">{item.artist}</td>
-                <td className="text-muted py-3">{item.category}</td>
-                <td className="text-end py-3">${item.startingPrice || 0}</td>
-                <td className="text-end fw-semibold py-3">${item.reserve}</td>
-                <td className="text-center py-3">
-                  <Badge
-                    className={`px-3 py-2 text-uppercase rounded-pill ${getBadgeStyle(item.status)}`}
-                    style={{ fontSize: '0.75rem', fontWeight: '500' }}
-                  >
-                    {item.status}
-                  </Badge>
-                  {item.status === 'Rejected' && item.rejectionReason && (
-                    <div className="text-danger small mt-1 font-monospace" style={{ fontSize: '0.7rem' }}>
-                      Reason: {item.rejectionReason}
-                    </div>
-                  )}
-                </td>
-                <td className="text-center text-muted font-monospace py-3">{item.submittedBy}</td>
-                <td className="text-center py-3">
-                  <div className="d-flex gap-2 justify-content-center">
-                    {item.status === 'Pending' && (
-                      <>
+          {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+
+          {/* Filter Bar (Search, Status, Sorting) */}
+          <Row className="g-3 mb-4">
+            <Col md={5} sm={12}>
+              <InputGroup size="sm">
+                <InputGroup.Text className="bg-light text-muted">
+                  <Search size={16} />
+                </InputGroup.Text>
+                <Form.Control
+                  placeholder="Search by title or artist..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </InputGroup>
+            </Col>
+
+            <Col md={3} sm={6}>
+              <Form.Select
+                size="sm"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="All">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Active">Active</option>
+                <option value="Rejected">Rejected</option>
+              </Form.Select>
+            </Col>
+
+            <Col md={4} sm={6}>
+              <Form.Select
+                size="sm"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="title_a_z">Title A-Z</option>
+                <option value="title_z_a">Title Z-A</option>
+                <option value="reserve_low">Reserve Price (Low to High)</option>
+                <option value="reserve_high">Reserve Price (High to Low)</option>
+              </Form.Select>
+            </Col>
+          </Row>
+
+          {/* Pending Items Banner */}
+          {pendingCount > 0 && (
+            <Alert
+              variant="warning"
+              className="d-flex align-items-center gap-2 py-3 border-0 border-start border-4 border-warning mb-4 rounded-0 shadow-xs"
+              style={{ backgroundColor: '#fffbf2' }}
+            >
+              <AlertCircle size={20} className="text-warning flex-shrink-0" />
+              <div className="text-dark small">
+                <span className="fw-bold">{pendingCount} items</span> awaiting approval from sellers
+              </div>
+            </Alert>
+          )}
+
+          {/* Items Table */}
+          {processedItems.length > 0 ? (
+            <Table responsive hover className="align-middle border rounded shadow-xs" style={{ fontSize: '0.92rem' }}>
+              <thead>
+                <tr className="text-white bg-dark-teal" style={{ backgroundColor: '#004e64' }}>
+                  <th className="py-3 px-3">Title</th>
+                  <th className="py-3">Artist</th>
+                  <th className="py-3">Category</th>
+                  <th className="py-3 text-end">Starting Price</th>
+                  <th className="py-3 text-end">Reserve</th>
+                  <th className="py-3 text-center">Status</th>
+                  <th className="py-3 text-center">Submitted By</th>
+                  <th className="py-3 text-center" style={{ width: '150px' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {processedItems.map((item) => (
+                  <tr key={item.id}>
+                    <td className="fw-bold text-dark py-3 px-3">{item.title}</td>
+                    <td className="text-muted py-3">{item.artist}</td>
+                    <td className="text-muted py-3">{item.category}</td>
+                    <td className="text-end py-3">${item.startingPrice || 0}</td>
+                    <td className="text-end fw-semibold py-3">${item.reserve}</td>
+                    <td className="text-center py-3">
+                      <Badge
+                        className={`px-3 py-2 text-uppercase rounded-pill ${getBadgeStyle(item.status)}`}
+                        style={{ fontSize: '0.75rem', fontWeight: '500' }}
+                      >
+                        {item.status}
+                      </Badge>
+                      {item.status === 'Rejected' && item.rejectionReason && (
+                        <div className="text-danger small mt-1 font-monospace" style={{ fontSize: '0.7rem' }}>
+                          Reason: {item.rejectionReason}
+                        </div>
+                      )}
+                    </td>
+                    <td className="text-center text-muted font-monospace py-3">{item.submittedBy}</td>
+                    <td className="text-center py-3">
+                      <div className="d-flex gap-2 justify-content-center">
+                        {item.status === 'Pending' && (
+                          <>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="text-success p-0 hover-opacity"
+                              title="Approve"
+                              onClick={() => handleApprove(item.id)}
+                            >
+                              <Check size={18} />
+                            </Button>
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="text-danger p-0 hover-opacity"
+                              title="Reject"
+                              onClick={() => handleReject(item.id)}
+                            >
+                              <X size={18} />
+                            </Button>
+                          </>
+                        )}
                         <Button
                           variant="link"
                           size="sm"
-                          className="text-success p-0 hover-opacity"
-                          title="Approve"
-                          onClick={() => handleApprove(item.id)}
+                          className="text-info p-0 hover-opacity"
+                          title="Edit"
+                          onClick={() => handleOpenEdit(item)}
                         >
-                          <Check size={18} />
+                          <Edit2 size={16} />
                         </Button>
                         <Button
                           variant="link"
                           size="sm"
                           className="text-danger p-0 hover-opacity"
-                          title="Reject"
-                          onClick={() => handleReject(item.id)}
+                          title="Delete"
+                          onClick={() => handleDelete(item)}
                         >
-                          <X size={18} />
+                          <Trash2 size={16} />
                         </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="text-info p-0 hover-opacity"
-                      title="Edit"
-                      onClick={() => handleOpenEdit(item)}
-                    >
-                      <Edit2 size={16} />
-                    </Button>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="text-danger p-0 hover-opacity"
-                      title="Delete"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <Alert variant="warning" className="text-center py-4">
-          No auction items found.
-        </Alert>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          ) : (
+            <Alert variant="warning" className="text-center py-4">
+              No auction items found.
+            </Alert>
+          )}
+
+          {/* Add Item Modal */}
+          <Modal show={showAddModal} onHide={() => setShowAddModal(false)} size="lg" centered>
+            <Modal.Header closeButton className="bg-light">
+              <Modal.Title className="fw-bold fs-5">Add New Auction Item</Modal.Title>
+            </Modal.Header>
+            <Form onSubmit={handleAddSubmit}>
+              <Modal.Body className="p-4">
+                {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Item Name (Title)</Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="e.g. Starry Night"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Condition</Form.Label>
+                      <Form.Select value={condition} onChange={(e) => setCondition(e.target.value)} required>
+                        <option value="NEW">New</option>
+                        <option value="LIKE_NEW">Like New</option>
+                        <option value="GOOD">Good</option>
+                        <option value="FAIR">Fair</option>
+                        <option value="POOR">Poor</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Row className="g-3">
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Category</Form.Label>
+                      <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+                        {categories.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g. 150.00"
+                        value={startingPrice}
+                        onChange={(e) => setStartingPrice(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        placeholder="e.g. 500.00"
+                        value={reserve}
+                        onChange={(e) => setReserve(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold">Description</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    placeholder="Details about the artwork..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Status</Form.Label>
+                      <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Active">Active</option>
+                        <option value="Rejected">Rejected</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Modal.Body>
+              <Modal.Footer className="bg-light">
+                <Button variant="secondary" size="sm" onClick={() => setShowAddModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="dark"
+                  size="sm"
+                  type="submit"
+                  style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
+                >
+                  Submit Item
+                </Button>
+              </Modal.Footer>
+            </Form>
+          </Modal>
+
+          {/* Edit Item Modal */}
+          <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
+            <Modal.Header closeButton className="bg-light">
+              <Modal.Title className="fw-bold fs-5">Edit Auction Item</Modal.Title>
+            </Modal.Header>
+            <Form onSubmit={handleEditSubmit}>
+              <Modal.Body className="p-4">
+                {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Item Title</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Condition</Form.Label>
+                      <Form.Select value={condition} onChange={(e) => setCondition(e.target.value)} required>
+                        <option value="NEW">New</option>
+                        <option value="LIKE_NEW">Like New</option>
+                        <option value="GOOD">Good</option>
+                        <option value="FAIR">Fair</option>
+                        <option value="POOR">Poor</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Row className="g-3">
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Category</Form.Label>
+                      <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+                        {categories.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        value={startingPrice}
+                        onChange={(e) => setStartingPrice(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        value={reserve}
+                        onChange={(e) => setReserve(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold">Description</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                  />
+                </Form.Group>
+
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="small fw-semibold">Status</Form.Label>
+                      <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Active">Active</option>
+                        <option value="Rejected">Rejected</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Modal.Body>
+              <Modal.Footer className="bg-light">
+                <Button variant="secondary" size="sm" onClick={() => setShowEditModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="dark"
+                  size="sm"
+                  type="submit"
+                  style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
+                >
+                  Save Changes
+                </Button>
+              </Modal.Footer>
+            </Form>
+          </Modal>
+        </>
       )}
 
-      {/* Add Item Modal */}
-      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} size="lg" centered>
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered>
         <Modal.Header closeButton className="bg-light">
-          <Modal.Title className="fw-bold fs-5">Add New Auction Item</Modal.Title>
+          <Modal.Title className="fw-bold fs-5">Confirm Deletion</Modal.Title>
         </Modal.Header>
-        <Form onSubmit={handleAddSubmit}>
-          <Modal.Body className="p-4">
-            {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
-
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Item Name (Title)</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g. Starry Night"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Condition</Form.Label>
-                  <Form.Select value={condition} onChange={(e) => setCondition(e.target.value)} required>
-                    <option value="NEW">New</option>
-                    <option value="LIKE_NEW">Like New</option>
-                    <option value="GOOD">Good</option>
-                    <option value="FAIR">Fair</option>
-                    <option value="POOR">Poor</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row className="g-3">
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Category</Form.Label>
-                  <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 150.00"
-                    value={startingPrice}
-                    onChange={(e) => setStartingPrice(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 500.00"
-                    value={reserve}
-                    onChange={(e) => setReserve(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Min Increment (USD)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 10.00"
-                    value={minIncrement}
-                    onChange={(e) => setMinIncrement(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="small fw-semibold">Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                placeholder="Details about the artwork..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-              />
-            </Form.Group>
-
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Status</Form.Label>
-                  <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Active">Active</option>
-                    <option value="Rejected">Rejected</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-          </Modal.Body>
-          <Modal.Footer className="bg-light">
-            <Button variant="secondary" size="sm" onClick={() => setShowAddModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="dark"
-              size="sm"
-              type="submit"
-              style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
-            >
-              Submit Item
-            </Button>
-          </Modal.Footer>
-        </Form>
+        <Modal.Body className="p-4">
+          <p className="mb-0">
+            Are you sure you want to delete item <strong>"{itemToDelete?.title}"</strong>?
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="bg-light">
+          <Button variant="secondary" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            className="fw-semibold"
+            onClick={confirmDelete}
+          >
+            Delete
+          </Button>
+        </Modal.Footer>
       </Modal>
 
-      {/* Edit Item Modal */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
-        <Modal.Header closeButton className="bg-light">
-          <Modal.Title className="fw-bold fs-5">Edit Auction Item</Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleEditSubmit}>
-          <Modal.Body className="p-4">
-            {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
-
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Item Title</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Condition</Form.Label>
-                  <Form.Select value={condition} onChange={(e) => setCondition(e.target.value)} required>
-                    <option value="NEW">New</option>
-                    <option value="LIKE_NEW">Like New</option>
-                    <option value="GOOD">Good</option>
-                    <option value="FAIR">Fair</option>
-                    <option value="POOR">Poor</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row className="g-3">
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Category</Form.Label>
-                  <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    value={startingPrice}
-                    onChange={(e) => setStartingPrice(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    value={reserve}
-                    onChange={(e) => setReserve(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Min Increment (USD)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    step="0.01"
-                    value={minIncrement}
-                    onChange={(e) => setMinIncrement(e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="small fw-semibold">Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-              />
-            </Form.Group>
-
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="small fw-semibold">Status</Form.Label>
-                  <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Active">Active</option>
-                    <option value="Rejected">Rejected</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-          </Modal.Body>
-          <Modal.Footer className="bg-light">
-            <Button variant="secondary" size="sm" onClick={() => setShowEditModal(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="dark"
-              size="sm"
-              type="submit"
-              style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
-            >
-              Save Changes
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
-      </>
-      )}
+      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1080 }}>
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={3000}
+          autohide
+          bg={toastVariant}
+        >
+          <Toast.Header>
+            <strong className="me-auto">
+              {toastVariant === 'success' ? 'Success' : 'Error'}
+            </strong>
+          </Toast.Header>
+          <Toast.Body className={toastVariant === 'success' ? 'text-white' : ''}>
+            {toastMessage}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 }

@@ -22,5 +22,7 @@ public interface AuctionItemService {
     PageResponse<ItemResponse> getMyUploadedItems(int page, int size, String name, Long categoryId, ItemStatus status);
 
     PageResponse<ItemResponse> getMyWonItems(int page, int size, String name, Long categoryId);
+
+    void deleteItem(Long itemId);
 }
 

@@ -118,8 +118,14 @@ export function AppContextProvider({ children }) {
     }
   };
 
-  const deleteItem = (id) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+  const deleteItem = async (id) => {
+    try {
+      await productService.deleteItem(id);
+      setItems(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      console.error("Failed to delete item via Service", err);
+      throw err;
+    }
   };
 
   // Category CRUD calling Service Layer

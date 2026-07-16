@@ -57,6 +57,13 @@ export const itemApi = {
   }),
 
   /**
+   * Deletes an item
+   */
+  delete: (id) => apiRequest(`/items/${id}`, {
+    method: 'DELETE',
+  }),
+
+  /**
    * Fetches user's uploaded items
    */
   getMyUploadedItems: (params = {}) => {
