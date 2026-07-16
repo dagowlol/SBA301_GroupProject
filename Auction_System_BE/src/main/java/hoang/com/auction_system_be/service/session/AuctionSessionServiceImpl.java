@@ -336,21 +336,31 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 boolean isActive = session.getStatus() == SessionStatus.ACTIVE;
 
                 // 1. Effective State & Time Calculation
+                LocalDateTime effectiveStartTime = request.getStartTime() != null ? request.getStartTime()
+                                : session.getStartTime();
                 LocalDateTime effectiveEndTime = request.getEndTime() != null ? request.getEndTime()
                                 : session.getEndTime();
                 SessionStatus effectiveStatus = request.getStatus() != null ? request.getStatus() : session.getStatus();
 
-                // 2. Strict End Time Validation for SCHEDULED and ACTIVE
+                // 2. Start time can only be changed for SCHEDULED sessions
+                if (request.getStartTime() != null && session.getStatus() != SessionStatus.SCHEDULED) {
+                        throw new AppException(ErrorCode.SESSION_CANNOT_UPDATE_START_TIME);
+                }
+
+                // 3. Strict Time Validation for SCHEDULED and ACTIVE
                 if (effectiveStatus == SessionStatus.SCHEDULED || effectiveStatus == SessionStatus.ACTIVE) {
                         if (!effectiveEndTime.isAfter(LocalDateTime.now())) {
                                 throw new AppException(ErrorCode.SESSION_CANNOT_ACTIVATE_PAST_END_TIME);
                         }
-                        if (!effectiveEndTime.isAfter(session.getStartTime())) {
+                        if (!effectiveEndTime.isAfter(effectiveStartTime)) {
                                 throw new AppException(ErrorCode.SESSION_INVALID_END_TIME);
                         }
                 }
 
-                // 3. Apply Updates
+                // 4. Apply Updates
+                if (request.getStartTime() != null) {
+                        session.setStartTime(request.getStartTime());
+                }
                 if (request.getEndTime() != null) {
                         session.setEndTime(request.getEndTime());
                 }
