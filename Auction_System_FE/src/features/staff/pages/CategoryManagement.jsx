@@ -9,12 +9,15 @@ import {
   Badge, 
   Row, 
   Col, 
-  Alert 
+  Alert,
+  Spinner,
+  Toast,
+  ToastContainer
 } from 'react-bootstrap';
 import { Plus, Search, Edit2, Trash2, GripVertical, ArrowUpDown } from 'lucide-react';
 
 export default function CategoryManagement() {
-  const { categories, addCategory, editCategory, deleteCategory, items } = useContext(AppContext);
+  const { categories, addCategory, editCategory, deleteCategory, items, loading } = useContext(AppContext);
 
   // Search & sorting state
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,7 +27,9 @@ export default function CategoryManagement() {
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedCat, setSelectedCat] = useState(null);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -34,6 +39,17 @@ export default function CategoryManagement() {
   const [status, setStatus] = useState('Active');
   const [order, setOrder] = useState('');
   const [error, setError] = useState('');
+
+  // Toast state
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState('success');
+
+  const triggerToast = (message, variant = 'success') => {
+    setToastMessage(message);
+    setToastVariant(variant);
+    setShowToast(true);
+  };
 
   // Handle auto slug generation from name
   const handleNameChange = (val) => {
@@ -79,6 +95,7 @@ export default function CategoryManagement() {
         order: parseInt(order) || (categories.length + 1)
       });
       setShowAddModal(false);
+      triggerToast(`Category "${name}" has been added successfully.`);
     } catch (err) {
       setError(err.message || 'Failed to create category on backend');
     }
@@ -103,14 +120,22 @@ export default function CategoryManagement() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this category?")) {
-      setError('');
-      try {
-        await deleteCategory(id);
-      } catch (err) {
-        setError(err.message || 'Failed to delete category from backend');
-      }
+  const handleDelete = (cat) => {
+    setCategoryToDelete(cat);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!categoryToDelete) return;
+    setError('');
+    try {
+      await deleteCategory(categoryToDelete.id);
+      triggerToast(`Category "${categoryToDelete.name}" has been deleted successfully.`);
+    } catch (err) {
+      setError(err.message || 'Failed to delete category from backend');
+    } finally {
+      setShowDeleteConfirm(false);
+      setCategoryToDelete(null);
     }
   };
 
@@ -165,6 +190,13 @@ export default function CategoryManagement() {
 
   return (
     <div className="bg-white rounded p-4 shadow-sm border text-start">
+      {loading ? (
+        <div className="d-flex flex-column align-items-center justify-content-center py-5">
+          <Spinner animation="border" variant="primary" />
+          <span className="mt-3 text-muted">Loading categories...</span>
+        </div>
+      ) : (
+      <>
       {/* Title Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -274,7 +306,7 @@ export default function CategoryManagement() {
                         variant="link" 
                         size="sm" 
                         className="text-danger p-0 hover-opacity"
-                        onClick={() => handleDelete(cat.id)}
+                        onClick={() => handleDelete(cat)}
                       >
                         <Trash2 size={16} />
                       </Button>
@@ -459,6 +491,52 @@ export default function CategoryManagement() {
           </Modal.Footer>
         </Form>
       </Modal>
+      </>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered>
+        <Modal.Header closeButton className="bg-light">
+          <Modal.Title className="fw-bold fs-5">Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <p className="mb-0">
+            Are you sure you want to delete category <strong>"{categoryToDelete?.name}"</strong>?
+          </p>
+        </Modal.Body>
+        <Modal.Footer className="bg-light">
+          <Button variant="secondary" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
+            className="fw-semibold"
+            onClick={confirmDelete}
+          >
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1080 }}>
+        <Toast
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={3000}
+          autohide
+          bg={toastVariant}
+        >
+          <Toast.Header>
+            <strong className="me-auto">
+              {toastVariant === 'success' ? 'Success' : 'Error'}
+            </strong>
+          </Toast.Header>
+          <Toast.Body className={toastVariant === 'success' ? 'text-white' : ''}>
+            {toastMessage}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 }
