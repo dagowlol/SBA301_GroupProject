@@ -1,5 +1,6 @@
 package hoang.com.auction_system_be.service.user;
 
+import hoang.com.auction_system_be.dto.request.ChangePasswordRequest;
 import hoang.com.auction_system_be.dto.request.RoleAssignRequest;
 import hoang.com.auction_system_be.dto.request.UserCreateRequest;
 import hoang.com.auction_system_be.dto.request.UserStatusUpdateRequest;
@@ -22,4 +23,6 @@ public interface UserService {
     UserResponse updateStatus(Long id, UserStatusUpdateRequest request);
 
     void deleteUser(Long id);
+
+    void changePassword(ChangePasswordRequest request);
 }

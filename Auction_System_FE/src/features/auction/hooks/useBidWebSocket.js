@@ -8,7 +8,7 @@ export function useBidWebSocket(sessionId, onLimitReached) {
 
   useEffect(() => {
     if (!sessionId || isSubscribedRef.current) return;
-    
+
     isSubscribedRef.current = true;
     let unsubscribe = null;
 

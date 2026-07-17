@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuctionSessionUpdateRequest {
 
+    @Future(message = "Start time must be in the future")
+    LocalDateTime startTime;
+
     @Future(message = "End time must be in the future")
     LocalDateTime endTime;
 

@@ -3,6 +3,7 @@ package hoang.com.auction_system_be.service.auth;
 import hoang.com.auction_system_be.dto.request.*;
 import hoang.com.auction_system_be.dto.response.AuthResponse;
 import hoang.com.auction_system_be.dto.response.TokenPair;
+import hoang.com.auction_system_be.dto.response.UserResponse;
 import hoang.com.auction_system_be.entity.User;
 import hoang.com.auction_system_be.enums.RoleName;
 import hoang.com.auction_system_be.enums.UserStatus;
@@ -203,6 +204,26 @@ public class AuthServiceImpl implements AuthService {
         validateCsrfToken(refreshToken, csrfTokenHeader);
         refreshTokenService.revokeToken(refreshToken);
         log.info("User logged out, refresh token revoked.");
+    }
+
+    @Override
+    @Transactional
+    public UserResponse getCurrentUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        return UserResponse.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
+                .authProvider(user.getAuthProvider())
+                .status(user.getStatus())
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 
     // =========================================================================

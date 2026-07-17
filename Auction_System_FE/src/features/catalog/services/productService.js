@@ -13,7 +13,7 @@ export const productService = {
   getAllItems: async (params = {}) => {
     try {
       const res = await itemApi.getItems(params);
-      
+
       // Handle Spring Boot PageResponse structure
       if (res && Array.isArray(res.content)) {
         return {
@@ -21,8 +21,8 @@ export const productService = {
           totalPages: res.totalPages || 1,
           totalElements: res.totalElements || res.content.length
         };
-      } 
-      
+      }
+
       // Fallback if backend returns list directly
       if (Array.isArray(res)) {
         return {
@@ -39,14 +39,15 @@ export const productService = {
     }
   },
 
-  /**
-   * Submits a new item details to backend
-   * @param {Object} itemModel - Item details from frontend form
-   * @returns {Promise<Object>} Newly created mapped item model
-   */
   createItem: async (itemModel) => {
     const requestDto = productMapper.toRequestDto(itemModel);
-    const rawDto = await itemApi.create(requestDto);
+    const formData = new FormData();
+    Object.keys(requestDto).forEach((key) => {
+      if (requestDto[key] !== undefined && requestDto[key] !== null) {
+        formData.append(key, requestDto[key]);
+      }
+    });
+    const rawDto = await itemApi.createWithFormData(formData);
     return productMapper.toFrontendModel(rawDto);
   },
 
@@ -69,6 +70,26 @@ export const productService = {
   rejectItem: async (id, rejectionReason) => {
     const rawDto = await itemApi.reject(id, rejectionReason);
     return productMapper.toFrontendModel(rawDto);
+  },
+
+  /**
+   * Updates an item on the backend
+   * @param {number} id - Item ID
+   * @param {Object} itemModel - Item details from frontend form
+   * @returns {Promise<Object>} Updated mapped item response model
+   */
+  updateItem: async (id, itemModel) => {
+    const requestDto = productMapper.toRequestDto(itemModel);
+    const rawDto = await itemApi.update(id, requestDto);
+    return productMapper.toFrontendModel(rawDto);
+  },
+
+  /**
+   * Deletes an item from the backend
+   * @param {number} id - Item ID
+   */
+  deleteItem: async (id) => {
+    await itemApi.delete(id);
   },
 
   /**

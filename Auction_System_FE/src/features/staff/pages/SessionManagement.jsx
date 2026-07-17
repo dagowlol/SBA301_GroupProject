@@ -235,11 +235,12 @@ export default function SessionManagement() {
 
   const getBadgeStyle = (status) => {
     switch (status) {
-      case 'ACTIVE':    return { background: '#dcfce7', color: '#166534', border: '1px solid #86efac' };
-      case 'SCHEDULED': return { background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' };
-      case 'ENDED':     return { background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' };
-      case 'CANCELLED': return { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' };
-      default:          return { background: '#f9fafb', color: '#6b7280', border: '1px solid #e5e7eb' };
+      case 'ACTIVE':          return { background: '#dcfce7', color: '#166534', border: '1px solid #86efac' };
+      case 'SCHEDULED':       return { background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' };
+      case 'ENDED':           return { background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' };
+      case 'RESERVE_NOT_MET': return { background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' };
+      case 'CANCELLED':       return { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' };
+      default:                return { background: '#f9fafb', color: '#6b7280', border: '1px solid #e5e7eb' };
     }
   };
 
@@ -313,6 +314,7 @@ export default function SessionManagement() {
             <option value="SCHEDULED">SCHEDULED</option>
             <option value="ACTIVE">ACTIVE</option>
             <option value="ENDED">ENDED</option>
+            <option value="RESERVE_NOT_MET">RESERVE NOT MET</option>
             <option value="CANCELLED">CANCELLED</option>
           </Form.Select>
         </div>
@@ -381,7 +383,7 @@ export default function SessionManagement() {
                           className="p-1 border-0 bg-transparent"
                           style={{ color: '#dc2626' }}
                           onClick={() => setDeleteTargetId(session.id)}
-                          disabled={session.status === 'ACTIVE' || session.status === 'ENDED' || deleteMutation.isPending}
+                          disabled={session.status === 'ACTIVE' || session.status === 'ENDED' || session.status === 'RESERVE_NOT_MET' || deleteMutation.isPending}
                           title="Delete session"
                         >
                           <Trash2 size={16} />

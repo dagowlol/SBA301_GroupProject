@@ -25,6 +25,8 @@ public class AuctionSessionDetailResponse {
     LocalDateTime endTime;
     BigDecimal currentPrice;
     String currentWinnerName;
+    Long winnerId;
+    String winnerName;
     List<BidLogResponse> bidLogs;
     SessionStatus status;
     BigDecimal minimumIncrement;

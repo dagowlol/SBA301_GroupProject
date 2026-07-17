@@ -11,6 +11,8 @@ const getMockImage = (title, categoryName) => {
   return 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=60'; // general art placeholder
 };
 
+import { resolveImageUrl } from '../../../utils/imageUtils';
+
 /**
  * Mapper utility to convert Product shapes between Frontend Models and Backend DTOs.
  */
@@ -40,7 +42,8 @@ export const productMapper = {
       category = item.categoryName || 'General';
       reserve = parseFloat(item.reservePrice) || parseFloat(item.startingPrice) || 0;
       submittedBy = item.sellerName || 'seller_current';
-      image = getMockImage(item.name, item.categoryName);
+      // Use real imageUrl from backend if available, fall back to mock
+      image = resolveImageUrl(item.imageUrl) || getMockImage(item.name, item.categoryName);
       categoryId = item.categoryId;
     } else {
       // Mock local items
@@ -80,6 +83,8 @@ export const productMapper = {
       type: type,
       startTime: item.startTime || item.createdAt || new Date().toISOString(),
       endTime: item.endTime || item.updatedAt || new Date().toISOString(),
+      minIncrement: item.minIncrement ? parseFloat(item.minIncrement) : 0,
+      condition: item.condition || 'NEW',
       rejectionReason: item.rejectionReason || '',
       bids: Array.isArray(item.bids) ? item.bids.map(b => ({
         bidder: b.bidder,
@@ -97,11 +102,14 @@ export const productMapper = {
   toRequestDto: (model) => {
     if (!model) return null;
     return {
-      name: model.title,
+      itemName: model.itemName || model.title,
+      name: model.name || model.itemName || model.title,
       description: model.description || '',
       categoryId: parseInt(model.categoryId) || 1,
       startingPrice: parseFloat(model.startingPrice) || parseFloat(model.reserve) * 0.8 || 100,
-      reservePrice: parseFloat(model.reserve) || 0
+      reservePrice: parseFloat(model.reservePrice) || parseFloat(model.reserve) || 0,
+      condition: model.condition || 'NEW',
+      status: model.status ? model.status.toUpperCase() : undefined
     };
   }
 };

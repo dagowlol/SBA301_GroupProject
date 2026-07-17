@@ -8,46 +8,47 @@ export const AppContext = createContext();
 export function AppContextProvider({ children }) {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch categories from Backend via Service
   useEffect(() => {
-    async function loadCategories() {
+    let cancelled = false;
+    async function loadAll() {
+      setLoading(true);
       try {
-        const data = await categoryService.getAllCategories();
-        setCategories(data);
+        const [catData, pageResult] = await Promise.all([
+          categoryService.getAllCategories(),
+          productService.getAllItems({ size: 100 }),
+        ]);
+        if (!cancelled) {
+          setCategories(catData);
+          setItems(pageResult.content);
+        }
       } catch (err) {
-        console.error("Failed to load categories from Service, falling back to local storage", err);
-        const saved = localStorage.getItem('auction_categories');
-        const fallback = saved ? JSON.parse(saved) : initialCategories;
-        setCategories(fallback.map(c => ({
-          id: c.id,
-          name: c.name,
-          description: c.description || '',
-          parentCategoryId: c.parentCategoryId || null,
-          parentCategoryName: c.parentCategoryName || null,
-          slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-          order: c.order || c.sortOrder || 0,
-          status: c.status || 'Active'
-        })));
+        console.error("Failed to load data from Service, falling back to local storage", err);
+        if (!cancelled) {
+          const savedCats = localStorage.getItem('auction_categories');
+          const fallbackCats = savedCats ? JSON.parse(savedCats) : initialCategories;
+          setCategories(fallbackCats.map(c => ({
+            id: c.id,
+            name: c.name,
+            description: c.description || '',
+            parentCategoryId: c.parentCategoryId || null,
+            parentCategoryName: c.parentCategoryName || null,
+            slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+            order: c.order || c.sortOrder || 0,
+            status: c.status || 'Active'
+          })));
+
+          const savedItems = localStorage.getItem('auction_items');
+          const fallbackItems = savedItems ? JSON.parse(savedItems) : initialItems;
+          setItems(productService.processItems(fallbackItems));
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
-    loadCategories();
-  }, []);
-
-  // Fetch items from Backend via Service
-  useEffect(() => {
-    async function loadItems() {
-      try {
-        const pageResult = await productService.getAllItems({ size: 100 }); // fetch first 100 items
-        setItems(pageResult.content);
-      } catch (err) {
-        console.error("Failed to load items from Service, falling back to local storage", err);
-        const saved = localStorage.getItem('auction_items');
-        const fallback = saved ? JSON.parse(saved) : initialItems;
-        setItems(productService.processItems(fallback));
-      }
-    }
-    loadItems();
+    loadAll();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -57,6 +58,22 @@ export function AppContextProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('auction_items', JSON.stringify(items));
   }, [items]);
+
+  const refetch = async () => {
+    setLoading(true);
+    try {
+      const [catData, pageResult] = await Promise.all([
+        categoryService.getAllCategories(),
+        productService.getAllItems({ size: 100 }),
+      ]);
+      setCategories(catData);
+      setItems(pageResult.content);
+    } catch (err) {
+      console.error("Failed to refetch data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // F09: Approve an item on backend
   const approveItem = async (id) => {
@@ -91,12 +108,24 @@ export function AppContextProvider({ children }) {
     }
   };
 
-  const editItem = (id, updated) => {
-    setItems(prev => prev.map(item => (item.id === id ? { ...item, ...updated } : item)));
+  const editItem = async (id, updated) => {
+    try {
+      const edited = await productService.updateItem(id, updated);
+      setItems(prev => prev.map(item => (item.id === id ? edited : item)));
+    } catch (err) {
+      console.error("Failed to edit item via Service", err);
+      throw err;
+    }
   };
 
-  const deleteItem = (id) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+  const deleteItem = async (id) => {
+    try {
+      await productService.deleteItem(id);
+      setItems(prev => prev.filter(item => item.id !== id));
+    } catch (err) {
+      console.error("Failed to delete item via Service", err);
+      throw err;
+    }
   };
 
   // Category CRUD calling Service Layer
@@ -143,7 +172,7 @@ export function AppContextProvider({ children }) {
   const placeBid = (id, amount, bidder = 'current_user') => {
     setItems(prev => prev.map(item => {
       if (item.id === id) {
-        const newBid = { bidder, amount, time: new Date().toISOString() };
+        const newBid = { bidder, amount, time: new Date().toISOString };
         return {
           ...item,
           currentBid: amount,
@@ -158,6 +187,8 @@ export function AppContextProvider({ children }) {
     <AppContext.Provider value={{
       categories,
       items,
+      loading,
+      refetch,
       approveItem,
       rejectItem,
       addItem,

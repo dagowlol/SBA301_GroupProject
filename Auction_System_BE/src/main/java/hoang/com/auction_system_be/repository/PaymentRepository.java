@@ -11,4 +11,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByTransactionId(String transactionId);
 
     Optional<Payment> findByPaymentGatewayRef(String paymentGatewayRef);
+
+    java.util.Optional<Payment> findByParticipantIdAndType(Long participantId, hoang.com.auction_system_be.enums.PaymentType type);
+
+    java.util.Optional<Payment> findByParticipantUserIdAndParticipantSessionId(Long userId, Long sessionId);
 }

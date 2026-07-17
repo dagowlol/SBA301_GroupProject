@@ -7,23 +7,34 @@ import hoang.com.auction_system_be.entity.AuctionSession;
 import hoang.com.auction_system_be.entity.AuctionParticipant;
 import hoang.com.auction_system_be.entity.AuctionExtensionLog;
 import hoang.com.auction_system_be.entity.User;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
+@Slf4j
 public class AuctionSessionMapper {
 
     public AuctionSessionDetailResponse toDetailResponse(
             AuctionSession session,
             String imageUrl,
             String currentWinnerName,
-            List<BidLogResponse> bidLogs
-    ) {
+            List<BidLogResponse> bidLogs) {
         if (session == null) {
             return null;
         }
+        Long winnerId = null;
+        String winnerName = null;
+        if (session.getCurrentWinnerParticipant() != null && session.getCurrentWinnerParticipant().getUser() != null) {
+            winnerId = session.getCurrentWinnerParticipant().getUser().getId();
+            winnerName = session.getCurrentWinnerParticipant().getUser().getFirstName() + " "
+                    + session.getCurrentWinnerParticipant().getUser().getLastName();
+        }
+        log.info("session status {}", session.getStatus());
+
         return AuctionSessionDetailResponse.builder()
                 .sessionId(session.getId())
                 .itemId(session.getItem().getId())
@@ -33,6 +44,8 @@ public class AuctionSessionMapper {
                 .endTime(session.getEndTime())
                 .currentPrice(session.getCurrentHighestBid())
                 .currentWinnerName(currentWinnerName)
+                .winnerId(winnerId)
+                .winnerName(winnerName)
                 .bidLogs(bidLogs)
                 .status(session.getStatus())
                 .minimumIncrement(session.getMinimumIncrement())
@@ -55,8 +68,7 @@ public class AuctionSessionMapper {
             AuctionParticipant participant,
             LocalDateTime oldEndTime,
             LocalDateTime newEndTime,
-            String reason
-    ) {
+            String reason) {
         if (session == null) {
             return null;
         }

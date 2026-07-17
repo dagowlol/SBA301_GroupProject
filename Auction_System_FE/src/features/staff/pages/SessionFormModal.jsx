@@ -89,7 +89,8 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
     setApiError('');
     try {
       const payload = {
-        endTime: new Date(data.endTime).toISOString(),
+        startTime: isEdit ? data.startTime : undefined,
+        endTime: data.endTime,
         reservePrice: data.reservePrice ? Number(data.reservePrice) : null,
         minimumIncrement: data.minimumIncrement ? Number(data.minimumIncrement) : null,
         antiSnipeWindowSeconds: Number(data.antiSnipeWindowSeconds),
@@ -99,7 +100,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
           cancellationReason: data.status === 'CANCELLED' ? data.cancellationReason : null
         } : {
           itemId: Number(data.itemId),
-          startTime: new Date(data.startTime).toISOString()
+          startTime: data.startTime
         })
       };
 
@@ -144,7 +145,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label className="small fw-semibold text-muted mb-1">Start Time</Form.Label>
-                    <Form.Control type="datetime-local" {...register('startTime')} isInvalid={!!errors.startTime} disabled={isEdit} />
+                    <Form.Control type="datetime-local" {...register('startTime')} isInvalid={!!errors.startTime} disabled={isActive} />
                     <Form.Control.Feedback type="invalid">{errors.startTime?.message}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -166,6 +167,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
                         <option value="SCHEDULED">Scheduled</option>
                         <option value="ACTIVE">Active</option>
                         <option value="ENDED">Ended</option>
+                        <option value="RESERVE_NOT_MET">Reserve Not Met</option>
                         <option value="CANCELLED">Cancelled</option>
                       </Form.Select>
                     </Form.Group>

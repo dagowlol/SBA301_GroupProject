@@ -60,7 +60,7 @@ class UserServiceImplTest {
                 .lastName("Doe")
                 .email("john.doe@example.com")
                 .phoneNumber("1234567890")
-                .password("encodedPassword")
+                .passwordHash("encodedPassword")
                 .address("123 Main St")
                 .status(UserStatus.ACTIVE)
                 .role(RoleName.USER)

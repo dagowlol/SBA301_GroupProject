@@ -63,7 +63,7 @@ const CreateItemRequest = () => {
 
       await itemApi.createWithFormData(formData);
       message.success('Item request submitted successfully!');
-      navigate('/user/items'); // Redirect to manage items
+      navigate('/my-account'); // Redirect to My Account (Auction Items tab)
     } catch (error) {
       message.error(error.message || 'Failed to submit item request');
     } finally {
@@ -76,7 +76,7 @@ const CreateItemRequest = () => {
       <Button 
         type="link" 
         icon={<ArrowLeftOutlined />} 
-        onClick={() => navigate('/user/items')}
+        onClick={() => navigate('/my-account')}
         style={{ marginBottom: '16px', paddingLeft: 0 }}
       >
         Back to My Items
@@ -234,7 +234,7 @@ const CreateItemRequest = () => {
 
           <Form.Item style={{ marginTop: '24px', textAlign: 'right' }}>
             <Space>
-              <Button onClick={() => navigate('/user/items')}>Cancel</Button>
+              <Button onClick={() => navigate('/my-account')}>Cancel</Button>
               <Button type="primary" htmlType="submit" loading={loading}>
                 Submit Request
               </Button>

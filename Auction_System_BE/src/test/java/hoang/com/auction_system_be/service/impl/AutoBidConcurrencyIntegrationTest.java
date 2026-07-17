@@ -69,8 +69,8 @@ public class AutoBidConcurrencyIntegrationTest {
         User staff = User.builder()
                 .firstName("Staff")
                 .lastName("Member")
-                .email("staff@example.com")
-                .password("123456")
+                .email("staff_" + System.currentTimeMillis() + "@example.com")
+                .passwordHash("123456")
                 .build();
         staff = userRepository.save(staff);
 
@@ -110,18 +110,24 @@ public class AutoBidConcurrencyIntegrationTest {
         session = auctionSessionRepository.save(session);
 
         // Create 3 user participants for AutoBid
-        User u1 = userRepository.save(User.builder().firstName("Robot").lastName("One").email("r1@ex.com").build());
-        User u2 = userRepository.save(User.builder().firstName("Robot").lastName("Two").email("r2@ex.com").build());
-        User u3 = userRepository.save(User.builder().firstName("Robot").lastName("Three").email("r3@ex.com").build());
+        User u1 = userRepository.save(User.builder().firstName("Robot").lastName("One").email("r1_" + System.currentTimeMillis() + "@ex.com").build());
+        User u2 = userRepository.save(User.builder().firstName("Robot").lastName("Two").email("r2_" + System.currentTimeMillis() + "@ex.com").build());
+        User u3 = userRepository.save(User.builder().firstName("Robot").lastName("Three").email("r3_" + System.currentTimeMillis() + "@ex.com").build());
 
-        AuctionParticipant p1 = auctionParticipantRepository.save(AuctionParticipant.builder().user(u1).session(session).build());
-        AuctionParticipant p2 = auctionParticipantRepository.save(AuctionParticipant.builder().user(u2).session(session).build());
-        AuctionParticipant p3 = auctionParticipantRepository.save(AuctionParticipant.builder().user(u3).session(session).build());
+        AuctionParticipant p1 = auctionParticipantRepository
+                .save(AuctionParticipant.builder().user(u1).session(session).build());
+        AuctionParticipant p2 = auctionParticipantRepository
+                .save(AuctionParticipant.builder().user(u2).session(session).build());
+        AuctionParticipant p3 = auctionParticipantRepository
+                .save(AuctionParticipant.builder().user(u3).session(session).build());
 
         // Save active auto bid configurations
-        autoBidConfigRepository.save(AutoBidConfig.builder().participant(p1).maxBidAmount(BigDecimal.valueOf(200)).bidIncrement(BigDecimal.valueOf(10)).isActive(true).build());
-        autoBidConfigRepository.save(AutoBidConfig.builder().participant(p2).maxBidAmount(BigDecimal.valueOf(250)).bidIncrement(BigDecimal.valueOf(15)).isActive(true).build());
-        autoBidConfigRepository.save(AutoBidConfig.builder().participant(p3).maxBidAmount(BigDecimal.valueOf(300)).bidIncrement(BigDecimal.valueOf(20)).isActive(true).build());
+        autoBidConfigRepository.save(AutoBidConfig.builder().participant(p1).maxBidAmount(BigDecimal.valueOf(200))
+                .bidIncrement(BigDecimal.valueOf(10)).isActive(true).build());
+        autoBidConfigRepository.save(AutoBidConfig.builder().participant(p2).maxBidAmount(BigDecimal.valueOf(250))
+                .bidIncrement(BigDecimal.valueOf(15)).isActive(true).build());
+        autoBidConfigRepository.save(AutoBidConfig.builder().participant(p3).maxBidAmount(BigDecimal.valueOf(300))
+                .bidIncrement(BigDecimal.valueOf(20)).isActive(true).build());
     }
 
     @Test
@@ -161,13 +167,14 @@ public class AutoBidConcurrencyIntegrationTest {
         System.out.println("Final highest bid: " + updatedSession.getCurrentHighestBid());
         System.out.println("Bids placed count: " + bids.size());
         for (Bid b : bids) {
-            System.out.println("Bid: User " + b.getParticipant().getUser().getFirstName() + " bid " + b.getAmount());
+            System.out.println("Bid: Participant ID " + b.getParticipant().getId() + " bid " + b.getAmount());
         }
 
-        // Ensure bids are sequentially valid (each bid must be higher than the previous one)
+        // Ensure bids are sequentially valid (each bid must be higher than the previous
+        // one)
         bids.sort((b1, b2) -> b1.getAmount().compareTo(b2.getAmount()));
         for (int i = 1; i < bids.size(); i++) {
-            assertThat(bids.get(i).getAmount()).isGreaterThan(bids.get(i-1).getAmount());
+            assertThat(bids.get(i).getAmount()).isGreaterThan(bids.get(i - 1).getAmount());
         }
 
         // Ensure no two bids have the exact same amount

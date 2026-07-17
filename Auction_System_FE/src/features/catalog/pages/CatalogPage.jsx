@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import FilterBar from '../components/FilterBar';
 import ProductCard from '../components/ProductCard';
+import { itemApi } from '../../../api/itemApi';
 import { sessionApi } from '../../../api/sessionApi';
 
 /**
@@ -41,7 +42,7 @@ export default function CatalogPage() {
       const list = res?.content ?? res?.data ?? [];
       // Only show publicly meaningful sessions: SCHEDULED and ACTIVE
       const publicSessions = list.filter(s =>
-        s.status === 'SCHEDULED' || s.status === 'ACTIVE'
+        s.status === 'SCHEDULED' || s.status === 'ACTIVE' || s.status === 'APPROVED'
       );
       setSessions(publicSessions);
     } catch (err) {
@@ -177,8 +178,8 @@ export default function CatalogPage() {
               {activeTab === 'current'
                 ? 'Hiện tại chưa có phiên đấu giá đang diễn ra.'
                 : activeTab === 'upcoming'
-                ? 'Chưa có phiên đấu giá sắp diễn ra.'
-                : 'Thử điều chỉnh bộ lọc hoặc từ khoá tìm kiếm.'}
+                  ? 'Chưa có phiên đấu giá sắp diễn ra.'
+                  : 'Thử điều chỉnh bộ lọc hoặc từ khoá tìm kiếm.'}
             </p>
           </div>
         )}

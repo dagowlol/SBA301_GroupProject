@@ -32,7 +32,8 @@ public class SecurityConfig {
                         "/ws-auction/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
-                        "/v3/api-docs/**"
+                        "/v3/api-docs/**",
+                        "/uploads/**"
         };
 
         private static final String[] PUBLIC_GET_ENDPOINTS = {

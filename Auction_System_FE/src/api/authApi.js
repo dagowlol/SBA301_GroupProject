@@ -29,4 +29,8 @@ export const authApi = {
   logout: () => apiRequest('/auth/logout', {
     method: 'POST',
   }),
+
+  getMe: () => apiRequest('/auth/me', {
+    method: 'GET',
+  }),
 };

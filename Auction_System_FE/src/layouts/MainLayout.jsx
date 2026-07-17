@@ -1,15 +1,13 @@
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Navbar, Nav, Container, Button, Form, InputGroup, Dropdown } from 'react-bootstrap';
-import { Search, Facebook, Twitter, Instagram, User, LogOut, Package, History, DollarSign } from 'lucide-react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Navbar, Nav, Container, Button, Form, Dropdown } from 'react-bootstrap';
+import { Facebook, Twitter, Instagram, User, LogOut, Package, DollarSign } from 'lucide-react';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import AuthModal from '../features/auth/components/AuthModal';
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { user, isAuthenticated, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
-  const isHome = location.pathname === '/';
+  const { isAuthenticated, user, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light" style={{ border: '3px solid #a855f7' }}>
@@ -33,23 +31,16 @@ export default function MainLayout() {
             <Nav className="mx-auto gap-4 text-dark fw-semibold" style={{ fontSize: '0.9rem' }}>
               <Nav.Link as={Link} to="/" className="text-dark hover-teal">Home</Nav.Link>
               <Nav.Link as={Link} to="/auction" className="text-dark hover-teal">Auction</Nav.Link>
-              <Nav.Link as={Link} to="/results" className="text-dark hover-teal">Results</Nav.Link>
-              <Nav.Link as={Link} to="/value-buy-sell" className="text-dark hover-teal">Value, Buy, Sell</Nav.Link>
+              {/* <Nav.Link as={Link} to="/results" className="text-dark hover-teal">Results</Nav.Link>
+              <Nav.Link as={Link} to="/value-buy-sell" className="text-dark hover-teal">Value, Buy, Sell</Nav.Link> */}
               <Nav.Link as={Link} to="/about-us" className="text-dark hover-teal">About Us</Nav.Link>
               <Nav.Link as={Link} to="/contact-us" className="text-dark hover-teal">Contact Us</Nav.Link>
             </Nav>
 
             <div className="d-flex align-items-center gap-3">
-              <Button
-                className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0"
-                style={{ backgroundColor: '#003d5b', width: '38px', height: '38px' }}
-                aria-label="Search"
-              >
-                <Search size={18} />
-              </Button>
               {isAuthenticated ? (
                 <div className="d-flex align-items-center gap-3">
-                  {user?.roles?.some(role => ['ADMIN', 'AUCTION_MANAGER', 'STAFF'].includes(role)) && (
+                  {user?.role && user.role !== 'USER' && (
                     <Button
                       variant="dark"
                       className="px-4 py-2 rounded-pill fw-bold"
@@ -59,12 +50,11 @@ export default function MainLayout() {
                       Staff Portal
                     </Button>
                   )}
-
                   <Dropdown align="end">
                     <Dropdown.Toggle
                       variant="light"
                       id="dropdown-user"
-                      className="d-flex align-items-center gap-2 rounded-ill border shadow-sm px-3 py-2 bg-white"
+                      className="d-flex align-items-center gap-2 rounded-pill border shadow-sm px-3 py-2 bg-white"
                     >
                       <div
                         className="rounded-circle d-flex align-items-center justify-content-center"
@@ -78,13 +68,9 @@ export default function MainLayout() {
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu className="shadow border-0 mt-2 rounded-3" style={{ minWidth: '220px' }}>
-                      <Dropdown.Item as={Link} to="/user/profile" className="py-2 d-flex align-items-center gap-3">
+                      <Dropdown.Item as={Link} to="/my-account" className="py-2 d-flex align-items-center gap-3">
                         <User size={16} className="text-secondary" />
                         <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Profile</span>
-                      </Dropdown.Item>
-                      <Dropdown.Item as={Link} to="/user/bids" className="py-2 d-flex align-items-center gap-3">
-                        <History size={16} className="text-secondary" />
-                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Bids</span>
                       </Dropdown.Item>
                       <Dropdown.Item as={Link} to="/user/items" className="py-2 d-flex align-items-center gap-3">
                         <Package size={16} className="text-secondary" />

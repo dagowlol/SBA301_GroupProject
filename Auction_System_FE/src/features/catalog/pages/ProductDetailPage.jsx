@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { sessionApi } from '../../../api/sessionApi';
 import CountdownTimer from '../../auction/components/CountdownTimer';
+import { resolveImageUrl } from '../../../utils/imageUtils';
 
 /**
  * ProductDetailPage — Preview page for a SCHEDULED auction session.
@@ -46,10 +47,11 @@ const formatPrice = (amount) => {
 
 // SessionStatus config
 const statusConfig = {
-  ACTIVE:    { bg: 'success',   label: '🔴 Đang Diễn Ra', textClass: 'text-success' },
-  SCHEDULED: { bg: 'warning',   label: '🗓 Sắp Diễn Ra', textClass: 'text-warning' },
-  ENDED:     { bg: 'secondary', label: 'Đã Kết Thúc', textClass: 'text-secondary' },
-  CANCELLED: { bg: 'danger',    label: 'Đã Hủy', textClass: 'text-danger' },
+  ACTIVE:          { bg: 'success',   label: '🔴 Đang Diễn Ra', textClass: 'text-success' },
+  SCHEDULED:       { bg: 'warning',   label: '🗓 Sắp Diễn Ra', textClass: 'text-warning' },
+  ENDED:           { bg: 'secondary', label: 'Đã Kết Thúc', textClass: 'text-secondary' },
+  RESERVE_NOT_MET: { bg: 'warning',   label: 'Không Đạt Giá Dự Định', textClass: 'text-warning' },
+  CANCELLED:       { bg: 'danger',    label: 'Đã Hủy', textClass: 'text-danger' },
 };
 
 export default function ProductDetailPage() {
@@ -110,13 +112,13 @@ export default function ProductDetailPage() {
 
   const status = statusConfig[session.status] ?? { bg: 'secondary', label: session.status, textClass: 'text-secondary' };
   const isScheduled = session.status === 'SCHEDULED';
-  const isEnded = session.status === 'ENDED' || session.status === 'CANCELLED';
+  const isEnded = session.status === 'ENDED' || session.status === 'CANCELLED' || session.status === 'RESERVE_NOT_MET';
   const hasCurrentBid = session.currentHighestBid && parseFloat(session.currentHighestBid) > 0;
 
   // Item info comes from session fields (itemName, itemDescription etc.)
   const itemName = session.itemName || session.item?.name || 'Sản phẩm đấu giá';
   const itemDescription = session.itemDescription || session.item?.description || '';
-  const itemImage = session.itemImage || getArtworkImage(itemName);
+  const itemImage = resolveImageUrl(session.itemImage) || getArtworkImage(itemName);
 
   return (
     <Container className="py-5">
