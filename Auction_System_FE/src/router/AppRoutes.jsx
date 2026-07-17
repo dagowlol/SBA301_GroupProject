@@ -17,6 +17,7 @@ import SessionManagement from '../features/staff/pages/SessionManagement';
 import BidMonitoring from '../features/staff/pages/BidMonitoring';
 // import AutoBid from '../features/staff/pages/AutoBid';
 import UserManagement from '../features/staff/pages/UserManagement';
+import AuctionStatistics from '../features/admin/pages/AuctionStatistics';
 
 import HomePage from '../features/catalog/pages/HomePage';
 import AboutUsPage from '../features/catalog/pages/AboutUsPage';
@@ -55,6 +56,7 @@ export default function AppRoutes() {
           <Route path="bid-monitoring" element={<BidMonitoring />} />
           {/* <Route path="autobid" element={<AutoBid />} /> */}
           <Route path="users" element={<UserManagement />} />
+          <Route path="statistics" element={<AuctionStatistics />} />
         </Route>
 
         {/* Fallback Catch-all Route */}

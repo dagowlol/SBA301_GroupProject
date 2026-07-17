@@ -33,13 +33,13 @@ export default function Sidebar() {
     { name: 'Auction Sessions', icon: Calendar, path: '/admin/sessions', badge: 'F10' },
     { name: 'Bid Monitoring', icon: Activity, path: '/admin/bid-monitoring', badge: 'F11' },
     // { name: 'Auto-Bid Management', icon: Cpu, path: '/admin/autobid', badge: 'F12' },
-    { name: 'Auction Statistics', icon: BarChart3, path: '#', badge: 'F15' },
+    { name: 'Auction Statistics', icon: BarChart3, path: '/admin/statistics', badge: 'F15' },
     { name: 'User Management', icon: Users, path: '/admin/users', badge: 'F14' },
   ];
 
   return (
     <div
-      className="d-flex flex-column text-white min-vh-100 flex-shrink-0"
+      className="admin-sidebar d-flex flex-column text-white min-vh-100 flex-shrink-0"
       style={{ width: '260px', backgroundColor: '#004e64', borderRight: '1px solid #003a4b' }}
     >
       {/* Brand Logo Header */}
