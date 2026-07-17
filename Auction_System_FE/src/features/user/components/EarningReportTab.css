@@ -1,36 +1,38 @@
 /* ============================================================
    EarningReportTab — Styles
+   Aligned with Annexe Auction Home page design system
+   Primary: #003d5b · Background: #f8f9fa · Font: Plus Jakarta Sans
    ============================================================ */
 
-/* ─── Container chính ─────────────────────────────────────────── */
+/* ─── Container ────────────────────────────────────────────── */
 .earning-report {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 6px 16px rgba(0, 0, 0, 0.04);
-  padding: 32px;
+  background: #f8f9fa;
   min-height: 80vh;
+  padding: 32px;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+/* ─── Header ───────────────────────────────────────────────── */
 .earning-report__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
   gap: 16px;
 }
 
 .earning-report__title {
-  font-size: 1.65rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #0a2233;
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.4px;
 }
 
 .earning-report__subtitle {
-  font-size: 0.85rem;
-  color: #8b8fa3;
+  font-size: 0.83rem;
+  color: #8b95a1;
   margin: 4px 0 0;
   font-weight: 400;
 }
@@ -44,44 +46,52 @@
 .earning-report__export-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   padding: 9px 20px;
-  border-radius: 10px;
-  border: 1.5px solid #e2e5ea;
-  background: #fff;
-  color: #495057;
+  border-radius: 8px;
+  border: 1.5px solid #003d5b;
+  background: #003d5b;
+  color: #ffffff;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: inherit;
 }
 
 .earning-report__export-btn:hover {
-  border-color: #004e64;
-  color: #004e64;
-  background: #f0fafb;
+  background: #002d47;
+  border-color: #002d47;
 }
 
-/* ─── Summary Cards ───────────────────────────────────────────── */
+.earning-report__export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Summary Cards ────────────────────────────────────────── */
 .earning-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-bottom: 36px;
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
 .earning-card {
   position: relative;
-  border-radius: 14px;
-  padding: 24px 24px 24px 28px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 22px 22px 22px 26px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
   overflow: hidden;
-  transition: transform 0.25s cubic-bezier(0.165, 0.84, 0.44, 1),
-              box-shadow 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: transform 0.22s cubic-bezier(0.165, 0.84, 0.44, 1),
+              box-shadow 0.22s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .earning-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 61, 91, 0.1);
 }
 
 /* Left accent bar */
@@ -89,58 +99,46 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 12px;
-  bottom: 12px;
-  width: 4px;
-  border-radius: 0 4px 4px 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
 }
 
-/* Card — Tổng doanh thu (Green) */
-.earning-card--revenue {
-  background: #f0fdf4;
-  border: 1px solid #dcfce7;
-}
+/* Revenue card — teal accent */
 .earning-card--revenue::before {
-  background: linear-gradient(180deg, #22c55e, #16a34a);
+  background: linear-gradient(180deg, #003d5b, #0077b6);
 }
 .earning-card--revenue .earning-card__value {
-  color: #15803d;
+  color: #003d5b;
 }
 .earning-card--revenue .earning-card__icon {
-  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-  color: #16a34a;
+  background: #eef6fb;
+  color: #003d5b;
 }
 
-/* Card — Sản phẩm thành công (Blue) */
-.earning-card--products {
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-}
+/* Products card — slate accent */
 .earning-card--products::before {
-  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  background: linear-gradient(180deg, #334155, #475569);
 }
 .earning-card--products .earning-card__value {
-  color: #1d4ed8;
+  color: #334155;
 }
 .earning-card--products .earning-card__icon {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-  color: #2563eb;
+  background: #f1f5f9;
+  color: #475569;
 }
 
-/* Card — Tiền chờ thanh toán (Orange) */
-.earning-card--pending {
-  background: #fff7ed;
-  border: 1px solid #ffedd5;
-}
+/* Pending card — amber accent */
 .earning-card--pending::before {
-  background: linear-gradient(180deg, #f97316, #ea580c);
+  background: linear-gradient(180deg, #b45309, #d97706);
 }
 .earning-card--pending .earning-card__value {
-  color: #c2410c;
+  color: #92400e;
 }
 .earning-card--pending .earning-card__icon {
-  background: linear-gradient(135deg, #ffedd5, #fed7aa);
-  color: #ea580c;
+  background: #fffbeb;
+  color: #b45309;
 }
 
 .earning-card__top {
@@ -150,18 +148,18 @@
 }
 
 .earning-card__label {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #8b8fa3;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.7px;
   margin-bottom: 10px;
 }
 
 .earning-card__icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,44 +167,47 @@
 }
 
 .earning-card__value {
-  font-size: 1.75rem;
+  font-size: 1.7rem;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.5px;
-  animation: fadeInUp 0.6s ease-out both;
+  animation: fadeInUp 0.5s ease-out both;
 }
 
+.earning-card:nth-child(2) .earning-card__value { animation-delay: 0.08s; }
+.earning-card:nth-child(3) .earning-card__value { animation-delay: 0.16s; }
+
 .earning-card__suffix {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   margin-left: 4px;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.earning-card:nth-child(2) .earning-card__value {
-  animation-delay: 0.1s;
-}
-.earning-card:nth-child(3) .earning-card__value {
-  animation-delay: 0.2s;
+.earning-analytics-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  margin-bottom: 28px;
+  border: 1px solid #e8edf2;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #94a3b8;
+  font-size: 0.8rem;
 }
 
-/* ─── Filter Bar ──────────────────────────────────────────────── */
+/* ─── Filter Bar ───────────────────────────────────────────── */
 .earning-filters {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -214,32 +215,35 @@
 .earning-filters__tabs {
   display: flex;
   gap: 4px;
-  background: #f1f3f5;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
   border-radius: 10px;
   padding: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .earning-filters__tab {
-  padding: 8px 20px;
+  padding: 7px 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: 7px;
   background: transparent;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #6b7280;
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
+  font-family: inherit;
   white-space: nowrap;
 }
 
 .earning-filters__tab:hover {
-  color: #374151;
+  color: #003d5b;
 }
 
 .earning-filters__tab--active {
-  background: #ffffff;
-  color: #004e64;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: #003d5b;
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 61, 91, 0.25);
 }
 
 .earning-filters__search {
@@ -248,36 +252,43 @@
 
 .earning-filters__search-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: #94a3b8;
   pointer-events: none;
 }
 
 .earning-filters__search-input {
-  padding: 9px 14px 9px 40px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  width: 260px;
-  background: #fafbfc;
-  transition: all 0.2s ease;
+  padding: 9px 14px 9px 38px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  font-size: 0.84rem;
+  width: 250px;
+  background: #ffffff;
+  transition: all 0.18s ease;
   outline: none;
   font-family: inherit;
+  color: #334155;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.earning-filters__search-input::placeholder {
+  color: #94a3b8;
 }
 
 .earning-filters__search-input:focus {
-  border-color: #004e64;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(0, 78, 100, 0.08);
+  border-color: #003d5b;
+  box-shadow: 0 0 0 3px rgba(0, 61, 91, 0.08);
 }
 
-/* ─── Data Table ──────────────────────────────────────────────── */
+/* ─── Table Wrapper ────────────────────────────────────────── */
 .earning-table-wrapper {
-  overflow-x: auto;
+  background: #ffffff;
   border-radius: 12px;
-  border: 1px solid #f1f3f5;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  overflow-x: auto;
 }
 
 .earning-table {
@@ -287,34 +298,34 @@
 }
 
 .earning-table thead {
-  background: #f8f9fb;
+  background: #003d5b;
 }
 
 .earning-table th {
-  padding: 14px 16px;
-  font-size: 0.72rem;
+  padding: 13px 16px;
+  font-size: 0.7rem;
   font-weight: 700;
-  color: #8b8fa3;
+  color: rgba(255, 255, 255, 0.9);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  border-bottom: 1px solid #f1f3f5;
+  letter-spacing: 0.7px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   white-space: nowrap;
 }
 
 .earning-table td {
-  padding: 16px 16px;
-  font-size: 0.88rem;
-  color: #374151;
-  border-bottom: 1px solid #f7f8f9;
+  padding: 15px 16px;
+  font-size: 0.87rem;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
 }
 
 .earning-table tbody tr {
-  transition: background 0.15s ease;
+  transition: background 0.12s ease;
 }
 
 .earning-table tbody tr:hover {
-  background: #fafbfc;
+  background: #f8fafc;
 }
 
 .earning-table tbody tr:last-child td {
@@ -322,69 +333,71 @@
 }
 
 /* Alignment helpers */
-.earning-table .col-left { text-align: left; }
-.earning-table .col-right { text-align: right; }
+.earning-table .col-left   { text-align: left; }
+.earning-table .col-right  { text-align: right; }
 .earning-table .col-center { text-align: center; }
+
+/* Invoice ID */
+.earning-table__invoice {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+  font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
+}
 
 /* Product name */
 .earning-table__product {
   font-weight: 600;
-  color: #1a1a2e;
+  color: #0f172a;
   max-width: 240px;
-}
-
-/* Invoice ID */
-.earning-table__invoice {
-  font-size: 0.8rem;
-  color: #9ca3af;
-  font-weight: 500;
-  font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
 }
 
 /* Price */
 .earning-table__price {
   font-weight: 700;
-  color: #004e64;
+  color: #003d5b;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
 /* Buyer masked */
 .earning-table__buyer {
-  font-size: 0.85rem;
-  color: #6b7280;
+  font-size: 0.84rem;
+  color: #64748b;
 }
 
 /* Date */
 .earning-table__date {
-  font-size: 0.84rem;
-  color: #6b7280;
+  font-size: 0.83rem;
+  color: #64748b;
   white-space: nowrap;
 }
 
-/* ─── Status Badges ───────────────────────────────────────────── */
+/* ─── Status Badges ────────────────────────────────────────── */
 .earning-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 14px;
+  padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-weight: 700;
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
 
+/* SUCCESS — teal toned */
 .earning-badge--success {
-  background: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
+  background: #e6f4f1;
+  color: #0f766e;
+  border: 1px solid #99d6cf;
 }
 
+/* PENDING — warm amber */
 .earning-badge--pending {
-  background: #fff7ed;
-  color: #ea580c;
-  border: 1px solid #fed7aa;
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fcd34d;
 }
 
 .earning-badge__dot {
@@ -395,96 +408,111 @@
 }
 
 .earning-badge--success .earning-badge__dot {
-  background: #22c55e;
+  background: #14b8a6;
 }
 
 .earning-badge--pending .earning-badge__dot {
-  background: #f97316;
+  background: #f59e0b;
   animation: pulse-dot 2s infinite;
 }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50%       { opacity: 0.35; }
 }
 
-/* ─── Load More ───────────────────────────────────────────────── */
+/* ─── Load More ────────────────────────────────────────────── */
 .earning-load-more {
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 24px 0 8px;
+  gap: 12px;
+  padding: 20px 0 4px;
+}
+
+.earning-pagination__page {
+  min-width: 64px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 
 .earning-load-more__btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 28px;
+  padding: 9px 28px;
   border-radius: 24px;
-  border: 1.5px solid #e2e5ea;
-  background: #fff;
-  color: #495057;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   font-family: inherit;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .earning-load-more__btn:hover:not(:disabled) {
-  border-color: #004e64;
-  color: #004e64;
-  background: #f0fafb;
+  border-color: #003d5b;
+  color: #003d5b;
+  background: #f0f7fa;
 }
 
 .earning-load-more__btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
-/* ─── Empty & Loading States ──────────────────────────────────── */
+/* ─── Empty & Loading States ───────────────────────────────── */
 .earning-empty {
   text-align: center;
-  padding: 60px 20px;
-  color: #9ca3af;
+  padding: 64px 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
 }
 
 .earning-empty__icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: #f3f4f6;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #f1f5f9;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
-  color: #d1d5db;
+  margin-bottom: 14px;
+  color: #cbd5e1;
 }
 
 .earning-empty__title {
   font-size: 1rem;
-  font-weight: 600;
-  color: #6b7280;
+  font-weight: 700;
+  color: #475569;
   margin-bottom: 4px;
 }
 
 .earning-empty__text {
-  font-size: 0.85rem;
-  color: #9ca3af;
+  font-size: 0.84rem;
+  color: #94a3b8;
+  max-width: 320px;
+  margin: 0 auto;
 }
 
 .earning-loading {
   text-align: center;
-  padding: 48px 20px;
+  padding: 52px 20px;
 }
 
 .earning-spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #004e64;
+  width: 34px;
+  height: 34px;
+  border: 2.5px solid #e2e8f0;
+  border-top-color: #003d5b;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.75s linear infinite;
   margin: 0 auto 12px;
 }
 
@@ -492,11 +520,10 @@
   to { transform: rotate(360deg); }
 }
 
-/* ─── Responsive: Tablet (≤ 992px) ────────────────────────────── */
+/* ─── Responsive: Tablet (≤ 992px) ─────────────────────────── */
 @media (max-width: 992px) {
   .earning-report {
-    padding: 24px;
-    border-radius: 12px;
+    padding: 24px 20px;
   }
 
   .earning-summary {
@@ -508,30 +535,25 @@
   }
 
   .earning-card__value {
-    font-size: 1.5rem;
+    font-size: 1.45rem;
   }
 }
 
-/* ─── Responsive: Mobile (≤ 768px) ────────────────────────────── */
+/* ─── Responsive: Mobile (≤ 768px) ─────────────────────────── */
 @media (max-width: 768px) {
   .earning-report {
-    padding: 20px 16px;
-    border-radius: 0;
-    box-shadow: none;
+    padding: 16px;
+    background: #f8f9fa;
     min-height: auto;
   }
 
-  .earning-report__header {
-    margin-bottom: 24px;
-  }
-
   .earning-report__title {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
   }
 
   .earning-summary {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
   }
 
   .earning-summary .earning-card:last-child {
@@ -539,11 +561,11 @@
   }
 
   .earning-card {
-    padding: 20px 20px 20px 24px;
+    padding: 18px 18px 18px 22px;
   }
 
   .earning-card__value {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
   }
 
   .earning-filters {
@@ -560,10 +582,12 @@
     width: 100%;
   }
 
-  /* ── Mobile: Table → Card List ──────────────────────────────── */
+  /* Mobile: Table → Card List */
   .earning-table-wrapper {
     border: none;
     overflow: visible;
+    background: transparent;
+    box-shadow: none;
   }
 
   .earning-table {
@@ -577,23 +601,23 @@
   .earning-table tbody {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   .earning-table tbody tr {
     display: flex;
     flex-direction: column;
     background: #ffffff;
-    border: 1px solid #f1f3f5;
-    border-radius: 12px;
-    padding: 16px;
-    gap: 8px;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    padding: 14px 16px;
+    gap: 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
   .earning-table tbody tr:hover {
-    background: #fafbfc;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: #f8fafc;
+    box-shadow: 0 2px 8px rgba(0, 61, 91, 0.06);
   }
 
   .earning-table td {
@@ -602,21 +626,20 @@
     align-items: center;
     padding: 4px 0;
     border-bottom: none;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
   }
 
   .earning-table td::before {
     content: attr(data-label);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #9ca3af;
+    font-size: 0.73rem;
+    font-weight: 700;
+    color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.4px;
     flex-shrink: 0;
     margin-right: 12px;
   }
 
-  /* Override alignments for mobile card layout */
   .earning-table .col-left,
   .earning-table .col-right,
   .earning-table .col-center {
@@ -627,40 +650,39 @@
     max-width: none;
   }
 
-  /* Price row highlight */
-  .earning-table td[data-label="Giá chốt"] {
+  .earning-table td[data-label="Final Price"] {
     padding-top: 8px;
     margin-top: 4px;
-    border-top: 1px dashed #f1f3f5;
+    border-top: 1px dashed #e9ecef;
   }
 }
 
-/* ─── Responsive: Small Mobile (≤ 480px) ──────────────────────── */
+/* ─── Responsive: Small Mobile (≤ 480px) ───────────────────── */
 @media (max-width: 480px) {
   .earning-report {
-    padding: 16px 12px;
+    padding: 12px;
   }
 
   .earning-report__title {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
   }
 
   .earning-card {
-    padding: 16px 16px 16px 20px;
+    padding: 14px 14px 14px 18px;
   }
 
   .earning-card__value {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   .earning-card__icon {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 9px;
   }
 
   .earning-filters__tab {
-    padding: 7px 14px;
+    padding: 6px 13px;
     font-size: 0.78rem;
   }
 }

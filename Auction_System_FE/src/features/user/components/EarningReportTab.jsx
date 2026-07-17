@@ -1,9 +1,15 @@
-import React, { useState, useContext, useMemo } from 'react';
+import React, { lazy, Suspense, useState, useContext, useMemo, useEffect } from 'react';
 import { Spinner } from 'react-bootstrap';
 import { DollarSign, PackageCheck, Clock, Search, Download, Inbox } from 'lucide-react';
 import { AuthContext } from '../../../context/AuthContext';
-import { useEarningSummary, useEarningTransactions } from '../hooks/useEarningReport';
+import {
+  useEarningStatistics,
+  useEarningSummary,
+  useEarningTransactions,
+} from '../hooks/useEarningReport';
 import './EarningReportTab.css';
+
+const EarningCharts = lazy(() => import('./EarningCharts'));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -32,19 +38,22 @@ const formatDate = (dateStr) => {
 // ─── Filter tab config ────────────────────────────────────────────────────────
 
 const FILTER_TABS = [
-  { key: 'ALL', label: 'Tất cả' },
-  { key: 'PENDING', label: 'Đang chờ' },
-  { key: 'SUCCESS', label: 'Thành công' },
+  { key: 'ALL', label: 'All' },
+  { key: 'PENDING', label: 'Pending' },
+  { key: 'SUCCESS', label: 'Success' },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function EarningReportTab() {
-  const { user } = useContext(AuthContext);
-  const userId = user?.id;
+  const { user, isAuthenticated, openAuthModal } = useContext(AuthContext);
+  // Dùng userId thật nếu đã login, fallback 'guest' để mock data vẫn hoạt động
+  const userId = user?.id || 'guest';
 
   const [filterTab, setFilterTab] = useState('ALL');
   const [searchText, setSearchText] = useState('');
+  const [pageIndex, setPageIndex] = useState(0);
+  const [statisticsRange, setStatisticsRange] = useState('LAST_6_MONTHS');
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
@@ -52,6 +61,12 @@ export default function EarningReportTab() {
     data: summary,
     isLoading: summaryLoading,
   } = useEarningSummary(userId);
+
+  const {
+    data: statistics,
+    isLoading: statisticsLoading,
+    isError: statisticsError,
+  } = useEarningStatistics(userId, statisticsRange);
 
   const filters = useMemo(() => ({
     status: filterTab !== 'ALL' ? filterTab : undefined,
@@ -65,8 +80,26 @@ export default function EarningReportTab() {
     status: txStatus,
   } = useEarningTransactions(userId, filters);
 
-  // Flatten all cursor pages into a single array
-  const transactions = txData?.pages.flatMap((page) => page.content) || [];
+  useEffect(() => {
+    setPageIndex(0);
+  }, [userId, filterTab]);
+
+  const pages = txData?.pages || [];
+  const transactions = pages[pageIndex]?.content || [];
+
+  const goToNextPage = async () => {
+    if (pageIndex + 1 < pages.length) {
+      setPageIndex((current) => current + 1);
+      return;
+    }
+
+    if (hasNextPage) {
+      const result = await fetchNextPage();
+      if (result.data?.pages?.[pageIndex + 1]) {
+        setPageIndex((current) => current + 1);
+      }
+    }
+  };
 
   // Client-side search filter (product name)
   const filteredTransactions = useMemo(() => {
@@ -80,30 +113,55 @@ export default function EarningReportTab() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
+
     <div className="earning-report">
       {/* ═══ Header ═══ */}
       <header className="earning-report__header">
         <div>
-          <h2 className="earning-report__title">Báo Cáo Doanh Thu</h2>
+          <h2 className="earning-report__title">Earning Report</h2>
           <p className="earning-report__subtitle">
-            Thống kê doanh thu từ các phiên đấu giá thành công
+            Revenue statistics from successful auction sessions
           </p>
         </div>
         <div className="earning-report__actions">
-          <button className="earning-report__export-btn" disabled title="Sắp ra mắt">
-            <Download size={16} />
-            Xuất báo cáo
-          </button>
+          <span title="Export — Coming soon" style={{ display: 'inline-block', cursor: 'not-allowed' }}>
+            <button className="earning-report__export-btn" disabled style={{ pointerEvents: 'none', opacity: 0.5 }}>
+              <Download size={16} />
+              Export Report
+            </button>
+          </span>
         </div>
       </header>
 
+      {/* ═══ Login prompt ═══ */}
+      {!isAuthenticated && (
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+            border: '1px solid #bfdbfe',
+            borderRadius: '10px',
+            padding: '12px 20px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <span style={{ color: '#1e40af', fontSize: '0.85rem', fontWeight: 500 }}>
+            You are viewing sample data. Please sign in to view your actual report.
+          </span>
+        </div>
+      )}
+
       {/* ═══ Summary Cards (AC1) ═══ */}
       <section className="earning-summary">
-        {/* Card 1: Tổng doanh thu — Green */}
+        {/* Card 1: Total Revenue — Green */}
         <div className="earning-card earning-card--revenue">
           <div className="earning-card__top">
             <div>
-              <div className="earning-card__label">Tổng doanh thu</div>
+              <div className="earning-card__label">Total Revenue</div>
               <div className="earning-card__value">
                 {summaryLoading ? (
                   <Spinner animation="border" size="sm" />
@@ -121,11 +179,11 @@ export default function EarningReportTab() {
           </div>
         </div>
 
-        {/* Card 2: Sản phẩm thành công — Blue */}
+        {/* Card 2: Successful Products — Blue */}
         <div className="earning-card earning-card--products">
           <div className="earning-card__top">
             <div>
-              <div className="earning-card__label">Sản phẩm thành công</div>
+              <div className="earning-card__label">Successful Products</div>
               <div className="earning-card__value">
                 {summaryLoading ? (
                   <Spinner animation="border" size="sm" />
@@ -140,11 +198,11 @@ export default function EarningReportTab() {
           </div>
         </div>
 
-        {/* Card 3: Tiền chờ thanh toán — Orange */}
+        {/* Card 3: Pending Amount — Orange */}
         <div className="earning-card earning-card--pending">
           <div className="earning-card__top">
             <div>
-              <div className="earning-card__label">Tiền chờ thanh toán</div>
+              <div className="earning-card__label">Pending Amount</div>
               <div className="earning-card__value">
                 {summaryLoading ? (
                   <Spinner animation="border" size="sm" />
@@ -162,6 +220,16 @@ export default function EarningReportTab() {
           </div>
         </div>
       </section>
+
+      <Suspense fallback={<div className="earning-analytics-fallback">Loading charts...</div>}>
+        <EarningCharts
+          statistics={statistics}
+          range={statisticsRange}
+          onRangeChange={setStatisticsRange}
+          isLoading={statisticsLoading}
+          isError={statisticsError}
+        />
+      </Suspense>
 
       {/* ═══ Filter Bar ═══ */}
       <div className="earning-filters">
@@ -185,7 +253,7 @@ export default function EarningReportTab() {
           <input
             type="text"
             className="earning-filters__search-input"
-            placeholder="Tìm tên sản phẩm..."
+            placeholder="Search product name..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
@@ -196,18 +264,18 @@ export default function EarningReportTab() {
       {txStatus === 'pending' ? (
         <div className="earning-loading">
           <div className="earning-spinner" />
-          <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Đang tải dữ liệu...</p>
+          <p style={{ color: '#9ca3af', fontSize: '0.85rem' }}>Loading data...</p>
         </div>
       ) : filteredTransactions.length === 0 ? (
         <div className="earning-empty">
           <div className="earning-empty__icon">
             <Inbox size={28} />
           </div>
-          <div className="earning-empty__title">Không có giao dịch nào</div>
+          <div className="earning-empty__title">No transactions found</div>
           <div className="earning-empty__text">
             {filterTab !== 'ALL'
-              ? 'Thử chuyển sang tab khác hoặc xóa bộ lọc tìm kiếm.'
-              : 'Các giao dịch từ phiên đấu giá thành công sẽ hiển thị tại đây.'}
+              ? 'Try switching to another tab or clearing the search filter.'
+              : 'Transactions from successful auction sessions will appear here.'}
           </div>
         </div>
       ) : (
@@ -216,33 +284,33 @@ export default function EarningReportTab() {
             <table className="earning-table">
               <thead>
                 <tr>
-                  <th className="col-left">Mã hóa đơn</th>
-                  <th className="col-left">Tên sản phẩm</th>
-                  <th className="col-center">Ngày kết thúc</th>
-                  <th className="col-right">Giá chốt cuối cùng</th>
-                  <th className="col-left">Người mua</th>
-                  <th className="col-center">Trạng thái</th>
+                  <th className="col-left">Invoice ID</th>
+                  <th className="col-left">Product Name</th>
+                  <th className="col-center">End Date</th>
+                  <th className="col-right">Final Price</th>
+                  <th className="col-left">Buyer</th>
+                  <th className="col-center">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTransactions.map((tx) => (
                   <tr key={tx.id}>
-                    <td className="col-left" data-label="Mã HĐ">
+                    <td className="col-left" data-label="Invoice ID">
                       <span className="earning-table__invoice">{tx.id}</span>
                     </td>
-                    <td className="col-left" data-label="Sản phẩm">
+                    <td className="col-left" data-label="Product">
                       <span className="earning-table__product">{tx.productName}</span>
                     </td>
-                    <td className="col-center" data-label="Ngày KT">
+                    <td className="col-center" data-label="End Date">
                       <span className="earning-table__date">{formatDate(tx.sessionEndDate)}</span>
                     </td>
-                    <td className="col-right" data-label="Giá chốt">
+                    <td className="col-right" data-label="Final Price">
                       <span className="earning-table__price">{formatVND(tx.finalPrice)}</span>
                     </td>
-                    <td className="col-left" data-label="Người mua">
+                    <td className="col-left" data-label="Buyer">
                       <span className="earning-table__buyer">{maskBuyerName(tx.buyerName)}</span>
                     </td>
-                    <td className="col-center" data-label="Trạng thái">
+                    <td className="col-center" data-label="Status">
                       {tx.paymentStatus === 'SUCCESS' ? (
                         <span className="earning-badge earning-badge--success">
                           <span className="earning-badge__dot" />
@@ -261,18 +329,26 @@ export default function EarningReportTab() {
             </table>
           </div>
 
-          {/* ═══ Load More — Cursor Pagination ═══ */}
-          {hasNextPage && (
+          {/* ═══ Cursor Pagination ═══ */}
+          {(pages.length > 1 || pageIndex > 0 || hasNextPage) && (
             <div className="earning-load-more">
               <button
                 className="earning-load-more__btn"
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
+                onClick={() => setPageIndex((current) => current - 1)}
+                disabled={pageIndex === 0 || isFetchingNextPage}
+              >
+                Previous
+              </button>
+              <span className="earning-pagination__page">Page {pageIndex + 1}</span>
+              <button
+                className="earning-load-more__btn"
+                onClick={goToNextPage}
+                disabled={isFetchingNextPage || (pageIndex + 1 >= pages.length && !hasNextPage)}
               >
                 {isFetchingNextPage ? (
                   <Spinner animation="border" size="sm" />
                 ) : (
-                  'Tải thêm'
+                  'Next'
                 )}
               </button>
             </div>

@@ -1,10 +1,11 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { getEarningReport, getEarningTransactions } from '../../../api/earningReportApi';
+import {
+  getEarningReport,
+  getEarningStatistics,
+  getEarningTransactions,
+} from '../../../api/earningReportApi';
 
-/**
- * Hook lấy tổng quan doanh thu (summary cards).
- * @param {string} userId
- */
+
 export function useEarningSummary(userId) {
   return useQuery({
     queryKey: ['earningSummary', userId],
@@ -13,12 +14,15 @@ export function useEarningSummary(userId) {
   });
 }
 
-/**
- * Hook lấy danh sách giao dịch — cursor-based pagination.
- * Pattern giống useAuctionSessions.js
- * @param {string} userId
- * @param {Object} filters - { status }
- */
+export function useEarningStatistics(userId, range) {
+  return useQuery({
+    queryKey: ['earningStatistics', userId, range],
+    queryFn: () => getEarningStatistics(userId, range),
+    enabled: !!userId,
+  });
+}
+
+
 export function useEarningTransactions(userId, filters = {}) {
   return useInfiniteQuery({
     queryKey: ['earningTransactions', userId, filters],
@@ -26,7 +30,7 @@ export function useEarningTransactions(userId, filters = {}) {
       return await getEarningTransactions(userId, {
         ...filters,
         cursor: pageParam,
-        size: 5,
+        size: 10,
       });
     },
     initialPageParam: null,

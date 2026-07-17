@@ -1,6 +1,6 @@
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Navbar, Nav, Container, Button, Form, InputGroup } from 'react-bootstrap';
-import { Search, Facebook, Twitter, Instagram } from 'lucide-react';
+import { Navbar, Nav, Container, Button, Form, InputGroup, Dropdown } from 'react-bootstrap';
+import { Search, Facebook, Twitter, Instagram, User, LogOut, Package, History, DollarSign } from 'lucide-react';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import AuthModal from '../features/auth/components/AuthModal';
@@ -8,7 +8,7 @@ import AuthModal from '../features/auth/components/AuthModal';
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
+  const { user, isAuthenticated, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
   const isHome = location.pathname === '/';
 
   return (
@@ -17,18 +17,18 @@ export default function MainLayout() {
       <Navbar bg="white" expand="lg" className="py-3 sticky-top border-bottom shadow-sm">
         <Container>
           <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 text-dark d-flex align-items-center" style={{ fontStyle: 'italic', position: 'relative' }}>
-            <span style={{ 
-              background: 'linear-gradient(180deg, #003d5b 0%, #0077b6 50%, #90e0ef 100%)', 
-              WebkitBackgroundClip: 'text', 
-              WebkitTextFillColor: 'transparent', 
-              letterSpacing: '2px', 
+            <span style={{
+              background: 'linear-gradient(180deg, #003d5b 0%, #0077b6 50%, #90e0ef 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '2px',
               fontWeight: 900,
               fontFamily: 'Impact, sans-serif'
             }}>ANNEXE</span>
           </Navbar.Brand>
-          
+
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          
+
           <Navbar.Collapse id="basic-navbar-nav" className="justify-content-between">
             <Nav className="mx-auto gap-4 text-dark fw-semibold" style={{ fontSize: '0.9rem' }}>
               <Nav.Link as={Link} to="/" className="text-dark hover-teal">Home</Nav.Link>
@@ -38,38 +38,76 @@ export default function MainLayout() {
               <Nav.Link as={Link} to="/about-us" className="text-dark hover-teal">About Us</Nav.Link>
               <Nav.Link as={Link} to="/contact-us" className="text-dark hover-teal">Contact Us</Nav.Link>
             </Nav>
-            
+
             <div className="d-flex align-items-center gap-3">
-              <Button 
-                className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0" 
+              <Button
+                className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0"
                 style={{ backgroundColor: '#003d5b', width: '38px', height: '38px' }}
                 aria-label="Search"
               >
                 <Search size={18} />
               </Button>
               {isAuthenticated ? (
-                <>
-                  <Button 
-                    variant="dark" 
-                    className="px-4 py-2 rounded-pill fw-bold" 
-                    style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
-                    onClick={() => navigate('/admin/items')}
-                  >
-                    Staff Portal
-                  </Button>
-                  <Button 
-                    variant="outline-danger" 
-                    className="px-3 py-2 rounded-pill fw-bold" 
-                    style={{ fontSize: '0.9rem' }}
-                    onClick={logout}
-                  >
-                    Logout
-                  </Button>
-                </>
+                <div className="d-flex align-items-center gap-3">
+                  {user?.roles?.some(role => ['ADMIN', 'AUCTION_MANAGER', 'STAFF'].includes(role)) && (
+                    <Button
+                      variant="dark"
+                      className="px-4 py-2 rounded-pill fw-bold"
+                      style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
+                      onClick={() => navigate('/admin/items')}
+                    >
+                      Staff Portal
+                    </Button>
+                  )}
+
+                  <Dropdown align="end">
+                    <Dropdown.Toggle
+                      variant="light"
+                      id="dropdown-user"
+                      className="d-flex align-items-center gap-2 rounded-ill border shadow-sm px-3 py-2 bg-white"
+                    >
+                      <div
+                        className="rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ width: '28px', height: '28px', backgroundColor: '#003d5b', color: 'white' }}
+                      >
+                        {user?.email ? user.email.charAt(0).toUpperCase() : <User size={16} />}
+                      </div>
+                      <span className="fw-semibold text-dark d-none d-md-block" style={{ fontSize: '0.9rem' }}>
+                        {user?.email?.split('@')[0] || 'User'}
+                      </span>
+                    </Dropdown.Toggle>
+
+                    <Dropdown.Menu className="shadow border-0 mt-2 rounded-3" style={{ minWidth: '220px' }}>
+                      <Dropdown.Item as={Link} to="/user/profile" className="py-2 d-flex align-items-center gap-3">
+                        <User size={16} className="text-secondary" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Profile</span>
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/user/bids" className="py-2 d-flex align-items-center gap-3">
+                        <History size={16} className="text-secondary" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Bids</span>
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/user/items" className="py-2 d-flex align-items-center gap-3">
+                        <Package size={16} className="text-secondary" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Items</span>
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/user/earnings" className="py-2 d-flex align-items-center gap-3">
+                        <DollarSign size={16} className="text-secondary" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Earnings</span>
+                      </Dropdown.Item>
+
+                      <Dropdown.Divider />
+
+                      <Dropdown.Item onClick={logout} className="py-2 d-flex align-items-center gap-3 text-danger">
+                        <LogOut size={16} />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Logout</span>
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </div>
               ) : (
-                <Button 
-                  variant="dark" 
-                  className="px-4 py-2 rounded-pill fw-bold" 
+                <Button
+                  variant="dark"
+                  className="px-4 py-2 rounded-pill fw-bold"
                   style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
                   onClick={openAuthModal}
                 >
@@ -94,7 +132,7 @@ export default function MainLayout() {
           <div className="row justify-content-between mb-5">
             {/* Left Column: Brand & Info */}
             <div className="col-lg-5 col-md-6 mb-4 mb-md-0">
-              <h2 className="fw-bold mb-4 text-white" style={{ lineHeight: '1.1', fontSize: '2.5rem' }}>Annexe<br/>Auction</h2>
+              <h2 className="fw-bold mb-4 text-white" style={{ lineHeight: '1.1', fontSize: '2.5rem' }}>Annexe<br />Auction</h2>
               <p className="text-light small opacity-75" style={{ lineHeight: '1.6', maxWidth: '350px' }}>
                 Wisma Geha, Jl. Timor No.25, RT.9/RW.4,<br />
                 Gondangdia, Kec. Menteng, Kota Jakarta<br />
@@ -115,7 +153,7 @@ export default function MainLayout() {
                     className="bg-transparent border-0 border-bottom border-light text-white rounded-0 shadow-none px-0 pb-2 me-4"
                     style={{ fontSize: '0.85rem' }}
                   />
-                  <Button 
+                  <Button
                     variant="outline-light"
                     className="px-4 py-1 border-light rounded-0 text-white"
                     style={{ fontSize: '0.85rem' }}
