@@ -3,6 +3,7 @@ package hoang.com.auction_system_be.repository;
 import hoang.com.auction_system_be.dto.response.AuctionSessionListResponse;
 import hoang.com.auction_system_be.entity.AuctionSession;
 import hoang.com.auction_system_be.enums.SessionStatus;
+import hoang.com.auction_system_be.repository.projection.CategoryAuctionSuccessProjection;
 import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
@@ -91,4 +92,37 @@ public interface AuctionSessionRepository extends JpaRepository<AuctionSession, 
         @Transactional
         @Query(value = "UPDATE auction_sessions SET deleted_at = NULL WHERE id = :id", nativeQuery = true)
         int restoreSession(@Param("id") Long id);
+
+        @Query("SELECT COUNT(s) FROM AuctionSession s WHERE s.status = :status " +
+                        "AND s.startTime < :toDate AND s.endTime >= :fromDate")
+        long countRunningSessionsInRange(@Param("status") SessionStatus status,
+                        @Param("fromDate") LocalDateTime fromDate,
+                        @Param("toDate") LocalDateTime toDate);
+
+        @Query("SELECT COUNT(s) FROM AuctionSession s " +
+                        "WHERE s.status = hoang.com.auction_system_be.enums.SessionStatus.ENDED " +
+                        "AND s.currentWinnerParticipant IS NOT NULL " +
+                        "AND s.endTime >= :fromDate AND s.endTime < :toDate")
+        long countCompletedSessionsInRange(@Param("fromDate") LocalDateTime fromDate,
+                        @Param("toDate") LocalDateTime toDate);
+
+        @Query(value = """
+            SELECT c.id AS categoryId, c.name AS categoryName, COUNT(DISTINCT s.id) AS successfulAuctions
+            FROM auction_sessions s
+            JOIN auction_items i ON i.id = s.item_id AND i.deleted_at IS NULL
+            JOIN categories c ON c.id = i.category_id AND c.deleted_at IS NULL
+            JOIN payments p ON p.participant_id = s.current_winner_participant_id
+                           AND p.type = 'FINAL_PAYMENT'
+                           AND p.status = 'PAID'
+                           AND p.deleted_at IS NULL
+            WHERE s.status = 'ENDED'
+              AND s.deleted_at IS NULL
+              AND s.end_time >= :fromDate
+              AND s.end_time < :toDate
+            GROUP BY c.id, c.name
+            ORDER BY successfulAuctions DESC, c.name ASC
+            """, nativeQuery = true)
+        List<CategoryAuctionSuccessProjection> getSuccessfulAuctionsByCategory(
+                        @Param("fromDate") LocalDateTime fromDate,
+                        @Param("toDate") LocalDateTime toDate);
 }

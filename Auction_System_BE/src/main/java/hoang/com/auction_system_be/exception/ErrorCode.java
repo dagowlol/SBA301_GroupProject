@@ -64,6 +64,12 @@ public enum ErrorCode {
     // Payment
     PAYMENT_NOT_FOUND(5001, "Payment not found", HttpStatus.NOT_FOUND),
     INVALID_PAYMENT_STATUS(5002, "Invalid payment status for this operation", HttpStatus.BAD_REQUEST),
+
+    // Analytics
+    INVALID_ANALYTICS_DATE_FORMAT(9001, "Dates must use ISO format yyyy-MM-dd", HttpStatus.BAD_REQUEST),
+    INVALID_ANALYTICS_DATE_RANGE(9002, "Start date must not be after end date", HttpStatus.BAD_REQUEST),
+    INVALID_ANALYTICS_PERIOD(9003, "Period must be DAILY, WEEKLY, or MONTHLY", HttpStatus.BAD_REQUEST),
+
     // System
     SYSTEM_BUSY(8001, "System is busy. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE),
     SYSTEM_ERROR(8002, "System error occurred.", HttpStatus.INTERNAL_SERVER_ERROR),
