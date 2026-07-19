@@ -34,7 +34,7 @@ const getArtworkImage = (name = '') => {
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString('vi-VN', {
+  return new Date(dateStr).toLocaleString('en-US', {
     weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
   });
@@ -42,16 +42,16 @@ const formatDateTime = (dateStr) => {
 
 const formatPrice = (amount) => {
   if (!amount && amount !== 0) return '—';
-  return parseFloat(amount).toLocaleString('vi-VN') + ' VNĐ';
+  return parseFloat(amount).toLocaleString('en-US') + ' USD';
 };
 
 // SessionStatus config
 const statusConfig = {
-  ACTIVE:          { bg: 'success',   label: '🔴 Đang Diễn Ra', textClass: 'text-success' },
-  SCHEDULED:       { bg: 'warning',   label: '🗓 Sắp Diễn Ra', textClass: 'text-warning' },
-  ENDED:           { bg: 'secondary', label: 'Đã Kết Thúc', textClass: 'text-secondary' },
-  RESERVE_NOT_MET: { bg: 'warning',   label: 'Không Đạt Giá Dự Định', textClass: 'text-warning' },
-  CANCELLED:       { bg: 'danger',    label: 'Đã Hủy', textClass: 'text-danger' },
+  ACTIVE:          { bg: 'success',   label: '🔴 Live Now', textClass: 'text-success' },
+  SCHEDULED:       { bg: 'warning',   label: '🗓 Upcoming', textClass: 'text-warning' },
+  ENDED:           { bg: 'secondary', label: 'Ended', textClass: 'text-secondary' },
+  RESERVE_NOT_MET: { bg: 'warning',   label: 'Reserve Not Met', textClass: 'text-warning' },
+  CANCELLED:       { bg: 'danger',    label: 'Cancelled', textClass: 'text-danger' },
 };
 
 export default function ProductDetailPage() {
@@ -80,7 +80,7 @@ export default function ProductDetailPage() {
       })
       .catch((err) => {
         console.error('Failed to load session:', err);
-        setError('Không thể tải thông tin phiên đấu giá. Phiên có thể không tồn tại hoặc đã bị xóa.');
+        setError('Failed to load auction session details. The session may not exist or has been removed.');
       })
       .finally(() => setLoading(false));
   }, [id, navigate]);
@@ -90,7 +90,7 @@ export default function ProductDetailPage() {
     return (
       <Container className="py-5 text-center" style={{ minHeight: '60vh' }}>
         <Spinner animation="border" style={{ color: '#005f73', width: '3rem', height: '3rem' }} />
-        <p className="text-muted mt-3">Đang tải thông tin phiên đấu giá...</p>
+        <p className="text-muted mt-3">Loading auction session details...</p>
       </Container>
     );
   }
@@ -100,10 +100,10 @@ export default function ProductDetailPage() {
     return (
       <Container className="py-5">
         <Alert variant="danger" className="rounded-4">
-          <h5 className="fw-bold">Không tìm thấy phiên đấu giá</h5>
-          <p className="mb-3">{error || 'Phiên đấu giá này không tồn tại hoặc đã bị xóa.'}</p>
+          <h5 className="fw-bold">Auction Session Not Found</h5>
+          <p className="mb-3">{error || 'This auction session does not exist or has been removed.'}</p>
           <Button variant="outline-danger" as={Link} to="/auction" size="sm">
-            ← Quay về danh sách
+            ← Back to List
           </Button>
         </Alert>
       </Container>
@@ -116,7 +116,7 @@ export default function ProductDetailPage() {
   const hasCurrentBid = session.currentHighestBid && parseFloat(session.currentHighestBid) > 0;
 
   // Item info comes from session fields (itemName, itemDescription etc.)
-  const itemName = session.itemName || session.item?.name || 'Sản phẩm đấu giá';
+  const itemName = session.itemName || session.item?.name || 'Auction Item';
   const itemDescription = session.itemDescription || session.item?.description || '';
   const itemImage = resolveImageUrl(session.itemImage) || getArtworkImage(itemName);
 
@@ -129,7 +129,7 @@ export default function ProductDetailPage() {
         className="text-decoration-none text-dark d-inline-flex align-items-center gap-1 mb-4 p-0"
       >
         <ArrowLeft size={16} />
-        <span>Quay về danh sách đấu giá</span>
+        <span>Back to Auction List</span>
       </Button>
 
       <Row className="g-5">
@@ -150,22 +150,22 @@ export default function ProductDetailPage() {
               <Badge bg={status.bg} className="px-2 py-1 text-uppercase" style={{ fontSize: '0.78rem' }}>
                 {status.label}
               </Badge>
-              <span className="text-white small">Phiên #{session.id}</span>
+              <span className="text-white small">Session #{session.id}</span>
             </div>
           </div>
 
           {/* Extra info cards below image */}
           <div className="mt-4 d-flex gap-3">
             <Card className="flex-fill border-0 shadow-sm rounded-4 text-center p-3">
-              <div className="text-muted small text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>Giá khởi điểm</div>
+              <div className="text-muted small text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>Starting Price</div>
               <div className="fw-bold" style={{ color: '#004e64', fontSize: '1.05rem' }}>
                 {formatPrice(session.reservePrice)}
               </div>
             </Card>
             <Card className="flex-fill border-0 shadow-sm rounded-4 text-center p-3">
-              <div className="text-muted small text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>Giá hiện tại</div>
+              <div className="text-muted small text-uppercase mb-1" style={{ fontSize: '0.72rem' }}>Current Price</div>
               <div className="fw-bold" style={{ color: hasCurrentBid ? '#0f9f83' : '#aaa', fontSize: '1.05rem' }}>
-                {hasCurrentBid ? formatPrice(session.currentHighestBid) : 'Chưa có đặt giá'}
+                {hasCurrentBid ? formatPrice(session.currentHighestBid) : 'No bids yet'}
               </div>
             </Card>
           </div>
@@ -178,14 +178,14 @@ export default function ProductDetailPage() {
             {itemName}
           </h1>
           <p className="text-muted mb-4" style={{ fontSize: '0.9rem' }}>
-            Phiên đấu giá #{session.id}
+            Auction Session #{session.id}
           </p>
 
           {/* Description */}
           {itemDescription && (
             <div className="mb-4">
               <h5 className="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
-                <Info size={16} /> Mô tả sản phẩm
+                <Info size={16} /> Item Description
               </h5>
               <p className="text-muted" style={{ lineHeight: '1.7', fontSize: '0.92rem' }}>
                 {itemDescription}
@@ -199,7 +199,7 @@ export default function ProductDetailPage() {
               <div className="d-flex align-items-center gap-3">
                 <CalendarClock size={16} className="text-muted flex-shrink-0" />
                 <div>
-                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>Thời gian bắt đầu</div>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>Start Time</div>
                   <div className="fw-semibold text-dark small">{formatDateTime(session.startTime)}</div>
                 </div>
               </div>
@@ -207,7 +207,7 @@ export default function ProductDetailPage() {
               <div className="d-flex align-items-center gap-3">
                 <Clock size={16} className="text-muted flex-shrink-0" />
                 <div>
-                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>Thời gian kết thúc</div>
+                  <div className="text-muted small" style={{ fontSize: '0.75rem' }}>End Time</div>
                   <div className="fw-semibold text-dark small">{formatDateTime(session.endTime)}</div>
                 </div>
               </div>
@@ -217,7 +217,7 @@ export default function ProductDetailPage() {
           {/* Countdown — show only for SCHEDULED sessions with future start */}
           {isScheduled && session.startTime && new Date(session.startTime) > new Date() && (
             <div className="mb-4 p-3 rounded-4 border border-warning bg-warning bg-opacity-10 text-center">
-              <p className="fw-semibold text-dark mb-2 small">⏳ Phiên đấu giá bắt đầu sau:</p>
+              <p className="fw-semibold text-dark mb-2 small">⏳ Auction starts in:</p>
               <CountdownTimer
                 endTime={session.startTime}
                 onTimeUp={() => {
@@ -234,25 +234,25 @@ export default function ProductDetailPage() {
               <div className="d-flex align-items-start gap-3 mb-3">
                 <Hammer size={20} className="text-muted mt-1 flex-shrink-0" />
                 <div>
-                  <h6 className="fw-bold mb-1">Sắp bắt đầu đấu giá</h6>
+                  <h6 className="fw-bold mb-1">Auction Starting Soon</h6>
                   <p className="text-muted small mb-0">
-                    Phiên đấu giá này chưa mở. Vui lòng quay lại vào thời điểm bắt đầu để tham gia đặt giá trực tiếp.
+                    This auction session has not opened yet. Please come back at the start time to participate in live bidding.
                   </p>
                 </div>
               </div>
               <Alert variant="info" className="mb-0 py-2 px-3 small rounded-3">
-                📅 Bạn có thể đặt lịch nhắc nhở và quay lại trang này khi đến giờ đấu giá.
+                📅 You can set a reminder and return to this page when the auction begins.
               </Alert>
             </div>
           )}
 
           {isEnded && (
             <Alert variant="secondary" className="rounded-4 mb-4">
-              <h6 className="fw-bold">Phiên đấu giá đã kết thúc</h6>
+              <h6 className="fw-bold">Auction Has Ended</h6>
               <p className="mb-0 small text-muted">
                 {session.status === 'CANCELLED'
-                  ? 'Phiên này đã bị hủy bởi ban quản lý.'
-                  : 'Phiên này đã kết thúc. Cảm ơn bạn đã quan tâm.'}
+                  ? 'This session has been cancelled by the administrator.'
+                  : 'This session has ended. Thank you for your interest.'}
               </p>
             </Alert>
           )}
@@ -265,7 +265,7 @@ export default function ProductDetailPage() {
             className="d-flex align-items-center gap-2 rounded-3"
           >
             <ArrowLeft size={16} />
-            Xem thêm phiên đấu giá khác
+            Browse More Auctions
           </Button>
         </Col>
       </Row>

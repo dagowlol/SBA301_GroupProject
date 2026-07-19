@@ -47,7 +47,7 @@ export default function CatalogPage() {
       setSessions(publicSessions);
     } catch (err) {
       console.error('Failed to load sessions:', err);
-      setError('Không thể tải danh sách phiên đấu giá. Vui lòng thử lại sau.');
+      setError('Failed to load auction sessions. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -148,7 +148,7 @@ export default function CatalogPage() {
         {loading && (
           <div className="text-center py-5">
             <Spinner animation="border" style={{ color: '#005f73', width: '3rem', height: '3rem' }} />
-            <p className="text-muted mt-3">Đang tải phiên đấu giá...</p>
+            <p className="text-muted mt-3">Loading auction sessions...</p>
           </div>
         )}
 
@@ -173,13 +173,13 @@ export default function CatalogPage() {
         {/* Empty State */}
         {!loading && !error && paginatedSessions.length === 0 && (
           <div className="text-center py-5 border rounded-4 bg-white shadow-sm">
-            <h4 className="text-muted">Không có phiên đấu giá nào.</h4>
+            <h4 className="text-muted">No auction sessions found.</h4>
             <p className="text-muted small">
               {activeTab === 'current'
-                ? 'Hiện tại chưa có phiên đấu giá đang diễn ra.'
+                ? 'No active auction sessions at the moment.'
                 : activeTab === 'upcoming'
-                  ? 'Chưa có phiên đấu giá sắp diễn ra.'
-                  : 'Thử điều chỉnh bộ lọc hoặc từ khoá tìm kiếm.'}
+                  ? 'No upcoming auction sessions scheduled yet.'
+                  : 'Try adjusting your filters or search keywords.'}
             </p>
           </div>
         )}

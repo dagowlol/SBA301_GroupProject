@@ -32,7 +32,7 @@ const getArtworkImage = (name = '') => {
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString('vi-VN', {
+  return new Date(dateStr).toLocaleString('en-US', {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
   });
@@ -40,7 +40,7 @@ const formatDateTime = (dateStr) => {
 
 const formatPrice = (amount) => {
   if (!amount && amount !== 0) return '—';
-  return parseFloat(amount).toLocaleString('vi-VN') + ' VNĐ';
+  return parseFloat(amount).toLocaleString('en-US') + ' USD';
 };
 
 export default function ProductCard({ session }) {
@@ -103,7 +103,7 @@ export default function ProductCard({ session }) {
           >
             <Flame size={14} className="text-warning" />
             <span className="text-white small fw-semibold" style={{ fontSize: '0.78rem' }}>
-              Đang diễn ra — Vào ngay!
+              Live Now — Join In!
             </span>
           </div>
         )}
@@ -120,14 +120,14 @@ export default function ProductCard({ session }) {
 
         {/* Session ID tag */}
         <div className="text-muted mb-3" style={{ fontSize: '0.75rem' }}>
-          Phiên #{session.id}
+          Session #{session.id}
         </div>
 
         <div className="mt-auto">
           {/* Current Bid / Starting Price */}
           <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="text-muted small text-uppercase" style={{ fontSize: '0.73rem', letterSpacing: '0.3px' }}>
-              {hasCurrentBid ? 'Giá cao nhất:' : 'Giá khởi điểm:'}
+              {hasCurrentBid ? 'Highest Bid:' : 'Starting Price:'}
             </span>
             <span className="fw-bold" style={{ color: '#004e64', fontSize: '1.05rem' }}>
               {hasCurrentBid
@@ -142,8 +142,8 @@ export default function ProductCard({ session }) {
             {isActive ? <Clock size={13} className="text-danger flex-shrink-0" /> : <CalendarClock size={13} className="flex-shrink-0" />}
             <span className="font-monospace" style={{ lineHeight: '1.3' }}>
               {isActive
-                ? `Kết thúc: ${formatDateTime(session.endTime)}`
-                : `Bắt đầu: ${formatDateTime(session.startTime)}`
+                ? `Ends: ${formatDateTime(session.endTime)}`
+                : `Starts: ${formatDateTime(session.startTime)}`
               }
             </span>
           </div>
@@ -164,7 +164,7 @@ export default function ProductCard({ session }) {
               handleEnter();
             }}
           >
-            {isActive ? 'Vào phòng đấu giá' : 'Xem chi tiết'}
+            {isActive ? 'Enter Auction Room' : 'View Details'}
             <ArrowRight size={14} />
           </Button>
         </div>
