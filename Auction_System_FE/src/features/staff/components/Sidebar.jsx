@@ -27,7 +27,7 @@ export default function Sidebar() {
   };
 
   const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard', badge: null },
+    { name: 'Home', icon: LayoutDashboard, path: '/admin/dashboard', badge: null },
     { name: 'Auction Categories', icon: Tags, path: '/admin/categories', badge: 'F08' },
     { name: 'Auction Items', icon: Package, path: '/admin/items', badge: 'F09' },
     { name: 'Auction Sessions', icon: Calendar, path: '/admin/sessions', badge: 'F10' },
