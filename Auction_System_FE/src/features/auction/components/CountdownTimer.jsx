@@ -100,7 +100,7 @@ export default function CountdownTimer({ endTime, onTimeUp }) {
       <Card.Body className="p-3 text-center">
         <div className="d-flex align-items-center justify-content-center gap-2 mb-2 text-muted small text-uppercase tracking-wider fw-bold">
           <Clock size={16} className={isUrgent ? "text-danger" : "text-primary"} />
-          <span>Time Remaining</span>
+          {/* <span>Time Remaining</span> */}
         </div>
         <div className="d-flex justify-content-center gap-3">
           {timeBlocks.map((block, idx) => (
