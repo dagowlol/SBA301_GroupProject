@@ -118,6 +118,33 @@
   color: #6b7280;
   margin-top: 5px;
   margin-bottom: 0;
+  max-width: 560px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hero-status {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-status--active {
+  color: #b42318;
+  background: #fee4e2;
+}
+
+.hero-status--scheduled {
+  color: #075985;
+  background: #e0f2fe;
 }
 
 .hero-item-meta-col {
@@ -144,6 +171,8 @@
   z-index: 10;
   max-width: 100%;
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .hero-tab {
@@ -199,6 +228,42 @@
 .hero-tab-subtitle {
   color: #6b7280;
   font-size: 0.8rem;
+}
+
+.home-tabs-loading {
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.home-auction-alert {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 12px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+.home-retry-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.hero-tab:focus-visible,
+.btn-register-redeem:focus-visible,
+.btn-value-outline:focus-visible,
+.home-retry-button:focus-visible {
+  outline: 3px solid #38bdf8;
+  outline-offset: 3px;
 }
 
 /* Value, Buy, Sell Section */
@@ -301,4 +366,137 @@
   border-radius: 16px;
   padding: 40px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 992px) {
+  .home-hero {
+    min-height: 560px;
+  }
+
+  .home-hero-content,
+  .hero-item-content {
+    gap: 28px;
+  }
+
+  .hero-title-left,
+  .value-title {
+    font-size: 4.5rem;
+  }
+
+  .hero-item-title {
+    font-size: 3.5rem;
+  }
+
+  .hero-title-right {
+    font-size: 1.65rem;
+  }
+
+  .hero-tab {
+    min-width: 180px;
+    padding: 16px 20px;
+  }
+
+  .value-img-wrapper {
+    padding-left: 6%;
+  }
+
+  .value-content-wrapper {
+    padding-right: 6%;
+    margin-left: -5%;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-hero {
+    min-height: 650px;
+    padding-top: 24px;
+  }
+
+  .home-hero-content,
+  .hero-item-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home-hero-content {
+    padding-bottom: 32px;
+  }
+
+  .glass-box {
+    padding: 24px;
+  }
+
+  .hero-title-left,
+  .hero-item-title {
+    font-size: clamp(2.6rem, 12vw, 4rem);
+  }
+
+  .hero-title-right {
+    max-width: none;
+    margin-left: 0;
+    font-size: 1.35rem;
+  }
+
+  .hero-item-meta-col {
+    margin-left: 0;
+  }
+
+  .hero-tabs-container {
+    display: flex;
+    width: 100%;
+  }
+
+  .hero-tab {
+    min-width: 155px;
+    padding: 14px 16px;
+  }
+
+  .value-section {
+    padding: 48px 20px;
+  }
+
+  .value-img-wrapper,
+  .value-content-wrapper {
+    padding: 0;
+    margin: 0;
+  }
+
+  .value-img {
+    max-width: 420px;
+    margin: 0 auto 32px;
+  }
+
+  .value-title {
+    font-size: clamp(3.5rem, 18vw, 5rem);
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-register-redeem {
+    width: 100%;
+  }
+
+  .value-buttons {
+    flex-direction: column;
+  }
+
+  .btn-value-outline {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt-3d,
+  .hero-tab,
+  .btn-register-redeem {
+    transition: none;
+  }
+
+  .tilt-3d:hover,
+  .hero-tab:hover,
+  .hero-tab.active,
+  .btn-register-redeem:hover {
+    transform: none;
+  }
 }

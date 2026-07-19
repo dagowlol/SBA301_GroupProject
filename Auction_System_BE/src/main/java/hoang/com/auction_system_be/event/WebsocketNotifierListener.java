@@ -1,6 +1,7 @@
 package hoang.com.auction_system_be.event;
 
 import hoang.com.auction_system_be.dto.response.ErrorSocketResponse;
+import hoang.com.auction_system_be.dto.response.AutoBidLimitReachedPayload;
 import hoang.com.auction_system_be.mapper.AuctionSessionMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,7 @@ public class WebsocketNotifierListener {
         messagingTemplate.convertAndSendToUser(
                 event.getUserId().toString(),
                 "/queue/auto-bid/limit-reached",
-                new hoang.com.auction_system_be.dto.response.AutoBidLimitReachedPayload(event.getSessionId(), event.getMaxBidAmount())
+                new AutoBidLimitReachedPayload(event.getSessionId(), event.getMaxBidAmount())
         );
     }
 }

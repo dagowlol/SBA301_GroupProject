@@ -40,7 +40,7 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
         })
         .catch((err) => {
           console.error('Failed to fetch auto-bid config:', err);
-          message.error('Failed to load auto-bid configuration.');
+          message.error('Unable to load the auto-bid configuration.');
         })
         .finally(() => {
           setLoading(false);
@@ -74,7 +74,7 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
         bidIncrement: values.bidIncrement,
         isActive: values.isActive,
       });
-      message.success('Auto-bid configuration saved successfully!');
+      message.success('Auto-bid configuration saved successfully.');
       if (onConfigSaved) {
         onConfigSaved(savedConfig);
       }
@@ -82,7 +82,7 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
     } catch (err) {
       if (err.name === 'FieldsError') return;
       console.error('Failed to save auto-bid config:', err);
-      message.error(err.message || 'Failed to save configuration. Please try again.');
+      message.error(err.message || 'Failed to save the configuration. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -95,7 +95,7 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
       title={
         <div className="d-flex align-items-center gap-2 border-bottom pb-3 mb-3">
           <Cpu className="text-primary" size={24} />
-          <span className="fw-bold fs-5" style={{ color: '#004e64' }}>Auto-Bid Configuration</span>
+          <span className="fw-bold fs-5" style={{ color: '#004e64' }}>Auto-bid Configuration</span>
         </div>
       }
       footer={[
@@ -123,7 +123,7 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
         <div className="mb-4 text-muted small bg-light p-3 rounded-4 border border-light d-flex gap-2">
           <ShieldCheck className="text-success flex-shrink-0" size={18} />
           <span>
-            The system will automatically place bids on your behalf based on the personal budget limit set below.
+            The system will bid automatically for you within the limits configured below.
           </span>
         </div>
 
@@ -140,17 +140,17 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
           {/* Max Bid Amount */}
           <Form.Item
             name="maxBidAmount"
-            label={<span className="fw-semibold text-dark">Maximum Bid Amount (max_bid_amount)</span>}
+            label={<span className="fw-semibold text-dark">Maximum Bid Amount</span>}
             validateTrigger={['onChange', 'onBlur']}
             rules={[
-              { required: true, message: 'Please enter a maximum bid amount!' },
+              { required: true, message: 'Please enter a maximum bid amount.' },
               () => ({
                 validator(_, value) {
                   if (value === undefined || value === null || value >= minRequiredMaxBid) {
                     return Promise.resolve();
                   }
                   return Promise.reject(
-                    new Error(`Maximum bid must be at least ${minRequiredMaxBid.toLocaleString()} (Current Price + Minimum Increment)`)
+                    new Error(`Maximum bid must be at least ${minRequiredMaxBid.toLocaleString()} VND (current price plus minimum increment).`)
                   );
                 },
               }),
@@ -159,10 +159,10 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
             <InputNumber
               className="w-100 rounded-3"
               style={{ fontSize: '1.05rem', padding: '6px 12px' }}
-              placeholder={`Greater than or equal to ${minRequiredMaxBid.toLocaleString()}`}
+              placeholder={`At least ${minRequiredMaxBid.toLocaleString()}`}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              addonAfter="USD"
+              addonAfter="VND"
               size="large"
             />
           </Form.Item>
@@ -170,17 +170,17 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
           {/* Bid Increment */}
           <Form.Item
             name="bidIncrement"
-            label={<span className="fw-semibold text-dark">Auto Bid Increment (bid_increment)</span>}
+            label={<span className="fw-semibold text-dark">Auto-bid Increment</span>}
             validateTrigger={['onChange', 'onBlur']}
             rules={[
-              { required: true, message: 'Please enter a bid increment amount!' },
+              { required: true, message: 'Please enter an auto-bid increment.' },
               () => ({
                 validator(_, value) {
                   if (value === undefined || value === null || value >= minimumIncrement) {
                     return Promise.resolve();
                   }
                   return Promise.reject(
-                    new Error(`Bid increment must be at least ${minimumIncrement.toLocaleString()}`)
+                    new Error(`Bid increment must be at least ${minimumIncrement.toLocaleString()} VND.`)
                   );
                 },
               }),
@@ -192,7 +192,7 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
               placeholder={`Minimum ${minimumIncrement.toLocaleString()}`}
               formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              addonAfter="USD"
+              addonAfter="VND"
               size="large"
             />
           </Form.Item>
@@ -200,8 +200,8 @@ export default function AutoBidModal({ open, onClose, sessionId, currentPrice, m
           {/* Active Switch */}
           <div className="d-flex justify-content-between align-items-center bg-light p-3 rounded-4 border border-light mt-4">
             <div>
-              <div className="fw-bold text-dark mb-1">Enable Auto-Bid</div>
-              <div className="text-muted small">Turn on to start auto-bidding immediately</div>
+              <div className="fw-bold text-dark mb-1">Enable Auto-bid</div>
+              <div className="text-muted small">Turn this on to start automatic bidding immediately.</div>
             </div>
             <Form.Item name="isActive" valuePropName="checked" className="mb-0">
               <Switch checkedChildren="ON" unCheckedChildren="OFF" style={{ backgroundColor: form.getFieldValue('isActive') ? '#004e64' : '#d9d9d9' }} />

@@ -1,5 +1,6 @@
 package hoang.com.auction_system_be.scheduler;
 
+import hoang.com.auction_system_be.entity.AuctionSession;
 import hoang.com.auction_system_be.enums.SessionStatus;
 import hoang.com.auction_system_be.event.SessionEndedEvent;
 import hoang.com.auction_system_be.event.SessionStartedEvent;
@@ -89,13 +90,13 @@ public class AuctionSessionScheduler {
                 }
 
                 // Fetch sessions to check reserve price
-                List<hoang.com.auction_system_be.entity.AuctionSession> sessions =
+                List<AuctionSession> sessions =
                         auctionSessionRepository.findAllById(sessionIds);
 
                 // Determine final status per session
                 Map<Long, SessionStatus> statusMap = sessions.stream()
                         .collect(Collectors.toMap(
-                                hoang.com.auction_system_be.entity.AuctionSession::getId,
+                                AuctionSession::getId,
                                 s -> isReserveMet(s) ? SessionStatus.ENDED : SessionStatus.RESERVE_NOT_MET
                         ));
 
@@ -137,7 +138,7 @@ public class AuctionSessionScheduler {
         }
     }
 
-    private boolean isReserveMet(hoang.com.auction_system_be.entity.AuctionSession session) {
+    private boolean isReserveMet(AuctionSession session) {
         BigDecimal highestBid = session.getCurrentHighestBid();
         BigDecimal reservePrice = session.getReservePrice();
 

@@ -9,6 +9,7 @@ import hoang.com.auction_system_be.dto.response.BidBroadcastResponse;
 import hoang.com.auction_system_be.dto.response.BidLogResponse;
 import hoang.com.auction_system_be.entity.*;
 import hoang.com.auction_system_be.enums.SessionStatus;
+import hoang.com.auction_system_be.enums.BidStatus;
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.mapper.AuctionSessionMapper;
@@ -22,6 +23,7 @@ import hoang.com.auction_system_be.event.BidPlacedEvent;
 import hoang.com.auction_system_be.event.SessionExtendedEvent;
 import hoang.com.auction_system_be.repository.*;
 import hoang.com.auction_system_be.service.auth.SecurityContextService;
+import hoang.com.auction_system_be.service.storage.ObjectStorageService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -66,6 +68,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
         TransactionTemplate transactionTemplate;
         DistributedLockService lockService;
         AutoBidService autoBidService;
+        ObjectStorageService objectStorageService;
 
         // ─── WebSocket / Bid Logic ────────────────────────────────────────────
 
@@ -82,7 +85,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 String currentWinnerName = resolveWinnerName(session.getCurrentWinnerParticipant());
 
                 List<Bid> recentBids = bidRepository
-                                .findTop10ByParticipantSessionIdAndStatusNotOrderByBidTimestampDesc(sessionId, hoang.com.auction_system_be.enums.BidStatus.CANCELLED);
+                                .findTop10ByParticipantSessionIdAndStatusNotOrderByBidTimestampDesc(
+                                                sessionId, BidStatus.CANCELLED);
 
                 List<BidLogResponse> bidLogs = recentBids.stream()
                                 .map(bidMapper::toBidLogResponse)
@@ -482,6 +486,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                 .findFirst()
                                 .or(() -> item.getImages().stream().findFirst())
                                 .map(ItemImage::getImageUrl)
+                                .map(objectStorageService::resolveUrl)
                                 .orElse(null);
         }
 

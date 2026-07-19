@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_payment_participant", columnList = "participant_id"),
         @Index(name = "idx_payment_type", columnList = "type"),
         @Index(name = "idx_payment_status", columnList = "status"),
+        @Index(name = "idx_payment_final_lookup", columnList = "participant_id, type, deleted_at, status"),
         @Index(name = "idx_payment_tx", columnList = "transaction_id", unique = true)
 })
 @SQLDelete(sql = "UPDATE payments SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")

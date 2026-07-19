@@ -3,9 +3,13 @@ package hoang.com.auction_system_be.mapper;
 import hoang.com.auction_system_be.dto.response.ItemResponse;
 import hoang.com.auction_system_be.entity.AuctionItem;
 import org.springframework.stereotype.Component;
+import hoang.com.auction_system_be.service.storage.ObjectStorageService;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class ItemMapper {
+    private final ObjectStorageService objectStorageService;
 
     public ItemResponse toResponse(AuctionItem item) {
         if (item == null) {
@@ -51,8 +55,8 @@ public class ItemMapper {
                     .filter(img -> img.isPrimary())
                     .findFirst()
                     .ifPresentOrElse(
-                            img -> builder.imageUrl(img.getImageUrl()),
-                            () -> builder.imageUrl(item.getImages().get(0).getImageUrl())
+                            img -> builder.imageUrl(objectStorageService.resolveUrl(img.getImageUrl())),
+                            () -> builder.imageUrl(objectStorageService.resolveUrl(item.getImages().get(0).getImageUrl()))
                     );
         }
 

@@ -29,7 +29,7 @@ export default function AuctionRoom() {
 
   const { data: sessionDetail, isLoading, error } = useAuctionSessionDetail(sessionId);
   const { latestBid, wsError, placeBid, clearWsError } = useBidWebSocket(sessionId, (limitPayload) => {
-    message.warning('Auto-bid has been disabled - Your account has reached the maximum Auto-Bid limit.');
+    message.warning('Auto-bid was disabled because your account reached its configured limit.');
     setAutoBidConfig(prev => prev ? { ...prev, isActive: false } : null);
   });
 
@@ -91,7 +91,7 @@ export default function AuctionRoom() {
       }
     };
 
-    if (sessionDetail?.status === 'ENDED' && sessionDetail?.winnerId != null && sessionDetail?.winnerId === user?.id) {
+    if (sessionDetail?.status === 'ENDED' && sessionDetail?.winnerId === user?.id) {
       setLoadingPayment(true);
       fetchPaymentWithRetry();
     }
@@ -107,10 +107,10 @@ export default function AuctionRoom() {
       if (res && res.url) {
         window.location.href = res.url;
       } else {
-        message.error('Failed to receive payment URL.');
+        message.error('The payment URL was not returned.');
       }
     } catch (err) {
-      message.error('An error occurred: ' + err.message);
+      message.error('Payment failed: ' + err.message);
     } finally {
       setLoadingPayment(false);
     }
@@ -125,9 +125,9 @@ export default function AuctionRoom() {
         isActive: false
       });
       setAutoBidConfig(updated);
-      message.success('Auto-bid has been disabled.');
+      message.success('Auto-bid disabled successfully.');
     } catch (err) {
-      message.error('Failed to disable auto-bid: ' + err.message);
+      message.error('Unable to disable auto-bid: ' + err.message);
     }
   };
 
@@ -144,7 +144,7 @@ export default function AuctionRoom() {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '60vh' }}>
         <Spinner animation="border" style={{ color: '#004e64', width: '3rem', height: '3rem' }} />
-        <div className="mt-3 text-muted">Connecting to auction room...</div>
+        <div className="mt-3 text-muted">Connecting to the auction room...</div>
       </Container>
     );
   }
@@ -155,9 +155,9 @@ export default function AuctionRoom() {
         <Alert variant="danger" className="text-center p-5 shadow-sm rounded border-0 bg-white">
           <HelpCircle size={48} className="text-danger mb-3" />
           <h3 className="fw-bold">Auction Room Not Found</h3>
-          <p className="text-muted mb-4">{error?.message || 'Unable to load auction session details.'}</p>
+          <p className="text-muted mb-4">{error?.message || 'Unable to retrieve the auction session.'}</p>
           <Button variant="outline-danger" className="px-4 py-2" onClick={() => navigate('/auction')}>
-            Back to Catalog
+            Back to Auctions
           </Button>
         </Alert>
       </Container>
@@ -171,13 +171,13 @@ export default function AuctionRoom() {
         onClick={() => navigate('/auction')}
         className="text-decoration-none text-dark d-inline-flex align-items-center gap-2 mb-4 p-0 fw-medium"
       >
-        <ArrowLeft size={18} /> Back to Catalog
+        <ArrowLeft size={18} /> Back to Auctions
       </Button>
 
       {wsError && (
         <Alert variant="danger" onClose={clearWsError} dismissible className="d-flex align-items-center gap-2 border-0 shadow-sm">
           <AlertCircle size={20} />
-          <span><strong>Bid Error:</strong> {wsError}</span>
+          <span><strong>Bidding Error:</strong> {wsError}</span>
         </Alert>
       )}
 
@@ -255,7 +255,7 @@ export default function AuctionRoom() {
                       <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#fef3c7' }}>
                         <AlertCircle size={16} style={{ color: '#d97706' }} />
                         <span className="small fw-semibold" style={{ color: '#92400e' }}>
-                          ${Math.max(0, sessionDetail.reservePrice - sessionDetail.currentPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })} more to reach reserve
+                          {Math.max(0, sessionDetail.reservePrice - sessionDetail.currentPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })} VND more is needed to meet the reserve
                         </span>
                       </div>
                     )
@@ -273,14 +273,14 @@ export default function AuctionRoom() {
           </Card>
 
           {/* Winner Payment Card */}
-          {sessionDetail.status === 'ENDED' && sessionDetail.winnerId != null && sessionDetail.winnerId === user?.id && (
+          {sessionDetail.status === 'ENDED' && sessionDetail.winnerId === user?.id && (
             <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7' }}>
               <div style={{ height: '6px', backgroundColor: '#d97706', width: '100%' }}></div>
               <Card.Body className="p-4">
                 <h5 className="fw-bold text-warning-emphasis mb-2">Congratulations! You won this auction</h5>
                 <p className="text-muted small mb-3">
-                  Winning price: <strong className="text-dark">${sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>.
-                  Please complete your payment via VNPay below.
+                  Winning price: <strong className="text-dark">{sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })} VND</strong>.
+                  Complete your payment through VNPay below.
                 </p>
                 {payment ? (
                   payment.status === 'PENDING' ? (
@@ -307,30 +307,17 @@ export default function AuctionRoom() {
             </Card>
           )}
 
-          {/* Ended without winner (not the current user) */}
-          {sessionDetail.status === 'ENDED' && sessionDetail.winnerId == null && (
-            <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ backgroundColor: '#fef3c7', border: '1px solid #fcd34d' }}>
-              <div style={{ height: '6px', backgroundColor: '#f59e0b', width: '100%' }}></div>
-              <Card.Body className="p-4">
-                <h5 className="fw-bold mb-2" style={{ color: '#92400e' }}>Auction Ended</h5>
-                <p className="text-muted small mb-3">
-                  This auction has ended with no winner.
-                </p>
-              </Card.Body>
-            </Card>
-          )}
-
           {/* Reserve Not Met Notice */}
           {sessionDetail.status === 'RESERVE_NOT_MET' && (
             <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ backgroundColor: '#fef3c7', border: '1px solid #fcd34d' }}>
               <div style={{ height: '6px', backgroundColor: '#f59e0b', width: '100%' }}></div>
               <Card.Body className="p-4">
-                <h5 className="fw-bold mb-2" style={{ color: '#92400e' }}>Reserve Price Not Met</h5>
+                <h5 className="fw-bold mb-2" style={{ color: '#92400e' }}>The reserve price was not met</h5>
                 <p className="text-muted small mb-3">
-                  The highest bid (<strong>${sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>)
+                  The highest bid (<strong>{sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })} VND</strong>)
                   did not meet the reserve price
                   (<strong>${sessionDetail.reservePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>).
-                  This auction has ended with no winner.
+                  The auction ended without a winner.
                 </p>
               </Card.Body>
             </Card>

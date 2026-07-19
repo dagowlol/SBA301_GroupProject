@@ -34,7 +34,7 @@ const getArtworkImage = (name = '') => {
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString('en-US', {
+  return new Date(dateStr).toLocaleString('vi-VN', {
     weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
   });
@@ -42,12 +42,12 @@ const formatDateTime = (dateStr) => {
 
 const formatPrice = (amount) => {
   if (!amount && amount !== 0) return '—';
-  return parseFloat(amount).toLocaleString('en-US') + ' USD';
+  return parseFloat(amount).toLocaleString('en-US') + ' VND';
 };
 
 // SessionStatus config
 const statusConfig = {
-  ACTIVE:          { bg: 'success',   label: '🔴 Live Now', textClass: 'text-success' },
+  ACTIVE:          { bg: 'success',   label: '🔴 Live', textClass: 'text-success' },
   SCHEDULED:       { bg: 'warning',   label: '🗓 Upcoming', textClass: 'text-warning' },
   ENDED:           { bg: 'secondary', label: 'Ended', textClass: 'text-secondary' },
   RESERVE_NOT_MET: { bg: 'warning',   label: 'Reserve Not Met', textClass: 'text-warning' },
@@ -80,7 +80,7 @@ export default function ProductDetailPage() {
       })
       .catch((err) => {
         console.error('Failed to load session:', err);
-        setError('Failed to load auction session details. The session may not exist or has been removed.');
+        setError('Unable to load the auction. It may not exist or may have been removed.');
       })
       .finally(() => setLoading(false));
   }, [id, navigate]);
@@ -90,7 +90,7 @@ export default function ProductDetailPage() {
     return (
       <Container className="py-5 text-center" style={{ minHeight: '60vh' }}>
         <Spinner animation="border" style={{ color: '#005f73', width: '3rem', height: '3rem' }} />
-        <p className="text-muted mt-3">Loading auction session details...</p>
+        <p className="text-muted mt-3">Loading auction details...</p>
       </Container>
     );
   }
@@ -100,10 +100,10 @@ export default function ProductDetailPage() {
     return (
       <Container className="py-5">
         <Alert variant="danger" className="rounded-4">
-          <h5 className="fw-bold">Auction Session Not Found</h5>
-          <p className="mb-3">{error || 'This auction session does not exist or has been removed.'}</p>
+          <h5 className="fw-bold">Auction Not Found</h5>
+          <p className="mb-3">{error || 'This auction does not exist or has been removed.'}</p>
           <Button variant="outline-danger" as={Link} to="/auction" size="sm">
-            ← Back to List
+            ← Back to Auctions
           </Button>
         </Alert>
       </Container>
@@ -129,7 +129,7 @@ export default function ProductDetailPage() {
         className="text-decoration-none text-dark d-inline-flex align-items-center gap-1 mb-4 p-0"
       >
         <ArrowLeft size={16} />
-        <span>Back to Auction List</span>
+        <span>Back to Auctions</span>
       </Button>
 
       <Row className="g-5">
@@ -236,23 +236,23 @@ export default function ProductDetailPage() {
                 <div>
                   <h6 className="fw-bold mb-1">Auction Starting Soon</h6>
                   <p className="text-muted small mb-0">
-                    This auction session has not opened yet. Please come back at the start time to participate in live bidding.
+                    This auction is not open yet. Return at the scheduled start time to participate.
                   </p>
                 </div>
               </div>
               <Alert variant="info" className="mb-0 py-2 px-3 small rounded-3">
-                📅 You can set a reminder and return to this page when the auction begins.
+                📅 You can set a reminder and return when the auction begins.
               </Alert>
             </div>
           )}
 
           {isEnded && (
             <Alert variant="secondary" className="rounded-4 mb-4">
-              <h6 className="fw-bold">Auction Has Ended</h6>
+              <h6 className="fw-bold">Auction Ended</h6>
               <p className="mb-0 small text-muted">
                 {session.status === 'CANCELLED'
-                  ? 'This session has been cancelled by the administrator.'
-                  : 'This session has ended. Thank you for your interest.'}
+                  ? 'This session was cancelled by the auction team.'
+                  : 'This auction has ended. Thank you for your interest.'}
               </p>
             </Alert>
           )}
@@ -265,7 +265,7 @@ export default function ProductDetailPage() {
             className="d-flex align-items-center gap-2 rounded-3"
           >
             <ArrowLeft size={16} />
-            Browse More Auctions
+            View More Auctions
           </Button>
         </Col>
       </Row>

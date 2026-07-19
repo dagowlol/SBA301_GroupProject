@@ -21,10 +21,10 @@ const RANGE_OPTIONS = [
   { value: 'LAST_12_MONTHS', label: '1 year' },
 ];
 
-const formatCurrency = (value) => `${new Intl.NumberFormat('vi-VN').format(value || 0)} VNĐ`;
+const formatCurrency = (value) => `${new Intl.NumberFormat('en-US').format(value || 0)} VND`;
 
 const formatAxisCurrency = (value) => {
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toLocaleString('vi-VN')} tỷ`;
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toLocaleString('en-US')}B`;
   if (value >= 1_000_000) return `${(value / 1_000_000).toLocaleString('vi-VN')} tr`;
   if (value >= 1_000) return `${(value / 1_000).toLocaleString('vi-VN')}k`;
   return value;

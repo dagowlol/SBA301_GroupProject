@@ -39,4 +39,5 @@ public class ItemRequest {
     ItemStatus status;
 
     List<MultipartFile> images;
+    List<String> imageKeys;
 }

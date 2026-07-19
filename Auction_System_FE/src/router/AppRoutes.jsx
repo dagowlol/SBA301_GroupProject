@@ -25,6 +25,7 @@ import HomePage from '../features/catalog/pages/HomePage';
 import AboutUsPage from '../features/catalog/pages/AboutUsPage';
 import ContactUsPage from '../features/catalog/pages/ContactUsPage';
 import MyAccountPage from '../features/user/pages/MyAccountPage';
+import MyItemsPage from '../features/user/pages/MyItemsPage';
 
 export default function AppRoutes() {
   return (
@@ -42,14 +43,7 @@ export default function AppRoutes() {
           <Route path="my-account" element={<MyAccountPage />} />
           <Route path="payment-result" element={<PaymentResultPage />} />
           <Route path="user/items/create" element={<CreateItemRequest />} />
-          <Route
-            path="user/items"
-            element={
-              <div>
-                My Items Page - <a href="/user/items/create">Create New</a>
-              </div>
-            }
-          />
+          <Route path="user/items" element={<MyItemsPage />} />
           <Route path="user/earnings" element={<EarningReportTab />} />
 
           <Route element={<GuestRoute />}>

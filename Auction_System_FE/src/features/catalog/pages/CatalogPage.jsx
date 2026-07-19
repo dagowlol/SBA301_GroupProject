@@ -47,7 +47,7 @@ export default function CatalogPage() {
       setSessions(publicSessions);
     } catch (err) {
       console.error('Failed to load sessions:', err);
-      setError('Failed to load auction sessions. Please try again later.');
+      setError('Unable to load auctions. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -148,7 +148,7 @@ export default function CatalogPage() {
         {loading && (
           <div className="text-center py-5">
             <Spinner animation="border" style={{ color: '#005f73', width: '3rem', height: '3rem' }} />
-            <p className="text-muted mt-3">Loading auction sessions...</p>
+            <p className="text-muted mt-3">Loading auctions...</p>
           </div>
         )}
 
@@ -173,13 +173,13 @@ export default function CatalogPage() {
         {/* Empty State */}
         {!loading && !error && paginatedSessions.length === 0 && (
           <div className="text-center py-5 border rounded-4 bg-white shadow-sm">
-            <h4 className="text-muted">No auction sessions found.</h4>
+            <h4 className="text-muted">No auctions found.</h4>
             <p className="text-muted small">
               {activeTab === 'current'
-                ? 'No active auction sessions at the moment.'
+                ? 'There are no live auctions at the moment.'
                 : activeTab === 'upcoming'
-                  ? 'No upcoming auction sessions scheduled yet.'
-                  : 'Try adjusting your filters or search keywords.'}
+                  ? 'There are no upcoming auctions.'
+                  : 'Try adjusting the filters or search terms.'}
             </p>
           </div>
         )}

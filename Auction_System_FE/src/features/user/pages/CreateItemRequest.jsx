@@ -4,6 +4,7 @@ import { InboxOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { itemApi } from '../../../api/itemApi';
 import { categoryApi } from '../../../api/categoryApi';
+import { uploadImageDirect } from '../../../api/storageApi';
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;
@@ -49,6 +50,7 @@ const CreateItemRequest = () => {
 
     setLoading(true);
     try {
+      const imageKeys = await Promise.all(fileList.map((file) => uploadImageDirect(file.originFileObj || file)));
       const formData = new FormData();
       formData.append('itemName', values.itemName);
       formData.append('categoryId', values.categoryId);
@@ -57,9 +59,7 @@ const CreateItemRequest = () => {
       formData.append('description', values.description);
       formData.append('condition', values.condition);
 
-      fileList.forEach((file) => {
-        formData.append('images', file.originFileObj || file);
-      });
+      imageKeys.forEach((key) => formData.append('imageKeys', key));
 
       await itemApi.createWithFormData(formData);
       message.success('Item request submitted successfully!');
@@ -139,11 +139,11 @@ const CreateItemRequest = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="reservePrice"
-                label="Reserve Price (VNĐ)"
+                label="Reserve Price (VND)"
                 dependencies={['minIncrement']}
                 rules={[
                   { required: true, message: 'Please enter reserve price' },
-                  { type: 'number', min: 1000, message: 'Price must be at least 1,000 VNĐ' },
+                  { type: 'number', min: 1000, message: 'Price must be at least 1,000 VND' },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       const minIncr = getFieldValue('minIncrement');
@@ -160,7 +160,7 @@ const CreateItemRequest = () => {
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                   parser={(value) => value?.replace(/\$\s?|(,*)/g, '')}
                   placeholder="Enter reserve price"
-                  addonAfter="VNĐ"
+                  addonAfter="VND"
                   min={1000}
                   step={10000}
                 />
@@ -170,11 +170,11 @@ const CreateItemRequest = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="minIncrement"
-                label="Min Increment (VNĐ)"
+                label="Minimum Increment (VND)"
                 dependencies={['reservePrice']}
                 rules={[
                   { required: true, message: 'Please enter minimum increment' },
-                  { type: 'number', min: 1000, message: 'Increment must be at least 1,000 VNĐ' },
+                  { type: 'number', min: 1000, message: 'Increment must be at least 1,000 VND' },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       const reserve = getFieldValue('reservePrice');
@@ -191,7 +191,7 @@ const CreateItemRequest = () => {
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                   parser={(value) => value?.replace(/\$\s?|(,*)/g, '')}
                   placeholder="Enter min increment"
-                  addonAfter="VNĐ"
+                  addonAfter="VND"
                   min={1000}
                   step={10000}
                 />

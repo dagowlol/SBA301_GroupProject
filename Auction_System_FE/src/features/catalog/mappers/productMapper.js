@@ -58,12 +58,20 @@ export const productMapper = {
       'APPROVED': 'Approved',
       'ACTIVE': 'Active',
       'REJECTED': 'Rejected',
+      'SOLD': 'Sold',
+      'PAID': 'Paid',
+      'SHIPPING': 'Shipping',
+      'DELIVERED': 'Delivered',
       'Pending': 'Pending',
       'Approved': 'Approved',
       'Active': 'Active',
-      'Rejected': 'Rejected'
+      'Rejected': 'Rejected',
+      'Sold': 'Sold',
+      'Paid': 'Paid',
+      'Shipping': 'Shipping',
+      'Delivered': 'Delivered'
     };
-    const status = statusMap[rawStatus] || 'Pending';
+    const status = statusMap[rawStatus] || rawStatus;
     const type = status === 'Active' ? 'Current' : 'Upcoming';
 
     return {
@@ -78,6 +86,7 @@ export const productMapper = {
       status: status,
       submittedBy: submittedBy,
       image: image,
+      imageUrl: isBackendDto ? (item.imageUrl || '') : (item.imageUrl || item.image || ''),
       description: item.description || '',
       views: parseInt(item.views) || 0,
       type: type,
@@ -110,6 +119,7 @@ export const productMapper = {
       reservePrice: parseFloat(model.reservePrice) || parseFloat(model.reserve) || 0,
       condition: model.condition || 'NEW',
       status: model.status ? model.status.toUpperCase() : undefined
+      ,imageUrl: model.imageUrl || undefined
     };
   }
 };

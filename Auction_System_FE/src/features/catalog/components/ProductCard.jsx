@@ -32,7 +32,7 @@ const getArtworkImage = (name = '') => {
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString('en-US', {
+  return new Date(dateStr).toLocaleString('vi-VN', {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
   });
@@ -40,7 +40,7 @@ const formatDateTime = (dateStr) => {
 
 const formatPrice = (amount) => {
   if (!amount && amount !== 0) return '—';
-  return parseFloat(amount).toLocaleString('en-US') + ' USD';
+  return parseFloat(amount).toLocaleString('en-US') + ' VND';
 };
 
 export default function ProductCard({ session }) {
@@ -103,7 +103,7 @@ export default function ProductCard({ session }) {
           >
             <Flame size={14} className="text-warning" />
             <span className="text-white small fw-semibold" style={{ fontSize: '0.78rem' }}>
-              Live Now — Join In!
+              Live now — Join!
             </span>
           </div>
         )}
@@ -127,7 +127,7 @@ export default function ProductCard({ session }) {
           {/* Current Bid / Starting Price */}
           <div className="d-flex justify-content-between align-items-center mb-2">
             <span className="text-muted small text-uppercase" style={{ fontSize: '0.73rem', letterSpacing: '0.3px' }}>
-              {hasCurrentBid ? 'Highest Bid:' : 'Starting Price:'}
+              {hasCurrentBid ? 'Highest bid:' : 'Starting price:'}
             </span>
             <span className="fw-bold" style={{ color: '#004e64', fontSize: '1.05rem' }}>
               {hasCurrentBid

@@ -1,10 +1,15 @@
 package hoang.com.auction_system_be.service.user;
 
+import hoang.com.auction_system_be.config.file.excel.ExcelFileExport;
+import hoang.com.auction_system_be.config.file.pdf.PdfFileExport;
 import hoang.com.auction_system_be.dto.response.CursorPageResponse;
 import hoang.com.auction_system_be.dto.response.EarningStatisticsResponse;
 import hoang.com.auction_system_be.dto.response.EarningSummaryResponse;
 import hoang.com.auction_system_be.dto.response.EarningTransactionResponse;
 import hoang.com.auction_system_be.enums.EarningStatisticsRange;
+import hoang.com.auction_system_be.enums.EarningExportFormat;
+import hoang.com.auction_system_be.exception.AppException;
+import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.repository.AuctionSessionRepository;
 import hoang.com.auction_system_be.repository.projection.EarningRevenuePointProjection;
 import hoang.com.auction_system_be.repository.projection.EarningStatusCountProjection;
@@ -19,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -27,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +44,7 @@ public class EarningReportServiceImpl implements EarningReportService {
 
     private static final DateTimeFormatter DAY_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
+    private static final int EXPORT_BATCH_SIZE = 1_000;
 
     AuctionSessionRepository auctionSessionRepository;
 
@@ -82,7 +91,7 @@ public class EarningReportServiceImpl implements EarningReportService {
             }
         }
 
-        String safeStatus = (status != null && !status.trim().isEmpty()) ? status.trim().toUpperCase() : "ALL";
+        String safeStatus = normalizeStatus(status);
 
         List<EarningTransactionResponse> transactions = auctionSessionRepository.findOptimizedEarningTransactions(
                 userId, hasCursor, cursor, safeStatus, pageable);
@@ -104,6 +113,102 @@ public class EarningReportServiceImpl implements EarningReportService {
                 .hasNext(hasNext)
                 .pageSize(size)
                 .build();
+    }
+
+    @Override
+    public void exportEarningTransactions(
+            Long userId,
+            String status,
+            EarningExportFormat format,
+            OutputStream outputStream) throws IOException {
+        String safeStatus = normalizeStatus(status);
+        EarningExportFormat safeFormat = format == null ? EarningExportFormat.EXCEL : format;
+        String[] headers = {
+                "Transaction ID", "Product", "Session End Date",
+                "Final Price", "Buyer", "Payment Status"
+        };
+        List<Function<EarningTransactionResponse, Object>> columns = List.of(
+                EarningTransactionResponse::id,
+                EarningTransactionResponse::productName,
+                EarningTransactionResponse::sessionEndDate,
+                EarningTransactionResponse::finalPrice,
+                EarningTransactionResponse::buyerName,
+                EarningTransactionResponse::paymentStatus);
+
+        long exportedRows = switch (safeFormat) {
+            case EXCEL -> exportExcel(userId, safeStatus, outputStream, headers, columns);
+            case PDF -> exportPdf(userId, safeStatus, outputStream, headers, columns);
+        };
+
+        log.info("Exported {} earning transactions for user {} with status {} as {}",
+                exportedRows, userId, safeStatus, safeFormat);
+    }
+
+    private long exportExcel(
+            Long userId,
+            String status,
+            OutputStream outputStream,
+            String[] headers,
+            List<Function<EarningTransactionResponse, Object>> columns) throws IOException {
+        try (ExcelFileExport<EarningTransactionResponse> exporter =
+                     new ExcelFileExport<>("Earning transactions", headers, columns)) {
+            long exportedRows = exportBatches(userId, status, exporter::appendRows);
+            exporter.writeTo(outputStream);
+            return exportedRows;
+        }
+    }
+
+    private long exportPdf(
+            Long userId,
+            String status,
+            OutputStream outputStream,
+            String[] headers,
+            List<Function<EarningTransactionResponse, Object>> columns) throws IOException {
+        try (PdfFileExport<EarningTransactionResponse> exporter =
+                     new PdfFileExport<>(outputStream, "Earning Transactions", headers, columns)) {
+            return exportBatches(userId, status, exporter::appendRows);
+        }
+    }
+
+    private long exportBatches(Long userId, String status, BatchWriter batchWriter) throws IOException {
+        long exportedRows = 0;
+        Long cursor = 0L;
+        boolean hasCursor = false;
+
+        while (true) {
+            List<EarningTransactionResponse> batch =
+                    auctionSessionRepository.findOptimizedEarningTransactions(
+                            userId,
+                            hasCursor,
+                            cursor,
+                            status,
+                            PageRequest.of(0, EXPORT_BATCH_SIZE));
+
+            if (batch.isEmpty()) {
+                break;
+            }
+
+            batchWriter.write(batch);
+            exportedRows += batch.size();
+
+            EarningTransactionResponse lastTransaction = batch.get(batch.size() - 1);
+            if (lastTransaction.rawId() == null) {
+                throw new IllegalStateException("Export cursor is missing from earning transaction");
+            }
+            cursor = lastTransaction.rawId();
+            hasCursor = true;
+
+            if (batch.size() < EXPORT_BATCH_SIZE) {
+                break;
+            }
+        }
+
+        return exportedRows;
+    }
+
+    @FunctionalInterface
+    private interface BatchWriter {
+        void write(List<EarningTransactionResponse> batch) throws IOException;
     }
 
     @Override
@@ -162,6 +267,14 @@ public class EarningReportServiceImpl implements EarningReportService {
                     revenueByPeriod.getOrDefault(period, BigDecimal.ZERO)));
         }
         return points;
+    }
+
+    private String normalizeStatus(String status) {
+        String normalized = status == null || status.isBlank() ? "ALL" : status.trim().toUpperCase();
+        if (!normalized.equals("ALL") && !normalized.equals("SUCCESS") && !normalized.equals("PENDING")) {
+            throw new AppException(ErrorCode.INVALID_EARNING_STATUS);
+        }
+        return normalized;
     }
 
     private List<EarningStatisticsResponse.RevenuePoint> buildMonthlyPoints(

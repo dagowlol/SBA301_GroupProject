@@ -26,7 +26,7 @@ const MOCK_STATISTICS = {
 const MOCK_TRANSACTIONS = [
   {
     id: 'INV-20260701',
-    productName: 'Tranh Sơn Dầu "Hoàng Hôn Hội An"',
+    productName: 'Oil Painting "Hoi An Sunset"',
     sessionEndDate: '2026-07-01T18:30:00Z',
     finalPrice: 5500000,
     buyerName: 'Nguyễn Văn Anh',
@@ -35,7 +35,7 @@ const MOCK_TRANSACTIONS = [
   },
   {
     id: 'INV-20260628',
-    productName: 'Tượng Gốm Bát Tràng — Rồng Phượng',
+    productName: 'Bat Trang Ceramic Statue — Dragon and Phoenix',
     sessionEndDate: '2026-06-28T20:00:00Z',
     finalPrice: 3200000,
     buyerName: 'Trần Thị Bích',
@@ -44,7 +44,7 @@ const MOCK_TRANSACTIONS = [
   },
   {
     id: 'INV-20260625',
-    productName: 'Bộ Sưu Tập Tem Cổ Đông Dương 1920',
+    productName: 'Indochina Vintage Stamp Collection 1920',
     sessionEndDate: '2026-06-25T17:00:00Z',
     finalPrice: 2800000,
     buyerName: 'Phạm Quốc Cường',
@@ -53,7 +53,7 @@ const MOCK_TRANSACTIONS = [
   },
   {
     id: 'INV-20260620',
-    productName: 'Đồng Hồ Omega Seamaster 1965',
+    productName: 'Omega Seamaster Watch 1965',
     sessionEndDate: '2026-06-20T19:45:00Z',
     finalPrice: 4500000,
     buyerName: 'Lê Minh Đức',
@@ -62,7 +62,7 @@ const MOCK_TRANSACTIONS = [
   },
   {
     id: 'INV-20260618',
-    productName: 'Bình Gốm Men Lam Huế — Thế Kỷ XIX',
+    productName: 'Hue Blue-and-White Ceramic Vase — 19th Century',
     sessionEndDate: '2026-06-18T21:15:00Z',
     finalPrice: 1400000,
     buyerName: 'Hoàng Thị Ema',
@@ -71,7 +71,7 @@ const MOCK_TRANSACTIONS = [
   },
   {
     id: 'INV-20260615',
-    productName: 'Tranh Thêu Tay XQ Đà Lạt',
+    productName: 'XQ Da Lat Hand Embroidery',
     sessionEndDate: '2026-06-15T16:30:00Z',
     finalPrice: 950000,
     buyerName: 'Vũ Đình Phong',
@@ -137,4 +137,13 @@ export const getEarningTransactions = async (userId, params = {}) => {
   const queryString = query.toString();
   const path = `/users/${userId}/earning-transactions${queryString ? `?${queryString}` : ''}`;
   return await apiRequest(path);
+};
+
+export const exportEarningTransactions = async (userId, status = 'ALL', responseType = 'blob') => {
+  const query = new URLSearchParams();
+  if (status && status !== 'ALL') query.append('status', status);
+
+  const queryString = query.toString();
+  const path = `/users/${userId}/earning-transactions/export${queryString ? `?${queryString}` : ''}`;
+  return await apiRequest(path, { responseType });
 };

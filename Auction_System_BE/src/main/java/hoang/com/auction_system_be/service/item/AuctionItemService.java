@@ -16,6 +16,7 @@ public interface AuctionItemService {
     ItemResponse rejectItem(Long itemId, ItemRejectRequest request);
 
     ItemResponse updateItem(Long itemId, UpdateItemRequest request);
+    ItemResponse updateMyItem(Long itemId, UpdateItemRequest request);
 
     PageResponse<ItemResponse> getItems(int page, int size, String name, Long categoryId, ItemStatus status);
 

@@ -22,14 +22,21 @@ import {
   X,
   Plus,
   AlertCircle
+  ,ImagePlus,
+  Ban
 } from 'lucide-react';
-import { message } from 'antd';
+
+const formatVND = (value) => `${new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 0,
+}).format(Number(value) || 0)} VND`;
 
 export default function ItemApproval() {
   const {
     items,
     categories,
     loading,
+    loadError,
+    refetch,
     approveItem,
     rejectItem,
     addItem,
@@ -46,7 +53,12 @@ export default function ItemApproval() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [itemToReject, setItemToReject] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
+  const [isRejecting, setIsRejecting] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
   // Form states matching ItemRequest and ItemResponse
@@ -57,6 +69,7 @@ export default function ItemApproval() {
   const [startingPrice, setStartingPrice] = useState('');
   const [condition, setCondition] = useState('NEW');
   const [status, setStatus] = useState('Pending');
+  const [imageFile, setImageFile] = useState(null);
 
   // Error state for handling Spring Boot constraint exceptions
   const [error, setError] = useState('');
@@ -103,6 +116,7 @@ export default function ItemApproval() {
     setStartingPrice(item.startingPrice || '');
     setCondition(item.condition || 'NEW');
     setStatus(item.status);
+    setImageFile(null);
     setError('');
     setShowEditModal(true);
   };
@@ -117,19 +131,41 @@ export default function ItemApproval() {
     }
   };
 
-  const handleReject = async (id) => {
-    const reason = window.prompt("Enter rejection reason (required):");
-    if (reason === null) return; // cancelled
-    if (!reason.trim()) {
-      message.warning("Rejection reason is required!");
+  const handleOpenReject = (item) => {
+    setItemToReject(item);
+    setRejectionReason('');
+    setRejectError('');
+    setShowRejectModal(true);
+  };
+
+  const handleCloseReject = () => {
+    if (isRejecting) return;
+    setShowRejectModal(false);
+    setItemToReject(null);
+    setRejectionReason('');
+    setRejectError('');
+  };
+
+  const handleRejectSubmit = async (e) => {
+    e.preventDefault();
+    const reason = rejectionReason.trim();
+    if (!reason) {
+      setRejectError('Please provide a reason for rejecting this item.');
       return;
     }
 
-    setError('');
+    setRejectError('');
+    setIsRejecting(true);
     try {
-      await rejectItem(id, reason);
+      await rejectItem(itemToReject.id, reason);
+      triggerToast(`Item "${itemToReject.title}" has been rejected.`);
+      setShowRejectModal(false);
+      setItemToReject(null);
+      setRejectionReason('');
     } catch (err) {
-      setError(err.message || 'Failed to reject item on backend.');
+      setRejectError(err.message || 'Failed to reject item. Please try again.');
+    } finally {
+      setIsRejecting(false);
     }
   };
 
@@ -146,8 +182,7 @@ export default function ItemApproval() {
         categoryId: parseInt(categoryId),
         startingPrice: parseFloat(startingPrice),
         reservePrice: reserve ? parseFloat(reserve) : null,
-        condition,
-        status
+        condition
       });
       setShowAddModal(false);
       triggerToast(`Item "${title}" has been submitted successfully.`);
@@ -169,7 +204,7 @@ export default function ItemApproval() {
         startingPrice: parseFloat(startingPrice),
         reservePrice: reserve ? parseFloat(reserve) : null,
         condition,
-        status
+        imageFile
       });
       setShowEditModal(false);
       triggerToast(`Item "${title}" has been updated successfully.`);
@@ -211,7 +246,7 @@ export default function ItemApproval() {
       const q = searchQuery.toLowerCase();
       result = result.filter(item =>
         item.title.toLowerCase().includes(q) ||
-        item.artist.toLowerCase().includes(q) ||
+      item.artist.toLowerCase().includes(q) ||
         item.category.toLowerCase().includes(q)
       );
     }
@@ -241,6 +276,14 @@ export default function ItemApproval() {
         return 'bg-warning text-dark';
       case 'Rejected':
         return 'bg-danger text-white';
+      case 'Sold':
+        return 'bg-primary text-white';
+      case 'Paid':
+        return 'bg-success text-white';
+      case 'Shipping':
+        return 'bg-info text-dark';
+      case 'Delivered':
+        return 'bg-success text-white';
       default:
         return 'bg-secondary text-white';
     }
@@ -272,7 +315,12 @@ export default function ItemApproval() {
             </Button>
           </div>
 
-          {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+          {(error || loadError) && (
+            <Alert variant="danger" className="py-2.5 small mb-3 d-flex justify-content-between align-items-center">
+              <span>{error || loadError}</span>
+              {loadError && <Button size="sm" variant="outline-danger" onClick={refetch}>Retry</Button>}
+            </Alert>
+          )}
 
           {/* Filter Bar (Search, Status, Sorting) */}
           <Row className="g-3 mb-4">
@@ -282,7 +330,7 @@ export default function ItemApproval() {
                   <Search size={16} />
                 </InputGroup.Text>
                 <Form.Control
-                  placeholder="Search by title or artist..."
+                  placeholder="Search by title or seller..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -300,6 +348,10 @@ export default function ItemApproval() {
                 <option value="Approved">Approved</option>
                 <option value="Active">Active</option>
                 <option value="Rejected">Rejected</option>
+                <option value="Sold">Sold</option>
+                <option value="Paid">Paid</option>
+                <option value="Shipping">Shipping</option>
+                <option value="Delivered">Delivered</option>
               </Form.Select>
             </Col>
 
@@ -332,12 +384,12 @@ export default function ItemApproval() {
           )}
 
           {/* Items Table */}
-          {processedItems.length > 0 ? (
+          {!loadError && processedItems.length > 0 ? (
             <Table responsive hover className="align-middle border rounded shadow-xs" style={{ fontSize: '0.92rem' }}>
               <thead>
                 <tr className="text-white bg-dark-teal" style={{ backgroundColor: '#004e64' }}>
                   <th className="py-3 px-3">Title</th>
-                  <th className="py-3">Artist</th>
+                  <th className="py-3">Seller</th>
                   <th className="py-3">Category</th>
                   <th className="py-3 text-end">Starting Price</th>
                   <th className="py-3 text-end">Reserve</th>
@@ -352,8 +404,8 @@ export default function ItemApproval() {
                     <td className="fw-bold text-dark py-3 px-3">{item.title}</td>
                     <td className="text-muted py-3">{item.artist}</td>
                     <td className="text-muted py-3">{item.category}</td>
-                    <td className="text-end py-3">${item.startingPrice || 0}</td>
-                    <td className="text-end fw-semibold py-3">${item.reserve}</td>
+                    <td className="text-end py-3">{formatVND(item.startingPrice)}</td>
+                    <td className="text-end fw-semibold py-3">{formatVND(item.reserve)}</td>
                     <td className="text-center py-3">
                       <Badge
                         className={`px-3 py-2 text-uppercase rounded-pill ${getBadgeStyle(item.status)}`}
@@ -386,41 +438,36 @@ export default function ItemApproval() {
                               size="sm"
                               className="text-danger p-0 hover-opacity"
                               title="Reject"
-                              onClick={() => handleReject(item.id)}
+                              onClick={() => handleOpenReject(item)}
                             >
                               <X size={18} />
                             </Button>
                           </>
                         )}
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="text-info p-0 hover-opacity"
-                          title="Edit"
-                          onClick={() => handleOpenEdit(item)}
-                        >
-                          <Edit2 size={16} />
-                        </Button>
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="text-danger p-0 hover-opacity"
-                          title="Delete"
-                          onClick={() => handleDelete(item)}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
+                        {!['Sold', 'Paid', 'Shipping', 'Delivered'].includes(item.status) && (
+                          <Button variant="link" size="sm" className="text-info p-0 hover-opacity"
+                            title={item.status === 'Active' ? 'Edit description or image' : 'Edit'}
+                            onClick={() => handleOpenEdit(item)}>
+                            <Edit2 size={16} />
+                          </Button>
+                        )}
+                        {['Pending', 'Rejected'].includes(item.status) && (
+                          <Button variant="link" size="sm" className="text-danger p-0 hover-opacity"
+                            title="Delete" onClick={() => handleDelete(item)}>
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </Table>
-          ) : (
+          ) : !loadError ? (
             <Alert variant="warning" className="text-center py-4">
               No auction items found.
             </Alert>
-          )}
+          ) : null}
 
           {/* Add Item Modal */}
           <Modal show={showAddModal} onHide={() => setShowAddModal(false)} size="lg" centered>
@@ -471,7 +518,7 @@ export default function ItemApproval() {
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
+                      <Form.Label className="small fw-semibold">Starting Price (VND)</Form.Label>
                       <Form.Control
                         type="number"
                         step="0.01"
@@ -484,7 +531,7 @@ export default function ItemApproval() {
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
+                      <Form.Label className="small fw-semibold">Reserve Price (VND)</Form.Label>
                       <Form.Control
                         type="number"
                         step="0.01"
@@ -502,26 +549,13 @@ export default function ItemApproval() {
                   <Form.Control
                     as="textarea"
                     rows={3}
-                    placeholder="Details about the artwork..."
+                    placeholder="Enter the item's description..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     required
                   />
                 </Form.Group>
 
-                <Row className="g-3">
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-semibold">Status</Form.Label>
-                      <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Active">Active</option>
-                        <option value="Rejected">Rejected</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                </Row>
               </Modal.Body>
               <Modal.Footer className="bg-light">
                 <Button variant="secondary" size="sm" onClick={() => setShowAddModal(false)}>
@@ -547,6 +581,16 @@ export default function ItemApproval() {
             <Form onSubmit={handleEditSubmit}>
               <Modal.Body className="p-4">
                 {error && <Alert variant="danger" className="py-2.5 small mb-3">{error}</Alert>}
+                {status === 'Approved' && (
+                  <Alert variant="warning" className="small">
+                    Changing the name, category or prices sends this item back to Pending. Those fields are locked after a session is assigned.
+                  </Alert>
+                )}
+                {status === 'Active' && (
+                  <Alert variant="info" className="small">
+                    This auction is active. Only its description and image can be changed.
+                  </Alert>
+                )}
 
                 <Row className="g-3">
                   <Col md={6}>
@@ -554,6 +598,7 @@ export default function ItemApproval() {
                       <Form.Label className="small fw-semibold">Item Title</Form.Label>
                       <Form.Control
                         type="text"
+                        disabled={status === 'Active'}
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         required
@@ -563,7 +608,7 @@ export default function ItemApproval() {
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-semibold">Condition</Form.Label>
-                      <Form.Select value={condition} onChange={(e) => setCondition(e.target.value)} required>
+                      <Form.Select disabled={status === 'Active'} value={condition} onChange={(e) => setCondition(e.target.value)} required>
                         <option value="NEW">New</option>
                         <option value="LIKE_NEW">Like New</option>
                         <option value="GOOD">Good</option>
@@ -578,7 +623,7 @@ export default function ItemApproval() {
                   <Col md={3}>
                     <Form.Group className="mb-3">
                       <Form.Label className="small fw-semibold">Category</Form.Label>
-                      <Form.Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
+                      <Form.Select disabled={status === 'Active'} value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required>
                         {categories.map(c => (
                           <option key={c.id} value={c.id}>{c.name}</option>
                         ))}
@@ -587,9 +632,10 @@ export default function ItemApproval() {
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="small fw-semibold">Starting Price (USD)</Form.Label>
+                      <Form.Label className="small fw-semibold">Starting Price (VND)</Form.Label>
                       <Form.Control
                         type="number"
+                        disabled={status === 'Active'}
                         step="0.01"
                         value={startingPrice}
                         onChange={(e) => setStartingPrice(e.target.value)}
@@ -599,9 +645,10 @@ export default function ItemApproval() {
                   </Col>
                   <Col md={3}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="small fw-semibold">Reserve Price (USD)</Form.Label>
+                      <Form.Label className="small fw-semibold">Reserve Price (VND)</Form.Label>
                       <Form.Control
                         type="number"
+                        disabled={status === 'Active'}
                         step="0.01"
                         value={reserve}
                         onChange={(e) => setReserve(e.target.value)}
@@ -622,19 +669,28 @@ export default function ItemApproval() {
                   />
                 </Form.Group>
 
-                <Row className="g-3">
-                  <Col md={6}>
-                    <Form.Group className="mb-3">
-                      <Form.Label className="small fw-semibold">Status</Form.Label>
-                      <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Active">Active</option>
-                        <option value="Rejected">Rejected</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                </Row>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold d-flex align-items-center gap-2">
+                    <ImagePlus size={16} /> Item image
+                  </Form.Label>
+                  <Row className="g-2">
+                    <Col md={12}>
+                      <Form.Control id="staff-item-image" className="d-none" type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+                      <div className="d-flex align-items-center border rounded overflow-hidden bg-white">
+                        <label htmlFor="staff-item-image" className="btn btn-outline-secondary rounded-0 border-0 border-end mb-0 text-nowrap">
+                          Choose File
+                        </label>
+                        <span className="px-3 text-muted text-truncate small">
+                          {imageFile?.name || 'No file selected'}
+                        </span>
+                      </div>
+                      <Form.Text>Choose a JPG, PNG or WebP image from this computer.</Form.Text>
+                    </Col>
+                  </Row>
+                </Form.Group>
+
               </Modal.Body>
               <Modal.Footer className="bg-light">
                 <Button variant="secondary" size="sm" onClick={() => setShowEditModal(false)}>
@@ -653,6 +709,77 @@ export default function ItemApproval() {
           </Modal>
         </>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showRejectModal} onHide={handleCloseReject} centered backdrop={isRejecting ? 'static' : true}>
+        <Form onSubmit={handleRejectSubmit}>
+          <Modal.Header closeButton={!isRejecting} className="border-0 px-4 pt-4 pb-2">
+            <div className="d-flex align-items-center gap-3">
+              <div
+                className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                style={{ width: 46, height: 46, backgroundColor: '#fee2e2', color: '#dc2626' }}
+              >
+                <Ban size={23} />
+              </div>
+              <div>
+                <Modal.Title className="fw-bold fs-5">Reject auction item</Modal.Title>
+                <div className="text-muted small mt-1">This action will notify the seller.</div>
+              </div>
+            </div>
+          </Modal.Header>
+          <Modal.Body className="px-4 py-3">
+            <div className="rounded-3 border bg-light p-3 mb-3">
+              <div className="text-muted text-uppercase fw-semibold mb-1" style={{ fontSize: '0.7rem', letterSpacing: '0.06em' }}>
+                Selected item
+              </div>
+              <div className="fw-semibold text-dark">{itemToReject?.title}</div>
+              {itemToReject?.artist && <div className="text-muted small mt-1">Seller: {itemToReject.artist}</div>}
+            </div>
+
+            {rejectError && (
+              <Alert variant="danger" className="d-flex align-items-center gap-2 py-2 small">
+                <AlertCircle size={16} className="flex-shrink-0" /> {rejectError}
+              </Alert>
+            )}
+
+            <Form.Group controlId="rejectionReason">
+              <Form.Label className="fw-semibold">
+                Rejection reason <span className="text-danger">*</span>
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                maxLength={500}
+                autoFocus
+                disabled={isRejecting}
+                isInvalid={Boolean(rejectError) && !rejectionReason.trim()}
+                placeholder="Clearly explain what the seller needs to correct..."
+                value={rejectionReason}
+                onChange={(e) => {
+                  setRejectionReason(e.target.value);
+                  if (rejectError) setRejectError('');
+                }}
+                style={{ resize: 'none' }}
+              />
+              <div className="d-flex justify-content-between mt-2">
+                <Form.Text className="text-muted">Be specific and constructive.</Form.Text>
+                <Form.Text className={rejectionReason.length >= 450 ? 'text-danger' : 'text-muted'}>
+                  {rejectionReason.length}/500
+                </Form.Text>
+              </div>
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer className="border-0 bg-light px-4 py-3">
+            <Button variant="outline-secondary" onClick={handleCloseReject} disabled={isRejecting}>
+              Cancel
+            </Button>
+            <Button variant="danger" type="submit" disabled={isRejecting || !rejectionReason.trim()} className="d-flex align-items-center gap-2 fw-semibold">
+              {isRejecting ? <Spinner animation="border" size="sm" /> : <X size={17} />}
+              {isRejecting ? 'Rejecting...' : 'Reject item'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered>
@@ -679,7 +806,7 @@ export default function ItemApproval() {
         </Modal.Footer>
       </Modal>
 
-      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1080 }}>
+      <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 1080 }}>
         <Toast
           onClose={() => setShowToast(false)}
           show={showToast}

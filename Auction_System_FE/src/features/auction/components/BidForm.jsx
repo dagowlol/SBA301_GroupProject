@@ -36,12 +36,12 @@ export default function BidForm({
 
     const value = parseFloat(bidValue);
     if (isNaN(value)) {
-      setErrorMsg('Please enter a valid amount.');
+      setErrorMsg('Please enter a valid bid amount.');
       return;
     }
 
     if (value < minBidAllowed) {
-      setErrorMsg(`Bid must be at least $${minBidAllowed.toLocaleString()}.`);
+      setErrorMsg(`Your bid must be at least ${minBidAllowed.toLocaleString()} VND.`);
       return;
     }
 
@@ -51,10 +51,10 @@ export default function BidForm({
       if (success) {
         setBidValue('');
       } else {
-        setErrorMsg('WebSocket disconnected. Please refresh the page.');
+        setErrorMsg('The live connection was lost. Please reload the page.');
       }
     } catch (err) {
-      setErrorMsg(err.message || 'Failed to place bid.');
+      setErrorMsg(err.message || 'Failed to place the bid.');
     } finally {
       setSubmitting(false);
     }
@@ -63,7 +63,7 @@ export default function BidForm({
   if (isEnded) {
     return (
       <Alert variant="secondary" className="text-center py-3 mb-0 shadow-sm rounded-4 border-0">
-        <p className="fw-semibold mb-0 text-muted">Auction has ended. Bidding is closed.</p>
+        <p className="fw-semibold mb-0 text-muted">This auction has ended. Bidding is closed.</p>
       </Alert>
     );
   }
@@ -73,9 +73,9 @@ export default function BidForm({
       <div className="border p-4 rounded-4 bg-white shadow-sm text-center">
         <h5 className="fw-bold mb-3 d-flex align-items-center justify-content-center gap-2" style={{ color: '#004e64' }}>
           <Hammer size={18} style={{ color: '#004e64' }} />
-          <span>Place a Bid</span>
+          <span>Join the Auction</span>
         </h5>
-        <p className="text-muted small mb-4">Please log in to participate in the auction.</p>
+        <p className="text-muted small mb-4">Please sign in to participate in live bidding.</p>
         <Button 
           variant="dark" 
           onClick={openAuthModal}
@@ -83,7 +83,7 @@ export default function BidForm({
           style={{ backgroundColor: '#004e64', borderColor: '#004e64' }}
         >
           <LogIn size={16} />
-          <span>Log in to Bid</span>
+          <span>Sign in to Bid</span>
         </Button>
       </div>
     );
@@ -94,7 +94,7 @@ export default function BidForm({
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: '#004e64' }}>
           <Hammer size={18} style={{ color: '#004e64' }} />
-          <span>Place a Bid</span>
+          <span>Join the Auction</span>
         </h5>
         <Button 
           variant="outline-primary" 
@@ -114,7 +114,7 @@ export default function BidForm({
           <div className="d-flex align-items-center gap-2 text-info-emphasis">
             <Cpu size={16} className="text-info animate-pulse" />
             <span className="fw-medium">
-              Auto-Bid Active - Limit: ${autoBidConfig.maxBidAmount.toLocaleString('en-US')}
+              Auto-bid enabled — Limit: {autoBidConfig.maxBidAmount.toLocaleString('en-US')} VND
             </span>
           </div>
           <Button 
@@ -124,7 +124,7 @@ export default function BidForm({
             style={{ fontSize: '0.8rem' }}
           >
             <XCircle size={14} />
-            <span>Disable Auto-Bid</span>
+            <span>Disable Auto-bid</span>
           </Button>
         </div>
       )}
@@ -138,11 +138,11 @@ export default function BidForm({
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="bidAmountInput">
           <InputGroup size="lg" className="shadow-xs rounded-3 overflow-hidden">
-            <InputGroup.Text className="bg-white text-muted fw-bold border-end-0 ps-3">$</InputGroup.Text>
+            <InputGroup.Text className="bg-white text-muted fw-bold border-end-0 ps-3">VND</InputGroup.Text>
             <Form.Control
               type="number"
               step="0.01"
-              placeholder={`Enter $${minBidAllowed.toLocaleString()} or more...`}
+              placeholder={`Enter ${minBidAllowed.toLocaleString()} or more...`}
               value={bidValue}
               onChange={(e) => setBidValue(e.target.value)}
               required
@@ -151,7 +151,7 @@ export default function BidForm({
             />
           </InputGroup>
           <Form.Text className="text-muted small mt-2 ms-1 d-block">
-            Minimum increment: <strong>${minimumIncrement.toLocaleString()}</strong>
+            Minimum bid increment: <strong>{minimumIncrement.toLocaleString()} VND</strong>
           </Form.Text>
         </Form.Group>
         
@@ -167,7 +167,7 @@ export default function BidForm({
             transition: 'all 0.2s ease'
           }}
         >
-          {submitting ? <Spinner size="sm" animation="border" /> : 'Place Bid'}
+          {submitting ? <Spinner size="sm" animation="border" /> : 'Confirm Bid'}
         </Button>
       </Form>
     </div>

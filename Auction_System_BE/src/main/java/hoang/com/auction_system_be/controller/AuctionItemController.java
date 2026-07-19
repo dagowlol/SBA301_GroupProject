@@ -36,13 +36,22 @@ public class AuctionItemController {
                                 .build();
         }
 
-        @PatchMapping("/{id}/update")
+        @PatchMapping(value = "/{id}/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
         @Operation(summary = "Update an item", description = "Admin or Auction Manager updates a pending item.")
         public ApiResponse<ItemResponse> updateItem(
-                        @PathVariable Long id, @RequestBody UpdateItemRequest request) {
+                        @PathVariable Long id, @ModelAttribute UpdateItemRequest request) {
                 return ApiResponse.<ItemResponse>builder()
                                 .result(auctionItemService.updateItem(id, request))
+                                .build();
+        }
+
+        @PatchMapping(value = "/my-uploaded/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @Operation(summary = "Update own item", description = "Seller updates and resubmits a pending or rejected item.")
+        public ApiResponse<ItemResponse> updateMyItem(
+                        @PathVariable Long id, @ModelAttribute UpdateItemRequest request) {
+                return ApiResponse.<ItemResponse>builder()
+                                .result(auctionItemService.updateMyItem(id, request))
                                 .build();
         }
 

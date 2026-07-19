@@ -1,6 +1,7 @@
 package hoang.com.auction_system_be.repository;
 
 import hoang.com.auction_system_be.entity.Payment;
+import hoang.com.auction_system_be.enums.PaymentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -19,9 +20,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<Payment> findByPaymentGatewayRef(String paymentGatewayRef);
 
-    java.util.Optional<Payment> findByParticipantIdAndType(Long participantId, hoang.com.auction_system_be.enums.PaymentType type);
+    Optional<Payment> findByParticipantIdAndType(Long participantId, PaymentType type);
 
-    java.util.Optional<Payment> findByParticipantUserIdAndParticipantSessionId(Long userId, Long sessionId);
+    Optional<Payment> findByParticipantUserIdAndParticipantSessionId(Long userId, Long sessionId);
 
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p " +
             "WHERE p.status = hoang.com.auction_system_be.enums.PaymentStatus.PAID " +
