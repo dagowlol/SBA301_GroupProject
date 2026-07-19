@@ -365,8 +365,10 @@
   background: white;
   border-radius: 12px;
   padding: 2rem;
-  width: 480px;
+  width: 560px;
   max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
   animation: fadeInUp 0.2s ease;
 }
@@ -411,6 +413,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.um-form-grid-2 .um-form-group {
+  min-width: 0;
 }
 
 .um-form-group {

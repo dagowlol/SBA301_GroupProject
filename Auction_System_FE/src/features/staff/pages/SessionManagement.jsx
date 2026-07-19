@@ -240,6 +240,7 @@ export default function SessionManagement() {
       case 'ENDED':           return { background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' };
       case 'RESERVE_NOT_MET': return { background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' };
       case 'CANCELLED':       return { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' };
+      case 'POSTPONED':       return { background: '#ede9fe', color: '#5b21b6', border: '1px solid #c4b5fd' };
       default:                return { background: '#f9fafb', color: '#6b7280', border: '1px solid #e5e7eb' };
     }
   };
@@ -316,6 +317,7 @@ export default function SessionManagement() {
             <option value="ENDED">ENDED</option>
             <option value="RESERVE_NOT_MET">RESERVE NOT MET</option>
             <option value="CANCELLED">CANCELLED</option>
+            <option value="POSTPONED">POSTPONED</option>
           </Form.Select>
         </div>
       )}
@@ -383,7 +385,7 @@ export default function SessionManagement() {
                           className="p-1 border-0 bg-transparent"
                           style={{ color: '#dc2626' }}
                           onClick={() => setDeleteTargetId(session.id)}
-                          disabled={session.status === 'ACTIVE' || session.status === 'ENDED' || session.status === 'RESERVE_NOT_MET' || deleteMutation.isPending}
+                          disabled={session.status === 'ACTIVE' || deleteMutation.isPending}
                           title="Delete session"
                         >
                           <Trash2 size={16} />
