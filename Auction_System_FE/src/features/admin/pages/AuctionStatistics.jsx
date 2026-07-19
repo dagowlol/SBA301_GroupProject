@@ -31,10 +31,8 @@ const COLORS = ['#006d75', '#2f7ea1', '#0f9f83', '#d99132', '#6f6ac8', '#d15f76'
 
 const formatDate = (date) => date.format('YYYY-MM-DD');
 const formatVnd = (value) => new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'VND',
   maximumFractionDigits: 0,
-}).format(Number(value || 0));
+}).format(Number(value || 0)) + ' VND';
 const shortCurrency = (value) => {
   const number = Number(value || 0);
   if (number >= 1_000_000_000) return `${(number / 1_000_000_000).toLocaleString('en-US')}B`;
@@ -171,7 +169,7 @@ export default function AuctionStatistics() {
         border: { display: false },
         grid: { color: 'rgba(148, 163, 184, 0.18)', drawTicks: false },
         ticks: {
-          callback: (value) => `₫${shortCurrency(value)}`,
+          callback: (value) => `${shortCurrency(value)} VND`,
           color: '#718096',
           font: { size: 11, weight: 500 },
           padding: 10,

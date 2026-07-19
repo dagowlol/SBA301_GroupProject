@@ -519,7 +519,7 @@ export default function CategoryManagement() {
         </Modal.Footer>
       </Modal>
 
-      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1080 }}>
+      <ToastContainer position="bottom-end" className="p-3" style={{ zIndex: 1080 }}>
         <Toast
           onClose={() => setShowToast(false)}
           show={showToast}
