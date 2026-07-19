@@ -48,6 +48,10 @@ export const productService = {
         formData.append(key, requestDto[key]);
       }
     });
+    if (itemModel.imageFile) {
+      const imageKey = await uploadImageDirect(itemModel.imageFile);
+      formData.append('imageKeys', imageKey);
+    }
     const rawDto = await itemApi.createWithFormData(formData);
     return productMapper.toFrontendModel(rawDto);
   },

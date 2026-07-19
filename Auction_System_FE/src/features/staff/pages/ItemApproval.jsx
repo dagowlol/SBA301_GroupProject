@@ -99,6 +99,7 @@ export default function ItemApproval() {
     setStartingPrice('');
     setCondition('NEW');
     setStatus('Pending');
+    setImageFile(null);
     setError('');
     setShowAddModal(true);
   };
@@ -182,7 +183,8 @@ export default function ItemApproval() {
         categoryId: parseInt(categoryId),
         startingPrice: parseFloat(startingPrice),
         reservePrice: reserve ? parseFloat(reserve) : null,
-        condition
+        condition,
+        imageFile
       });
       setShowAddModal(false);
       triggerToast(`Item "${title}" has been submitted successfully.`);
@@ -554,6 +556,37 @@ export default function ItemApproval() {
                     onChange={(e) => setDescription(e.target.value)}
                     required
                   />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-semibold d-flex align-items-center gap-2">
+                    <ImagePlus size={16} /> Item image
+                  </Form.Label>
+                  <Form.Control
+                    id="staff-new-item-image"
+                    className="d-none"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  />
+                  <div className="d-flex align-items-center border rounded overflow-hidden bg-white">
+                    <label htmlFor="staff-new-item-image" className="btn btn-outline-secondary rounded-0 border-0 border-end mb-0 text-nowrap">
+                      Choose Image
+                    </label>
+                    <span className="px-3 text-muted text-truncate small">
+                      {imageFile?.name || 'No image selected'}
+                    </span>
+                  </div>
+                  {imageFile && (
+                    <img
+                      src={URL.createObjectURL(imageFile)}
+                      alt="New auction item preview"
+                      className="mt-2 rounded border object-fit-cover"
+                      style={{ width: '120px', height: '90px' }}
+                      onLoad={(event) => URL.revokeObjectURL(event.currentTarget.src)}
+                    />
+                  )}
+                  <Form.Text>Choose a JPG, PNG or WebP image. It will be uploaded using the staff image link.</Form.Text>
                 </Form.Group>
 
               </Modal.Body>
