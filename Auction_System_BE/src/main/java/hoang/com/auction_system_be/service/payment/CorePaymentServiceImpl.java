@@ -1,14 +1,20 @@
 package hoang.com.auction_system_be.service.payment;
 
 import hoang.com.auction_system_be.dto.response.PaymentResponse;
+import hoang.com.auction_system_be.entity.AuctionItem;
+import hoang.com.auction_system_be.entity.AuctionSession;
 import hoang.com.auction_system_be.entity.Payment;
 import hoang.com.auction_system_be.entity.AuctionParticipant;
+import hoang.com.auction_system_be.enums.ItemStatus;
 import hoang.com.auction_system_be.enums.PaymentStatus;
 import hoang.com.auction_system_be.enums.PaymentType;
+import hoang.com.auction_system_be.enums.SessionStatus;
 import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.repository.PaymentRepository;
 import hoang.com.auction_system_be.repository.AuctionParticipantRepository;
+import hoang.com.auction_system_be.repository.AuctionItemRepository;
+import hoang.com.auction_system_be.repository.AuctionSessionRepository;
 import hoang.com.auction_system_be.service.auth.SecurityContextService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +30,8 @@ public class CorePaymentServiceImpl implements CorePaymentService {
 
     private final PaymentRepository paymentRepository;
     private final AuctionParticipantRepository participantRepository;
+    private final AuctionItemRepository auctionItemRepository;
+    private final AuctionSessionRepository auctionSessionRepository;
     private final SecurityContextService securityContextService;
 
     @Override
@@ -65,12 +73,27 @@ public class CorePaymentServiceImpl implements CorePaymentService {
         if (isSuccess) {
             payment.setStatus(PaymentStatus.PAID);
             payment.setPaidAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            if (payment.getType() == PaymentType.FINAL_PAYMENT) {
+                AuctionParticipant participant = payment.getParticipant();
+                AuctionSession session = participant.getSession();
+                AuctionItem item = session.getItem();
+
+                item.setStatus(ItemStatus.SOLD);
+                auctionItemRepository.save(item);
+
+                session.setStatus(SessionStatus.PAID);
+                auctionSessionRepository.save(session);
+
+                log.info("Payment ID {} completed: item {} marked SOLD, session {} marked PAID",
+                        paymentId, item.getId(), session.getId());
+            }
         } else {
             payment.setStatus(PaymentStatus.FAILED);
             payment.setFailureReason(failureReason);
+            paymentRepository.save(payment);
         }
-
-        paymentRepository.save(payment);
     }
 
     @Override

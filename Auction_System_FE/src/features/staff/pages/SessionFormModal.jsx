@@ -171,6 +171,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
                         <option value="RESERVE_NOT_MET">Reserve Not Met</option>
                         <option value="CANCELLED">Cancelled</option>
                         <option value="POSTPONED">Postponed</option>
+                        <option value="PAID">Paid</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>

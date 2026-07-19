@@ -241,6 +241,7 @@ export default function SessionManagement() {
       case 'RESERVE_NOT_MET': return { background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' };
       case 'CANCELLED':       return { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' };
       case 'POSTPONED':       return { background: '#ede9fe', color: '#5b21b6', border: '1px solid #c4b5fd' };
+      case 'PAID':            return { background: '#d1fae5', color: '#065f46', border: '1px solid #6ee7b7' };
       default:                return { background: '#f9fafb', color: '#6b7280', border: '1px solid #e5e7eb' };
     }
   };
@@ -315,6 +316,7 @@ export default function SessionManagement() {
             <option value="SCHEDULED">SCHEDULED</option>
             <option value="ACTIVE">ACTIVE</option>
             <option value="ENDED">ENDED</option>
+            <option value="PAID">PAID</option>
             <option value="RESERVE_NOT_MET">RESERVE NOT MET</option>
             <option value="CANCELLED">CANCELLED</option>
             <option value="POSTPONED">POSTPONED</option>
