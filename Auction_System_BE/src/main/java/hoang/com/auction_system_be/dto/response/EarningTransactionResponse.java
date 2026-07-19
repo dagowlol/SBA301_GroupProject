@@ -13,7 +13,7 @@ public record EarningTransactionResponse(
     String paymentStatus,
     Long rawId // Useful for backend to extract nextCursor directly
 ) {
-    // Alternate Constructor khớp chính xác với các trường trong câu lệnh JPQL SELECT new
+    // Alternate constructor matching the fields in the JPQL SELECT new expression.
     public EarningTransactionResponse(
         Long sessionId,
         String productName,
@@ -36,7 +36,7 @@ public record EarningTransactionResponse(
 
     private static String maskName(String firstName, String lastName) {
         if ((firstName == null || firstName.isBlank()) && (lastName == null || lastName.isBlank())) {
-            return "Ẩn danh";
+            return "Anonymous";
         }
         String fullName = (lastName != null && !lastName.isBlank() ? lastName.trim() + " " : "") +
                           (firstName != null ? firstName.trim() : "");

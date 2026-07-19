@@ -7,19 +7,20 @@ import {
   useEarningSummary,
   useEarningTransactions,
 } from '../hooks/useEarningReport';
+import { exportEarningTransactions } from '../../../api/earningReportApi';
 import './EarningReportTab.css';
 
 const EarningCharts = lazy(() => import('./EarningCharts'));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Format số tiền theo chuẩn VNĐ: 1,500,000 VNĐ */
+/** Format a monetary amount in VND. */
 const formatVND = (amount) => {
-  if (amount === null || amount === undefined) return '0 VNĐ';
-  return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ';
+  if (amount === null || amount === undefined) return '0 VND';
+  return new Intl.NumberFormat('en-US').format(amount) + ' VND';
 };
 
-/** Masking tên người mua: "Nguyễn Văn Anh" → "Nguyễn V***" */
+/** Mask the buyer's name for privacy. */
 const maskBuyerName = (fullName) => {
   if (!fullName) return '***';
   const parts = fullName.trim().split(/\s+/);
@@ -27,7 +28,7 @@ const maskBuyerName = (fullName) => {
   return parts[0] + ' ' + parts[1][0] + '***';
 };
 
-/** Format ngày: dd/MM/yyyy HH:mm */
+/** Format a date as dd/MM/yyyy HH:mm. */
 const formatDate = (dateStr) => {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -47,13 +48,15 @@ const FILTER_TABS = [
 
 export default function EarningReportTab() {
   const { user, isAuthenticated, openAuthModal } = useContext(AuthContext);
-  // Dùng userId thật nếu đã login, fallback 'guest' để mock data vẫn hoạt động
+  // Use the authenticated user ID, with a guest fallback for mock data.
   const userId = user?.id || 'guest';
 
   const [filterTab, setFilterTab] = useState('ALL');
   const [searchText, setSearchText] = useState('');
   const [pageIndex, setPageIndex] = useState(0);
   const [statisticsRange, setStatisticsRange] = useState('LAST_6_MONTHS');
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
@@ -110,6 +113,60 @@ export default function EarningReportTab() {
     );
   }, [transactions, searchText]);
 
+  const handleExport = async () => {
+    if (!isAuthenticated) {
+      openAuthModal?.();
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError('');
+    try {
+      const fileName = `earning-transactions-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      let fileHandle = null;
+
+      if ('showSaveFilePicker' in window) {
+        try {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'Excel workbook',
+              accept: {
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+              },
+            }],
+          });
+        } catch (error) {
+          if (error.name === 'AbortError') return;
+          // Fall back to Blob download when the API exists but is unavailable
+          // in the current browser context (for example, an embedded iframe).
+        }
+      }
+
+      if (fileHandle) {
+        const response = await exportEarningTransactions(userId, filterTab, 'response');
+        const writable = await fileHandle.createWritable();
+        await response.body.pipeTo(writable);
+      } else {
+        const blob = await exportEarningTransactions(userId, filterTab);
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1_000);
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        setExportError(error.message || 'Unable to export the earning report.');
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -124,12 +181,18 @@ export default function EarningReportTab() {
           </p>
         </div>
         <div className="earning-report__actions">
-          <span title="Export — Coming soon" style={{ display: 'inline-block', cursor: 'not-allowed' }}>
-            <button className="earning-report__export-btn" disabled style={{ pointerEvents: 'none', opacity: 0.5 }}>
+          <div className="earning-report__export-control">
+            <button
+              className="earning-report__export-btn"
+              onClick={handleExport}
+              disabled={isExporting}
+              type="button"
+            >
               <Download size={16} />
-              Export Report
+              {isExporting ? 'Exporting...' : 'Export Report'}
             </button>
-          </span>
+            {exportError && <span className="earning-report__export-error">{exportError}</span>}
+          </div>
         </div>
       </header>
 
@@ -168,7 +231,7 @@ export default function EarningReportTab() {
                 ) : (
                   <>
                     {new Intl.NumberFormat('vi-VN').format(summary?.totalRevenue || 0)}
-                    <span className="earning-card__suffix">VNĐ</span>
+                    <span className="earning-card__suffix">VND</span>
                   </>
                 )}
               </div>
@@ -209,7 +272,7 @@ export default function EarningReportTab() {
                 ) : (
                   <>
                     {new Intl.NumberFormat('vi-VN').format(summary?.pendingAmount || 0)}
-                    <span className="earning-card__suffix">VNĐ</span>
+                    <span className="earning-card__suffix">VND</span>
                   </>
                 )}
               </div>

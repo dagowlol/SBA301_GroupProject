@@ -14,17 +14,18 @@ function getCookie(name) {
  */
 export async function apiRequest(path, options = {}) {
   const url = `${BASE_URL}${path}`;
+  const { responseType, ...fetchOptions } = options;
   const storedToken = sessionStorage.getItem('accessToken');
   const csrfToken = getCookie('csrf_token');
 
   const headers = {
     ...(storedToken ? { 'Authorization': `Bearer ${storedToken}` } : {}),
     ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
-    ...options.headers,
+    ...fetchOptions.headers,
   };
 
   // Only set application/json if not using FormData and not explicitly overridden
-  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+  if (!(fetchOptions.body instanceof FormData) && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
   
@@ -35,7 +36,7 @@ export async function apiRequest(path, options = {}) {
 
   const config = {
     credentials: 'include', // Ensure cookies (refresh_token, csrf_token) are sent
-    ...options,
+    ...fetchOptions,
     headers,
   };
 
@@ -85,9 +86,17 @@ export async function apiRequest(path, options = {}) {
     }
 
     // For DELETE or empty responses
-    if (response.status === 204 || path.includes('delete') || options.method === 'DELETE') {
+    if (response.status === 204 || path.includes('delete') || fetchOptions.method === 'DELETE') {
       const data = await response.json().catch(() => ({}));
       return data;
+    }
+
+    if (responseType === 'response') {
+      return response;
+    }
+
+    if (responseType === 'blob') {
+      return await response.blob();
     }
 
     const data = await response.json();
