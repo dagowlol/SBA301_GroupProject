@@ -21,6 +21,7 @@ import hoang.com.auction_system_be.repository.AuctionItemRepository;
 import hoang.com.auction_system_be.repository.CategoryRepository;
 import hoang.com.auction_system_be.repository.PaymentRepository;
 import hoang.com.auction_system_be.service.auth.SecurityContextService;
+import hoang.com.auction_system_be.service.storage.ObjectStorageService;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -35,11 +36,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +55,7 @@ public class AuctionItemServiceImpl implements AuctionItemService {
     ItemMapper itemMapper;
     SecurityContextService securityContextService;
     PaymentRepository paymentRepository;
+    ObjectStorageService objectStorageService;
 
     @Override
     @Transactional
@@ -72,29 +76,25 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                 .status(ItemStatus.PENDING)
                 .build();
 
-        List<ItemImage> itemImages = new ArrayList<>();
+        List<String> imageKeys = new ArrayList<>();
         if (request.getImages() != null) {
-            for (int i = 0; i < request.getImages().size(); i++) {
-                org.springframework.web.multipart.MultipartFile file = request.getImages().get(i);
-                if (file != null && !file.isEmpty()) {
-                    String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-                    try {
-                        java.nio.file.Path uploadPath = java.nio.file.Paths.get("uploads");
-                        if (!java.nio.file.Files.exists(uploadPath)) {
-                            java.nio.file.Files.createDirectories(uploadPath);
-                        }
-                        java.nio.file.Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
-                    } catch (Exception e) {
-                        log.error("Failed to save image: " + file.getOriginalFilename(), e);
-                    }
-                    itemImages.add(ItemImage.builder()
-                            .item(item)
-                            .imageUrl("/uploads/" + fileName)
-                            .isPrimary(i == 0)
-                            .sortOrder(i)
-                            .build());
+            for (MultipartFile image : request.getImages()) {
+                if (image != null && !image.isEmpty()) {
+                    imageKeys.add(objectStorageService.uploadImage(sellerId, image));
                 }
             }
+        }
+        if (request.getImageKeys() != null) {
+            for (String objectKey : request.getImageKeys()) {
+                objectStorageService.validateOwnedObject(sellerId, objectKey);
+                imageKeys.add(objectKey);
+            }
+        }
+
+        List<ItemImage> itemImages = new ArrayList<>();
+        for (int i = 0; i < imageKeys.size(); i++) {
+            itemImages.add(ItemImage.builder().item(item).imageUrl(imageKeys.get(i))
+                    .isPrimary(i == 0).sortOrder(i).build());
         }
         item.setImages(itemImages);
 
@@ -199,56 +199,127 @@ public class AuctionItemServiceImpl implements AuctionItemService {
         AuctionItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new AppException(ErrorCode.ITEM_NOT_FOUND));
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
-
-        item.setName(request.getName());
-        item.setDescription(request.getDescription());
-        item.setStartingPrice(request.getStartingPrice());
-        item.setReservePrice(request.getReservePrice());
-        item.setCategory(category);
-        if (request.getStatus() != null) {
-            item.setStatus(request.getStatus());
+        if (isTerminalItemStatus(item.getStatus())) {
+            throw new AppException(ErrorCode.INVALID_ITEM_STATUS);
+        }
+        if (request.getStatus() != null && request.getStatus() != item.getStatus()) {
+            throw new AppException(ErrorCode.INVALID_ITEM_STATUS);
         }
 
-        if (request.getImageUrl() != null && !request.getImageUrl().trim().isEmpty()) {
+        boolean importantChange = hasImportantItemChange(item, request);
+        if (item.getStatus() == ItemStatus.ACTIVE && importantChange) {
+            throw new AppException(ErrorCode.INVALID_ITEM_STATUS);
+        }
+        if (item.getStatus() == ItemStatus.APPROVED && importantChange
+                && item.getSessions() != null && !item.getSessions().isEmpty()) {
+            throw new AppException(ErrorCode.SESSION_CONFLICT);
+        }
+
+        if (item.getStatus() == ItemStatus.PENDING || item.getStatus() == ItemStatus.REJECTED
+                || (item.getStatus() == ItemStatus.APPROVED && importantChange)) {
+            applyEditableItemFields(item, request);
+        }
+        if (request.getDescription() != null) {
+            item.setDescription(request.getDescription());
+        }
+
+        if (item.getStatus() == ItemStatus.APPROVED && importantChange) {
+            item.setStatus(ItemStatus.PENDING);
+            item.setReviewedBy(null);
+            item.setReviewedAt(null);
+            item.setRejectionReason(null);
+        }
+
+        String replacementImageUrl = storeReplacementImage(request);
+        if (replacementImageUrl != null) {
+            item.getImages().forEach(image -> objectStorageService.deleteAfterCommit(image.getImageUrl()));
             item.getImages().clear();
             item.getImages().add(ItemImage.builder()
                     .item(item)
-                    .imageUrl(request.getImageUrl())
+                    .imageUrl(replacementImageUrl)
                     .isPrimary(true)
+                    .sortOrder(0)
                     .build());
-        }
-
-        if (request.getSubmittedBy() != null && !request.getSubmittedBy().trim().isEmpty()
-                && item.getSeller() != null) {
-            String[] parts = request.getSubmittedBy().trim().split("\\s+", 2);
-            if (parts.length > 0) {
-                item.getSeller().setFirstName(parts[0]);
-            }
-            if (parts.length > 1) {
-                item.getSeller().setLastName(parts[1]);
-            } else {
-                item.getSeller().setLastName("");
-            }
-        }
-
-        if (item.getSessions() != null && !item.getSessions().isEmpty()) {
-            AuctionSession session = item.getSessions().get(0);
-            if (request.getStartTime() != null) {
-                session.setStartTime(request.getStartTime());
-            }
-            if (request.getEndTime() != null) {
-                session.setEndTime(request.getEndTime());
-            }
-            if (request.getReservePrice() != null) {
-                session.setReservePrice(request.getReservePrice());
-            }
         }
 
         AuctionItem updatedItem = itemRepository.save(item);
         log.info("Updated item with id: {}", updatedItem.getId());
         return itemMapper.toResponse(updatedItem);
+    }
+
+    private boolean hasImportantItemChange(AuctionItem item, UpdateItemRequest request) {
+        return request.getName() != null && !Objects.equals(item.getName(), request.getName())
+                || request.getCategoryId() != null && (item.getCategory() == null
+                        || !Objects.equals(item.getCategory().getId(), request.getCategoryId()))
+                || differs(item.getStartingPrice(), request.getStartingPrice())
+                || differs(item.getReservePrice(), request.getReservePrice());
+    }
+
+    private boolean differs(java.math.BigDecimal current, java.math.BigDecimal requested) {
+        return requested != null && (current == null || current.compareTo(requested) != 0);
+    }
+
+    private void applyEditableItemFields(AuctionItem item, UpdateItemRequest request) {
+        if (request.getName() != null) item.setName(request.getName());
+        if (request.getStartingPrice() != null) item.setStartingPrice(request.getStartingPrice());
+        if (request.getReservePrice() != null) item.setReservePrice(request.getReservePrice());
+        if (request.getCategoryId() != null) {
+            item.setCategory(categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND)));
+        }
+    }
+
+    private boolean isTerminalItemStatus(ItemStatus status) {
+        return status == ItemStatus.SOLD || status == ItemStatus.PAID
+                || status == ItemStatus.SHIPPING || status == ItemStatus.DELIVERED;
+    }
+
+    @Override
+    @Transactional
+    public ItemResponse updateMyItem(Long itemId, UpdateItemRequest request) {
+        User currentUser = securityContextService.getCurrentUserEntity();
+        AuctionItem item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new AppException(ErrorCode.ITEM_NOT_FOUND));
+
+        if (item.getSeller() == null || !item.getSeller().getId().equals(currentUser.getId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        if (item.getStatus() != ItemStatus.PENDING && item.getStatus() != ItemStatus.REJECTED) {
+            throw new AppException(ErrorCode.INVALID_ITEM_STATUS);
+        }
+
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        item.setName(request.getName());
+        item.setDescription(request.getDescription());
+        item.setStartingPrice(request.getStartingPrice());
+        item.setReservePrice(request.getReservePrice());
+        item.setCategory(category);
+        item.setStatus(ItemStatus.PENDING);
+        item.setRejectionReason(null);
+        item.setReviewedBy(null);
+        item.setReviewedAt(null);
+
+        String replacementImageUrl = storeReplacementImage(request);
+        if (replacementImageUrl != null) {
+            item.getImages().forEach(image -> objectStorageService.deleteAfterCommit(image.getImageUrl()));
+            item.getImages().clear();
+            item.getImages().add(ItemImage.builder().item(item).imageUrl(replacementImageUrl)
+                    .isPrimary(true).sortOrder(0).build());
+        }
+        return itemMapper.toResponse(itemRepository.save(item));
+    }
+
+    private String storeReplacementImage(UpdateItemRequest request) {
+        Long userId = securityContextService.getCurrentUserEntity().getId();
+        if (request.getImage() != null && !request.getImage().isEmpty()) {
+            return objectStorageService.uploadImage(userId, request.getImage());
+        }
+        if (request.getImageKey() != null && !request.getImageKey().isBlank()) {
+            objectStorageService.validateOwnedObject(userId, request.getImageKey());
+            return request.getImageKey();
+        }
+        return null;
     }
 
     @Override
@@ -365,6 +436,10 @@ public class AuctionItemServiceImpl implements AuctionItemService {
     public void deleteItem(Long itemId) {
         AuctionItem item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new AppException(ErrorCode.ITEM_NOT_FOUND));
+        if (item.getStatus() != ItemStatus.PENDING && item.getStatus() != ItemStatus.REJECTED) {
+            throw new AppException(ErrorCode.INVALID_ITEM_STATUS);
+        }
+        item.getImages().forEach(image -> objectStorageService.deleteAfterCommit(image.getImageUrl()));
         itemRepository.delete(item);
         log.info("Deleted item with id: {}", itemId);
     }

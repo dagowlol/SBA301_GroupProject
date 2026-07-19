@@ -5,8 +5,11 @@ import hoang.com.auction_system_be.dto.response.BidBroadcastResponse;
 import hoang.com.auction_system_be.dto.response.ErrorSocketResponse;
 import hoang.com.auction_system_be.entity.*;
 import hoang.com.auction_system_be.enums.SessionStatus;
+import hoang.com.auction_system_be.event.BidPlacedEvent;
+import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.repository.*;
 import hoang.com.auction_system_be.service.session.AuctionSessionServiceImpl;
+import hoang.com.auction_system_be.service.autobid.AutoBidService;
 import hoang.com.auction_system_be.mapper.AuctionSessionMapper;
 import hoang.com.auction_system_be.mapper.BidMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +64,7 @@ class AuctionSessionServiceImplTest {
         org.springframework.context.ApplicationEventPublisher eventPublisher;
 
         @Mock
-        hoang.com.auction_system_be.service.autobid.AutoBidService autoBidService;
+        AutoBidService autoBidService;
 
         @InjectMocks
         AuctionSessionServiceImpl auctionSessionService;
@@ -138,11 +141,11 @@ class AuctionSessionServiceImplTest {
                 assertThat(testSession.getBidCount()).isEqualTo(1);
 
                 // Verify event published
-                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
-                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                ArgumentCaptor<BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(BidPlacedEvent.class);
                 verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                BidPlacedEvent event = eventCaptor.getValue();
                 assertThat(event.getSessionId()).isEqualTo("1");
                 assertThat(event.isError()).isFalse();
                 BidBroadcastResponse broadcast = event.getBroadcastResponse();
@@ -165,7 +168,7 @@ class AuctionSessionServiceImplTest {
                 when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
 
                 // Act & Assert
-                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                org.junit.jupiter.api.Assertions.assertThrows(AppException.class, () -> {
                         auctionSessionService.placeBid(1L, request);
                 });
 
@@ -173,11 +176,11 @@ class AuctionSessionServiceImplTest {
                 verify(bidRepository, never()).save(any(Bid.class));
                 verify(auctionSessionRepository, never()).save(any(AuctionSession.class));
 
-                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
-                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                ArgumentCaptor<BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(BidPlacedEvent.class);
                 verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                BidPlacedEvent event = eventCaptor.getValue();
                 assertThat(event.isError()).isTrue();
                 assertThat(event.getErrorMsg()).isEqualTo("Auction session is not active");
         }
@@ -194,7 +197,7 @@ class AuctionSessionServiceImplTest {
                 when(auctionSessionRepository.findByIdWithPessimisticLock(1L)).thenReturn(Optional.of(testSession));
 
                 // Act & Assert
-                org.junit.jupiter.api.Assertions.assertThrows(hoang.com.auction_system_be.exception.AppException.class, () -> {
+                org.junit.jupiter.api.Assertions.assertThrows(AppException.class, () -> {
                         auctionSessionService.placeBid(1L, request);
                 });
 
@@ -202,11 +205,11 @@ class AuctionSessionServiceImplTest {
                 verify(bidRepository, never()).save(any(Bid.class));
                 verify(auctionSessionRepository, never()).save(any(AuctionSession.class));
 
-                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
-                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                ArgumentCaptor<BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(BidPlacedEvent.class);
                 verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                BidPlacedEvent event = eventCaptor.getValue();
                 assertThat(event.isError()).isTrue();
                 assertThat(event.getErrorMsg()).isEqualTo("Bid amount is too low");
         }
@@ -256,11 +259,11 @@ class AuctionSessionServiceImplTest {
                 assertThat(savedLog.getTriggeredByParticipant()).isEqualTo(testParticipant);
 
                 // Verify event published
-                ArgumentCaptor<hoang.com.auction_system_be.event.BidPlacedEvent> eventCaptor = ArgumentCaptor
-                                .forClass(hoang.com.auction_system_be.event.BidPlacedEvent.class);
+                ArgumentCaptor<BidPlacedEvent> eventCaptor = ArgumentCaptor
+                                .forClass(BidPlacedEvent.class);
                 verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-                hoang.com.auction_system_be.event.BidPlacedEvent event = eventCaptor.getValue();
+                BidPlacedEvent event = eventCaptor.getValue();
                 assertThat(event.getSessionId()).isEqualTo("1");
                 assertThat(event.isError()).isFalse();
         }
