@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Spinner, Alert } from 'react-bootstrap';
+import { Spinner, Alert, Modal, Form, Button, Row, Col } from 'react-bootstrap';
 import { message } from 'antd';
 import { itemApi } from '../../../api/itemApi';
 import { categoryApi } from '../../../api/categoryApi';
 import { paymentApi } from '../../../api/paymentApi';
 import { resolveImageUrl } from '../../../utils/imageUtils';
+import { uploadImageDirect } from '../../../api/storageApi';
 import {
   Upload, Trophy, Search, Filter, ChevronLeft, ChevronRight,
-  Tag, DollarSign, Calendar, ArrowRight, Package, X, CreditCard, CheckCircle2, Clock, XCircle, RefreshCw
+  Tag, DollarSign, Calendar, ArrowRight, Package, X, CreditCard, CheckCircle2,
+  Clock, XCircle, RefreshCw, Compass, Plus, SlidersHorizontal, Pencil, ImagePlus
 } from 'lucide-react';
+import './myItems.css';
 
 // ── Status badge configuration ──────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -55,13 +58,14 @@ const PlaceholderImage = ({ name = '' }) => (
 );
 
 const formatVND = (v) =>
-  v != null ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v) : '-';
+  v != null ? `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(v)} VND` : '-';
 
 const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
+  d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
 
-const ItemCard = ({ item, onClick }) => {
+const ItemCard = ({ item, onClick, onEdit }) => {
   const [imgError, setImgError] = useState(false);
+  const canEdit = ['PENDING', 'REJECTED'].includes(item.status);
   return (
     <div
       onClick={() => onClick(item)}
@@ -124,10 +128,17 @@ const ItemCard = ({ item, onClick }) => {
         </div>
         <div style={{
           marginTop: 12, paddingTop: 10, borderTop: '1px solid #f3f4f6',
-          display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           color: '#004e64', fontSize: '0.78rem', fontWeight: 600, gap: 3,
         }}>
-          View Details <ArrowRight size={13} />
+          <button type="button" disabled={!canEdit} title={canEdit ? 'Edit item' : 'Only pending or rejected items can be edited'}
+            onClick={(event) => { event.stopPropagation(); if (canEdit) onEdit(item); }}
+            style={{ border: 0, background: 'transparent', color: canEdit ? '#004e64' : '#b8bec8', padding: 0,
+              display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600,
+              cursor: canEdit ? 'pointer' : 'not-allowed' }}>
+            <Pencil size={13} /> Edit
+          </button>
+          <span>View Details <ArrowRight size={13} /></span>
         </div>
       </div>
     </div>
@@ -136,10 +147,10 @@ const ItemCard = ({ item, onClick }) => {
 
 // ── Payment Status Badge ─────────────────────────────────────────────────────
 const PAYMENT_STATUS_CONFIG = {
-  PENDING: { label: 'Chưa thanh toán', color: '#d97706', bg: 'rgba(217,119,6,0.12)', icon: Clock },
-  PAID: { label: 'Đã thanh toán', color: '#059669', bg: 'rgba(5,150,105,0.12)', icon: CheckCircle2 },
-  FAILED: { label: 'Thanh toán lỗi', color: '#dc2626', bg: 'rgba(220,38,38,0.12)', icon: XCircle },
-  REFUNDED: { label: 'Đã hoàn tiền', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)', icon: RefreshCw },
+  PENDING: { label: 'Payment Pending', color: '#d97706', bg: 'rgba(217,119,6,0.12)', icon: Clock },
+  PAID: { label: 'Paid', color: '#059669', bg: 'rgba(5,150,105,0.12)', icon: CheckCircle2 },
+  FAILED: { label: 'Payment Failed', color: '#dc2626', bg: 'rgba(220,38,38,0.12)', icon: XCircle },
+  REFUNDED: { label: 'Refunded', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)', icon: RefreshCw },
 };
 
 const PaymentStatusBadge = ({ status }) => {
@@ -243,12 +254,12 @@ const WonItemCard = ({ item, payingId, onPay, onClick }) => {
         <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
           {!paymentStatus ? (
             <span style={{ fontSize: '0.73rem', color: '#9ca3af', fontStyle: 'italic' }}>
-              Chưa có thông tin thanh toán
+              Payment information is not available yet
             </span>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600 }}>Thanh toán</span>
+                <span style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 600 }}>Payment</span>
                 <PaymentStatusBadge status={paymentStatus} />
               </div>
               {paymentStatus === 'PENDING' && paymentId && (
@@ -267,8 +278,8 @@ const WonItemCard = ({ item, payingId, onPay, onClick }) => {
                   onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
                 >
                   {isPaying
-                    ? <><Spinner animation="border" size="sm" style={{ width: 13, height: 13, borderWidth: 2 }} /> Đang xử lý...</>
-                    : <><CreditCard size={14} /> Thanh toán VNPay</>
+                    ? <><Spinner animation="border" size="sm" style={{ width: 13, height: 13, borderWidth: 2 }} /> Processing...</>
+                    : <><CreditCard size={14} /> Pay with VNPay</>
                   }
                 </button>
               )}
@@ -335,6 +346,9 @@ export default function AuctionItemsTab() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [editingItem, setEditingItem] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
   const PAGE_SIZE = 8;
 
   // Payment state
@@ -378,10 +392,10 @@ export default function AuctionItemsTab() {
       if (res && res.url) {
         window.location.href = res.url;
       } else {
-        message.error('Không nhận được đường dẫn thanh toán.');
+        message.error('The payment URL was not returned.');
       }
     } catch (err) {
-      message.error('Có lỗi xảy ra: ' + err.message);
+      message.error('Payment failed: ' + err.message);
     } finally {
       setPayingSessionId(null);
     }
@@ -399,6 +413,37 @@ export default function AuctionItemsTab() {
   const handleItemClick = (item) => {
     if (item.sessionId) {
       navigate(`/auction/${item.sessionId}`);
+    }
+  };
+
+  const openEditModal = (item) => {
+    setEditingItem(item);
+    setEditForm({
+      name: item.name || '', description: item.description || '', categoryId: item.categoryId || '',
+      startingPrice: item.startingPrice || '', reservePrice: item.reservePrice || '',
+      image: null,
+    });
+  };
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      const imageKey = editForm.image ? await uploadImageDirect(editForm.image) : null;
+      Object.entries(editForm).forEach(([key, value]) => {
+        if (key === 'image') return;
+        if (value !== null && value !== undefined && value !== '') formData.append(key, value);
+      });
+      if (imageKey) formData.set('imageKey', imageKey);
+      await itemApi.updateMyUploadedItem(editingItem.id, formData);
+      message.success('Item updated and submitted for review.');
+      setEditingItem(null);
+      await fetchItems();
+    } catch (err) {
+      message.error(err?.message || 'Failed to update item.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -514,29 +559,64 @@ export default function AuctionItemsTab() {
       )}
 
       {!loading && !error && items.length === 0 && (
-        <div style={{
-          textAlign: 'center', padding: '60px 20px',
-          background: '#f8fafc', borderRadius: 14, border: '1px dashed #d1d5db',
-        }}>
-          {viewMode === 'uploaded' ? <Upload size={40} color="#d1d5db" /> : <Trophy size={40} color="#d1d5db" />}
-          <p style={{ marginTop: 14, color: '#9ca3af', fontWeight: 600, fontSize: '0.95rem' }}>
-            {viewMode === 'uploaded' ? 'No uploaded items yet' : 'No won items yet'}
+        <div className="items-empty-state">
+          <div className="items-empty-state__icon">
+            {hasActiveFilters
+              ? <SlidersHorizontal size={34} />
+              : viewMode === 'uploaded' ? <Upload size={34} /> : <Trophy size={34} />}
+          </div>
+          <h5>
+            {hasActiveFilters
+              ? 'No items match your filters'
+              : viewMode === 'uploaded' ? 'Start your selling journey' : 'Your winning collection starts here'}
+          </h5>
+          <p>
+            {hasActiveFilters
+              ? 'Try another name, category, or status to find the item you are looking for.'
+              : viewMode === 'uploaded'
+                ? 'Submit a collectible for review. Once approved, the auction team can schedule it for bidding.'
+                : 'Explore live and upcoming auctions. Every item you win will be collected here with its payment status.'}
           </p>
-          <p style={{ color: '#c4c9d4', fontSize: '0.82rem', margin: 0 }}>
-            {viewMode === 'uploaded'
-              ? 'Items you submit for auction will appear here.'
-              : 'Items you win in auctions will appear here.'}
-          </p>
-          {viewMode === 'uploaded' && (
-            <button
-              onClick={() => navigate('/user/items/create')}
-              style={{
-                marginTop: 16, padding: '10px 22px', borderRadius: 8, border: 'none',
-                background: '#004e64', color: '#fff', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
-              }}
-            >
-              + Submit an Item
-            </button>
+
+          <div className="items-empty-state__actions">
+            {hasActiveFilters ? (
+              <button className="items-empty-state__primary" onClick={clearFilters} type="button">
+                <X size={16} /> Clear filters
+              </button>
+            ) : viewMode === 'uploaded' ? (
+              <>
+                <button className="items-empty-state__primary" onClick={() => navigate('/user/items/create')} type="button">
+                  <Plus size={16} /> Submit your first item
+                </button>
+                <button className="items-empty-state__secondary" onClick={() => navigate('/auction')} type="button">
+                  <Compass size={16} /> Explore auctions
+                </button>
+              </>
+            ) : (
+              <button className="items-empty-state__primary" onClick={() => navigate('/auction')} type="button">
+                <Compass size={16} /> Browse auctions
+              </button>
+            )}
+          </div>
+
+          {!hasActiveFilters && viewMode === 'uploaded' && (
+            <div className="items-empty-state__steps" aria-label="How selling works">
+              <div className="items-empty-step">
+                <span className="items-empty-step__number">1</span>
+                <strong>Submit item details</strong>
+                <span>Add its story, category, expected price, and clear photos.</span>
+              </div>
+              <div className="items-empty-step">
+                <span className="items-empty-step__number">2</span>
+                <strong>Staff review</strong>
+                <span>Our auction team reviews the item before approving it.</span>
+              </div>
+              <div className="items-empty-step">
+                <span className="items-empty-step__number">3</span>
+                <strong>Go to auction</strong>
+                <span>Track its status here once an auction session is scheduled.</span>
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -554,7 +634,7 @@ export default function AuctionItemsTab() {
                   onClick={handleItemClick}
                 />
               ))
-              : items.map(item => <ItemCard key={item.id} item={item} onClick={handleItemClick} />)
+              : items.map(item => <ItemCard key={item.id} item={item} onClick={handleItemClick} onEdit={openEditModal} />)
             }
           </div>
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
@@ -566,6 +646,45 @@ export default function AuctionItemsTab() {
           * Items without an assigned session cannot be previewed yet.
         </p>
       )}
+
+      <Modal show={Boolean(editingItem)} onHide={() => !saving && setEditingItem(null)} size="lg" centered>
+        <Form onSubmit={handleEditSubmit}>
+          <Modal.Header closeButton><Modal.Title>Edit My Auction Item</Modal.Title></Modal.Header>
+          <Modal.Body>
+            <Alert variant="info" className="small">Saving will return this item to Pending for staff review.</Alert>
+            <Row className="g-3">
+              <Col md={8}><Form.Group><Form.Label>Item name</Form.Label><Form.Control required value={editForm.name || ''}
+                onChange={e => setEditForm(v => ({ ...v, name: e.target.value }))} /></Form.Group></Col>
+              <Col md={4}><Form.Group><Form.Label>Category</Form.Label><Form.Select required value={editForm.categoryId || ''}
+                onChange={e => setEditForm(v => ({ ...v, categoryId: e.target.value }))}>
+                <option value="">Select category</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </Form.Select></Form.Group></Col>
+              <Col md={6}><Form.Group><Form.Label>Starting price</Form.Label><Form.Control required min="0.01" step="0.01" type="number"
+                value={editForm.startingPrice || ''} onChange={e => setEditForm(v => ({ ...v, startingPrice: e.target.value }))} /></Form.Group></Col>
+              <Col md={6}><Form.Group><Form.Label>Reserve price</Form.Label><Form.Control required min="0.01" step="0.01" type="number"
+                value={editForm.reservePrice || ''} onChange={e => setEditForm(v => ({ ...v, reservePrice: e.target.value }))} /></Form.Group></Col>
+              <Col xs={12}><Form.Group><Form.Label>Description</Form.Label><Form.Control required as="textarea" rows={3}
+                value={editForm.description || ''} onChange={e => setEditForm(v => ({ ...v, description: e.target.value }))} /></Form.Group></Col>
+              <Col xs={12}><Form.Group><Form.Label className="d-flex align-items-center gap-2"><ImagePlus size={16} /> Choose Image</Form.Label>
+                <Form.Control id="owner-item-image" className="d-none" type="file" accept="image/png,image/jpeg,image/webp"
+                  onChange={e => setEditForm(v => ({ ...v, image: e.target.files?.[0] || null }))} />
+                <div className="d-flex align-items-center border rounded overflow-hidden bg-white">
+                  <label htmlFor="owner-item-image" className="btn btn-outline-secondary rounded-0 border-0 border-end mb-0 text-nowrap">
+                    Choose File
+                  </label>
+                  <span className="px-3 text-muted text-truncate small">
+                    {editForm.image?.name || 'No file selected'}
+                  </span>
+                </div>
+              </Form.Group></Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer><Button variant="secondary" disabled={saving} onClick={() => setEditingItem(null)}>Cancel</Button>
+            <Button type="submit" disabled={saving} style={{ background: '#004e64', borderColor: '#004e64' }}>
+              {saving ? <Spinner size="sm" /> : 'Save & Resubmit'}
+            </Button></Modal.Footer>
+        </Form>
+      </Modal>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { itemApi } from '../../../api/itemApi';
 import { productMapper } from '../mappers/productMapper';
+import { uploadImageDirect } from '../../../api/storageApi';
 
 /**
  * Service to manage Product/Item logic, validations, and mapping orchestrations.
@@ -80,7 +81,12 @@ export const productService = {
    */
   updateItem: async (id, itemModel) => {
     const requestDto = productMapper.toRequestDto(itemModel);
-    const rawDto = await itemApi.update(id, requestDto);
+    const formData = new FormData();
+    Object.entries(requestDto).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) formData.append(key, value);
+    });
+    if (itemModel.imageFile) formData.set('imageKey', await uploadImageDirect(itemModel.imageFile));
+    const rawDto = await itemApi.update(id, formData);
     return productMapper.toFrontendModel(rawDto);
   },
 

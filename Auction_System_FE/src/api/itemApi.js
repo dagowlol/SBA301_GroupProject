@@ -53,7 +53,12 @@ export const itemApi = {
    */
   update: (id, itemRequestDto) => apiRequest(`/items/${id}/update`, {
     method: 'PATCH',
-    body: JSON.stringify(itemRequestDto),
+    body: itemRequestDto,
+  }),
+
+  updateMyUploadedItem: (id, formData) => apiRequest(`/items/my-uploaded/${id}`, {
+    method: 'PATCH',
+    body: formData,
   }),
 
   /**
