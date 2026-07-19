@@ -88,8 +88,9 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
   const onSubmit = async (data) => {
     setApiError('');
     try {
+      console.log(data.status)
       const payload = {
-        startTime: isEdit ? data.startTime : undefined,
+        startTime: !isEdit || sessionData?.status === 'SCHEDULED' ? data.startTime : undefined,
         endTime: data.endTime,
         reservePrice: data.reservePrice ? Number(data.reservePrice) : null,
         minimumIncrement: data.minimumIncrement ? Number(data.minimumIncrement) : null,
@@ -145,7 +146,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label className="small fw-semibold text-muted mb-1">Start Time</Form.Label>
-                    <Form.Control type="datetime-local" {...register('startTime')} isInvalid={!!errors.startTime} disabled={isActive} />
+                    <Form.Control type="datetime-local" {...register('startTime')} isInvalid={!!errors.startTime} disabled={isEdit && sessionData?.status !== 'SCHEDULED'} />
                     <Form.Control.Feedback type="invalid">{errors.startTime?.message}</Form.Control.Feedback>
                   </Form.Group>
                 </Col>
@@ -169,6 +170,7 @@ export default function SessionFormModal({ show, onHide, sessionData, mode = 'cr
                         <option value="ENDED">Ended</option>
                         <option value="RESERVE_NOT_MET">Reserve Not Met</option>
                         <option value="CANCELLED">Cancelled</option>
+                        <option value="POSTPONED">Postponed</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
