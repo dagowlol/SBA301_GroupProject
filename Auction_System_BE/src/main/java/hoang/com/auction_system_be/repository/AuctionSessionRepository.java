@@ -4,6 +4,9 @@ import hoang.com.auction_system_be.dto.response.AuctionSessionListResponse;
 import hoang.com.auction_system_be.entity.AuctionSession;
 import hoang.com.auction_system_be.enums.SessionStatus;
 import hoang.com.auction_system_be.repository.projection.CategoryAuctionSuccessProjection;
+import hoang.com.auction_system_be.repository.projection.EarningSummaryProjection;
+import hoang.com.auction_system_be.repository.projection.EarningRevenuePointProjection;
+import hoang.com.auction_system_be.repository.projection.EarningStatusCountProjection;
 import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 
@@ -125,4 +128,121 @@ public interface AuctionSessionRepository extends JpaRepository<AuctionSession, 
         List<CategoryAuctionSuccessProjection> getSuccessfulAuctionsByCategory(
                         @Param("fromDate") LocalDateTime fromDate,
                         @Param("toDate") LocalDateTime toDate);
+
+        @Query(value = """
+            SELECT
+                COALESCE(SUM(CASE WHEN p.status = 'PAID' THEN s.current_highest_bid ELSE 0 END), 0) AS totalRevenue,
+                COALESCE(SUM(CAST(CASE WHEN p.status = 'PAID' THEN 1 ELSE 0 END AS BIGINT)), 0) AS successfulProducts,
+                COALESCE(SUM(CASE WHEN p.id IS NULL OR p.status <> 'PAID' THEN s.current_highest_bid ELSE 0 END), 0) AS pendingAmount
+            FROM auction_sessions s
+            JOIN auction_items i ON i.id = s.item_id AND i.deleted_at IS NULL
+            LEFT JOIN payments p
+              ON p.participant_id = s.current_winner_participant_id
+             AND p.type = 'FINAL_PAYMENT'
+             AND p.deleted_at IS NULL
+            WHERE i.seller_id = :sellerId
+              AND s.status = 'ENDED'
+              AND s.current_winner_participant_id IS NOT NULL
+              AND s.deleted_at IS NULL
+        """, nativeQuery = true)
+        EarningSummaryProjection getEarningSummary(@Param("sellerId") Long sellerId);
+
+        @Query(value = """
+            SELECT
+                CONVERT(VARCHAR(10), CAST(s.end_time AS DATE), 23) AS period,
+                COALESCE(SUM(CASE WHEN p.status = 'PAID' THEN s.current_highest_bid ELSE 0 END), 0) AS revenue
+            FROM auction_sessions s
+            JOIN auction_items i ON i.id = s.item_id AND i.deleted_at IS NULL
+            LEFT JOIN payments p
+              ON p.participant_id = s.current_winner_participant_id
+             AND p.type = 'FINAL_PAYMENT'
+             AND p.deleted_at IS NULL
+            WHERE i.seller_id = :sellerId
+              AND s.status = 'ENDED'
+              AND s.current_winner_participant_id IS NOT NULL
+              AND s.deleted_at IS NULL
+              AND s.end_time >= :fromDate
+              AND s.end_time < :toDate
+            GROUP BY CAST(s.end_time AS DATE)
+            ORDER BY CAST(s.end_time AS DATE)
+        """, nativeQuery = true)
+        List<EarningRevenuePointProjection> getDailyEarningRevenue(
+                @Param("sellerId") Long sellerId,
+                @Param("fromDate") LocalDateTime fromDate,
+                @Param("toDate") LocalDateTime toDate);
+
+        @Query(value = """
+            SELECT
+                CONCAT(YEAR(s.end_time), '-', RIGHT(CONCAT('0', MONTH(s.end_time)), 2)) AS period,
+                COALESCE(SUM(CASE WHEN p.status = 'PAID' THEN s.current_highest_bid ELSE 0 END), 0) AS revenue
+            FROM auction_sessions s
+            JOIN auction_items i ON i.id = s.item_id AND i.deleted_at IS NULL
+            LEFT JOIN payments p
+              ON p.participant_id = s.current_winner_participant_id
+             AND p.type = 'FINAL_PAYMENT'
+             AND p.deleted_at IS NULL
+            WHERE i.seller_id = :sellerId
+              AND s.status = 'ENDED'
+              AND s.current_winner_participant_id IS NOT NULL
+              AND s.deleted_at IS NULL
+              AND s.end_time >= :fromDate
+              AND s.end_time < :toDate
+            GROUP BY YEAR(s.end_time), MONTH(s.end_time)
+            ORDER BY YEAR(s.end_time), MONTH(s.end_time)
+        """, nativeQuery = true)
+        List<EarningRevenuePointProjection> getMonthlyEarningRevenue(
+                @Param("sellerId") Long sellerId,
+                @Param("fromDate") LocalDateTime fromDate,
+                @Param("toDate") LocalDateTime toDate);
+
+        @Query(value = """
+            SELECT
+                COALESCE(SUM(CAST(CASE WHEN p.status = 'PAID' THEN 1 ELSE 0 END AS BIGINT)), 0) AS paidCount,
+                COALESCE(SUM(CAST(CASE WHEN p.id IS NULL OR p.status <> 'PAID' THEN 1 ELSE 0 END AS BIGINT)), 0) AS pendingCount
+            FROM auction_sessions s
+            JOIN auction_items i ON i.id = s.item_id AND i.deleted_at IS NULL
+            LEFT JOIN payments p
+              ON p.participant_id = s.current_winner_participant_id
+             AND p.type = 'FINAL_PAYMENT'
+             AND p.deleted_at IS NULL
+            WHERE i.seller_id = :sellerId
+              AND s.status = 'ENDED'
+              AND s.current_winner_participant_id IS NOT NULL
+              AND s.deleted_at IS NULL
+              AND s.end_time >= :fromDate
+              AND s.end_time < :toDate
+        """, nativeQuery = true)
+        EarningStatusCountProjection getEarningStatusCounts(
+                @Param("sellerId") Long sellerId,
+                @Param("fromDate") LocalDateTime fromDate,
+                @Param("toDate") LocalDateTime toDate);
+
+        @Query("""
+            SELECT new hoang.com.auction_system_be.dto.response.EarningTransactionResponse(
+                s.id, i.name, s.endTime, s.currentHighestBid,
+                u.firstName, u.lastName, p.status
+            )
+            FROM AuctionSession s
+            JOIN s.item i
+            JOIN s.currentWinnerParticipant wp
+            JOIN wp.user u
+            LEFT JOIN Payment p ON p.participant = wp AND p.type = hoang.com.auction_system_be.enums.PaymentType.FINAL_PAYMENT
+            WHERE i.seller.id = :sellerId
+              AND s.status = hoang.com.auction_system_be.enums.SessionStatus.ENDED
+              AND s.currentWinnerParticipant IS NOT NULL
+              AND (:hasCursor = false OR s.id < :cursor)
+              AND (
+                 :status = 'ALL' OR
+                 (:status = 'SUCCESS' AND p.status = hoang.com.auction_system_be.enums.PaymentStatus.PAID) OR
+                 (:status = 'PENDING' AND (p.id IS NULL OR p.status != hoang.com.auction_system_be.enums.PaymentStatus.PAID))
+              )
+            ORDER BY s.id DESC
+        """)
+         List<hoang.com.auction_system_be.dto.response.EarningTransactionResponse> findOptimizedEarningTransactions(
+            @Param("sellerId") Long sellerId,
+            @Param("hasCursor") boolean hasCursor,
+            @Param("cursor") Long cursor,
+            @Param("status") String status,
+             Pageable pageable
+         );
 }

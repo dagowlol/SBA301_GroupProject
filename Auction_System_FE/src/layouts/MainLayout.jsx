@@ -1,16 +1,14 @@
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Navbar, Nav, Container, Button, Form, InputGroup } from 'react-bootstrap';
-import { Search, Facebook, Twitter, Instagram } from 'lucide-react';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Navbar, Nav, Container, Button, Form, Dropdown } from 'react-bootstrap';
+import { Facebook, Twitter, Instagram, User, LogOut, Package, DollarSign } from 'lucide-react';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import AuthModal from '../features/auth/components/AuthModal';
 
 export default function MainLayout() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { isAuthenticated, user, logout, isAuthModalOpen, openAuthModal, closeAuthModal } = useContext(AuthContext);
-  const isHome = location.pathname === '/';
-  console.log("user", user);
+
   return (
     <div className="d-flex flex-column min-vh-100 bg-light" style={{ border: '3px solid #a855f7' }}>
       {/* Header / Navbar */}
@@ -40,15 +38,8 @@ export default function MainLayout() {
             </Nav>
 
             <div className="d-flex align-items-center gap-3">
-              {/* <Button
-                className="rounded-circle p-2 d-flex align-items-center justify-content-center text-white border-0"
-                style={{ backgroundColor: '#003d5b', width: '38px', height: '38px' }}
-                aria-label="Search"
-              >
-                <Search size={18} />
-              </Button> */}
               {isAuthenticated ? (
-                <>
+                <div className="d-flex align-items-center gap-3">
                   {user?.role && user.role !== 'USER' && (
                     <Button
                       variant="dark"
@@ -59,15 +50,46 @@ export default function MainLayout() {
                       Staff Portal
                     </Button>
                   )}
-                  <Button
-                    variant="dark"
-                    className="px-4 py-2 rounded-pill fw-bold"
-                    style={{ fontSize: '0.9rem', backgroundColor: '#003d5b', borderColor: '#003d5b' }}
-                    onClick={() => navigate('/my-account')}
-                  >
-                    Account
-                  </Button>
-                </>
+                  <Dropdown align="end">
+                    <Dropdown.Toggle
+                      variant="light"
+                      id="dropdown-user"
+                      className="d-flex align-items-center gap-2 rounded-pill border shadow-sm px-3 py-2 bg-white"
+                    >
+                      <div
+                        className="rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ width: '28px', height: '28px', backgroundColor: '#003d5b', color: 'white' }}
+                      >
+                        {user?.email ? user.email.charAt(0).toUpperCase() : <User size={16} />}
+                      </div>
+                      <span className="fw-semibold text-dark d-none d-md-block" style={{ fontSize: '0.9rem' }}>
+                        {user?.email?.split('@')[0] || 'User'}
+                      </span>
+                    </Dropdown.Toggle>
+
+                    <Dropdown.Menu className="shadow border-0 mt-2 rounded-3" style={{ minWidth: '220px' }}>
+                      <Dropdown.Item as={Link} to="/my-account" className="py-2 d-flex align-items-center gap-3">
+                        <User size={16} className="text-secondary" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Profile</span>
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/user/items" className="py-2 d-flex align-items-center gap-3">
+                        <Package size={16} className="text-secondary" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Items</span>
+                      </Dropdown.Item>
+                      <Dropdown.Item as={Link} to="/user/earnings" className="py-2 d-flex align-items-center gap-3">
+                        <DollarSign size={16} className="text-secondary" />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>My Earnings</span>
+                      </Dropdown.Item>
+
+                      <Dropdown.Divider />
+
+                      <Dropdown.Item onClick={logout} className="py-2 d-flex align-items-center gap-3 text-danger">
+                        <LogOut size={16} />
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Logout</span>
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </div>
               ) : (
                 <Button
                   variant="dark"

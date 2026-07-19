@@ -13,10 +13,12 @@ import RegisterPage from '../features/auth/pages/RegisterPage';
 import AuctionRoom from '../features/auction/pages/AuctionRoom';
 import PaymentResultPage from '../features/auction/pages/PaymentResultPage';
 import CreateItemRequest from '../features/user/pages/CreateItemRequest';
+import EarningReportTab from '../features/user/components/EarningReportTab';
 import SessionManagement from '../features/staff/pages/SessionManagement';
 import BidMonitoring from '../features/staff/pages/BidMonitoring';
 // import AutoBid from '../features/staff/pages/AutoBid';
 import UserManagement from '../features/staff/pages/UserManagement';
+import AuctionStatistics from '../features/admin/pages/AuctionStatistics';
 
 import HomePage from '../features/catalog/pages/HomePage';
 import AboutUsPage from '../features/catalog/pages/AboutUsPage';
@@ -39,7 +41,16 @@ export default function AppRoutes() {
           <Route path="my-account" element={<MyAccountPage />} />
           <Route path="payment-result" element={<PaymentResultPage />} />
           <Route path="user/items/create" element={<CreateItemRequest />} />
-          <Route path="user/items" element={<div>My Items Page - <a href="/user/items/create">Create New</a></div>} />
+          <Route
+            path="user/items"
+            element={
+              <div>
+                My Items Page - <a href="/user/items/create">Create New</a>
+              </div>
+            }
+          />
+          <Route path="user/earnings" element={<EarningReportTab />} />
+
           <Route element={<GuestRoute />}>
             <Route path="register" element={<RegisterPage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />
@@ -55,6 +66,7 @@ export default function AppRoutes() {
           <Route path="bid-monitoring" element={<BidMonitoring />} />
           {/* <Route path="autobid" element={<AutoBid />} /> */}
           <Route path="users" element={<UserManagement />} />
+          <Route path="statistics" element={<AuctionStatistics />} />
         </Route>
 
         {/* Fallback Catch-all Route */}
