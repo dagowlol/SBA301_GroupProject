@@ -230,6 +230,9 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 if (item.getStatus() == ItemStatus.SOLD) {
                         throw new AppException(ErrorCode.ITEM_ALREADY_SOLD);
                 }
+                if (item.getStatus() == ItemStatus.PAID) {
+                        throw new AppException(ErrorCode.ITEM_ALREADY_SOLD);
+                }
                 if (item.getStatus() != ItemStatus.APPROVED) {
                         throw new AppException(ErrorCode.ITEM_NOT_APPROVED);
                 }
@@ -237,6 +240,10 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 List<SessionStatus> liveStatuses = List.of(SessionStatus.SCHEDULED, SessionStatus.ACTIVE);
                 if (auctionSessionRepository.existsByItemIdAndStatusIn(itemId, liveStatuses)) {
                         throw new AppException(ErrorCode.SESSION_CONFLICT);
+                }
+
+                if (auctionSessionRepository.existsByItemIdAndStatusIn(itemId, List.of(SessionStatus.PAID))) {
+                        throw new AppException(ErrorCode.ITEM_ALREADY_SOLD);
                 }
 
                 Long staffId = authenticationService.getCurrentUserId();
