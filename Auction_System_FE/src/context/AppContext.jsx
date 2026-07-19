@@ -1,66 +1,21 @@
-import { createContext, useState, useEffect } from 'react';
-import { initialCategories, initialItems } from '../api/mockData';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { categoryService } from '../features/staff/services/categoryService';
 import { productService } from '../features/catalog/services/productService';
+import { AuthContext } from './AuthContext';
 
 export const AppContext = createContext();
 
 export function AppContextProvider({ children }) {
+  const { isAuthenticated, accessToken } = useContext(AuthContext);
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadAll() {
-      setLoading(true);
-      try {
-        const [catData, pageResult] = await Promise.all([
-          categoryService.getAllCategories(),
-          productService.getAllItems({ size: 100 }),
-        ]);
-        if (!cancelled) {
-          setCategories(catData);
-          setItems(pageResult.content);
-        }
-      } catch (err) {
-        console.error("Failed to load data from Service, falling back to local storage", err);
-        if (!cancelled) {
-          const savedCats = localStorage.getItem('auction_categories');
-          const fallbackCats = savedCats ? JSON.parse(savedCats) : initialCategories;
-          setCategories(fallbackCats.map(c => ({
-            id: c.id,
-            name: c.name,
-            description: c.description || '',
-            parentCategoryId: c.parentCategoryId || null,
-            parentCategoryName: c.parentCategoryName || null,
-            slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-            order: c.order || c.sortOrder || 0,
-            status: c.status || 'Active'
-          })));
-
-          const savedItems = localStorage.getItem('auction_items');
-          const fallbackItems = savedItems ? JSON.parse(savedItems) : initialItems;
-          setItems(productService.processItems(fallbackItems));
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    loadAll();
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('auction_categories', JSON.stringify(categories));
-  }, [categories]);
-
-  useEffect(() => {
-    localStorage.setItem('auction_items', JSON.stringify(items));
-  }, [items]);
-
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
+    if (!isAuthenticated || !accessToken) return;
     setLoading(true);
+    setLoadError('');
     try {
       const [catData, pageResult] = await Promise.all([
         categoryService.getAllCategories(),
@@ -70,10 +25,16 @@ export function AppContextProvider({ children }) {
       setItems(pageResult.content);
     } catch (err) {
       console.error("Failed to refetch data:", err);
+      setLoadError(err?.message || 'Unable to load auction items.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, accessToken]);
+
+  useEffect(() => {
+    if (isAuthenticated && accessToken) refetch();
+    else setLoading(false);
+  }, [isAuthenticated, accessToken, refetch]);
 
   // F09: Approve an item on backend
   const approveItem = async (id) => {
@@ -188,6 +149,7 @@ export function AppContextProvider({ children }) {
       categories,
       items,
       loading,
+      loadError,
       refetch,
       approveItem,
       rejectItem,

@@ -57,8 +57,8 @@ public enum ErrorCode {
     SESSION_INVALID_STATUS_TRANSITION(6013, "Invalid session status transition", HttpStatus.BAD_REQUEST),
     SESSION_CANNOT_REDUCE_END_TIME(6014, "Cannot reduce the end time of an active auction session", HttpStatus.BAD_REQUEST),
     TOO_MANY_REQUESTS(6015, "Too many requests, please slow down", HttpStatus.TOO_MANY_REQUESTS),
-    INVALID_AUTO_BID_MAX_AMOUNT(6016, "Mức giá tối đa phải lớn hơn giá hiện tại cộng với bước giá tối thiểu", HttpStatus.BAD_REQUEST),
-    INVALID_AUTO_BID_INCREMENT(6017, "Bước giá tự động tăng phải lớn hơn hoặc bằng bước giá tối thiểu của phòng đấu giá", HttpStatus.BAD_REQUEST),
+    INVALID_AUTO_BID_MAX_AMOUNT(6016, "Maximum bid must exceed the current price plus the minimum bid increment", HttpStatus.BAD_REQUEST),
+    INVALID_AUTO_BID_INCREMENT(6017, "Auto-bid increment must be at least the auction's minimum bid increment", HttpStatus.BAD_REQUEST),
     SESSION_CANNOT_UPDATE_START_TIME(6018, "Start time can only be changed for SCHEDULED sessions", HttpStatus.BAD_REQUEST),
     BID_NOT_FOUND(6019, "Bid not found", HttpStatus.NOT_FOUND),
 
@@ -70,6 +70,7 @@ public enum ErrorCode {
     INVALID_ANALYTICS_DATE_FORMAT(9001, "Dates must use ISO format yyyy-MM-dd", HttpStatus.BAD_REQUEST),
     INVALID_ANALYTICS_DATE_RANGE(9002, "Start date must not be after end date", HttpStatus.BAD_REQUEST),
     INVALID_ANALYTICS_PERIOD(9003, "Period must be DAILY, WEEKLY, or MONTHLY", HttpStatus.BAD_REQUEST),
+    INVALID_EARNING_STATUS(9004, "Status must be ALL, SUCCESS, or PENDING", HttpStatus.BAD_REQUEST),
 
     // System
     SYSTEM_BUSY(8001, "System is busy. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE),

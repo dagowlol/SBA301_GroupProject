@@ -3,26 +3,26 @@ import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Clock, ArrowLeft, Home, Receipt, CreditCard, Calendar, Hash } from 'lucide-react';
 
 const VNP_RESPONSE_MESSAGES = {
-  '00': 'Giao dịch thành công',
-  '07': 'Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).',
-  '09': 'Thẻ/Tài khoản chưa đăng ký dịch vụ InternetBanking.',
-  '10': 'Xác thực thông tin thẻ/tài khoản không đúng quá 3 lần.',
-  '11': 'Đã hết hạn chờ thanh toán. Vui lòng thực hiện lại giao dịch.',
-  '12': 'Thẻ/Tài khoản bị khóa.',
-  '13': 'Mã OTP nhập không đúng. Vui lòng thực hiện lại giao dịch.',
-  '24': 'Khách hàng hủy giao dịch.',
-  '51': 'Tài khoản không đủ số dư để thực hiện giao dịch.',
-  '65': 'Tài khoản đã vượt quá hạn mức giao dịch trong ngày.',
-  '75': 'Ngân hàng thanh toán đang bảo trì.',
-  '79': 'Nhập sai mật khẩu thanh toán quá số lần quy định.',
-  '99': 'Lỗi không xác định.',
+  '00': 'Transaction completed successfully.',
+  '07': 'Payment succeeded, but the transaction requires review for unusual activity.',
+  '09': 'The card or account is not registered for Internet Banking.',
+  '10': 'Card or account authentication failed more than three times.',
+  '11': 'The payment session expired. Please start the transaction again.',
+  '12': 'The card or account is locked.',
+  '13': 'The OTP is incorrect. Please start the transaction again.',
+  '24': 'The transaction was cancelled by the customer.',
+  '51': 'The account has insufficient funds.',
+  '65': 'The account has exceeded its daily transaction limit.',
+  '75': 'The payment bank is undergoing maintenance.',
+  '79': 'The payment password was entered incorrectly too many times.',
+  '99': 'An unknown error occurred.',
 };
 
 function formatAmount(vnpAmount) {
   if (!vnpAmount) return '—';
   // VNPay amount is in cents (x100)
   const amount = parseInt(vnpAmount, 10) / 100;
-  return amount.toLocaleString('vi-VN') + ' ₫';
+  return amount.toLocaleString('en-US') + ' VND';
 }
 
 function formatPayDate(vnpPayDate) {
@@ -60,7 +60,7 @@ export default function PaymentResultPage() {
 
   const isSuccess = responseCode === '00' && transactionStatus === '00';
   const isPending = responseCode === '00' && transactionStatus !== '00';
-  const responseMessage = VNP_RESPONSE_MESSAGES[responseCode] || `Mã lỗi: ${responseCode}`;
+  const responseMessage = VNP_RESPONSE_MESSAGES[responseCode] || `Error code: ${responseCode}`;
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f0f4f8 0%, #e8edf2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
@@ -108,7 +108,7 @@ export default function PaymentResultPage() {
               </div>
 
               <h1 style={{ color: '#fff', fontWeight: 800, fontSize: '1.6rem', margin: 0, letterSpacing: '-0.5px' }}>
-                {isSuccess ? 'Thanh Toán Thành Công!' : isPending ? 'Đang Xử Lý' : 'Thanh Toán Thất Bại'}
+                {isSuccess ? 'Payment Successful!' : isPending ? 'Processing Payment' : 'Payment Failed'}
               </h1>
               <p style={{ color: 'rgba(255,255,255,0.85)', marginTop: '0.5rem', marginBottom: 0, fontSize: '0.95rem' }}>
                 {responseMessage}
@@ -119,7 +119,7 @@ export default function PaymentResultPage() {
           {/* Amount Highlight */}
           <div style={{ padding: '1.75rem 2rem 0', textAlign: 'center' }}>
             <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 1, color: '#9ca3af', fontWeight: 600, marginBottom: 4 }}>
-              Số tiền giao dịch
+              Transaction Amount
             </div>
             <div style={{
               fontSize: '2.4rem', fontWeight: 800, fontFamily: 'monospace',
@@ -136,16 +136,16 @@ export default function PaymentResultPage() {
           {/* Transaction Details */}
           <div style={{ padding: '0 2rem 1.5rem' }}>
             <h2 style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: 1, color: '#9ca3af', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Receipt size={14} /> Chi tiết giao dịch
+              <Receipt size={14} /> Transaction Details
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <DetailRow icon={<Hash size={15} color="#6b7280" />} label="Mã tham chiếu" value={txnRef || '—'} />
-              <DetailRow icon={<Hash size={15} color="#6b7280" />} label="Mã giao dịch VNPay" value={transactionNo || '—'} />
-              <DetailRow icon={<Hash size={15} color="#6b7280" />} label="Mã GD Ngân hàng" value={bankTranNo || '—'} />
-              <DetailRow icon={<CreditCard size={15} color="#6b7280" />} label="Ngân hàng" value={bankCode ? `${bankCode} (${cardType || 'N/A'})` : '—'} />
-              <DetailRow icon={<Calendar size={15} color="#6b7280" />} label="Thời gian thanh toán" value={formatPayDate(payDate)} />
-              <DetailRow icon={<Receipt size={15} color="#6b7280" />} label="Nội dung" value={orderInfo || '—'} />
+              <DetailRow icon={<Hash size={15} color="#6b7280" />} label="Reference Number" value={txnRef || '—'} />
+              <DetailRow icon={<Hash size={15} color="#6b7280" />} label="VNPay Transaction ID" value={transactionNo || '—'} />
+              <DetailRow icon={<Hash size={15} color="#6b7280" />} label="Bank Transaction ID" value={bankTranNo || '—'} />
+              <DetailRow icon={<CreditCard size={15} color="#6b7280" />} label="Bank" value={bankCode ? `${bankCode} (${cardType || 'N/A'})` : '—'} />
+              <DetailRow icon={<Calendar size={15} color="#6b7280" />} label="Payment Time" value={formatPayDate(payDate)} />
+              <DetailRow icon={<Receipt size={15} color="#6b7280" />} label="Description" value={orderInfo || '—'} />
             </div>
           </div>
 
@@ -168,7 +168,7 @@ export default function PaymentResultPage() {
               onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
               onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
-              <Home size={18} /> Về Trang Chủ
+              <Home size={18} /> Return Home
             </button>
             <button
               onClick={() => navigate('/auction')}
@@ -184,14 +184,14 @@ export default function PaymentResultPage() {
               onMouseEnter={e => { e.currentTarget.style.background = '#004e64'; e.currentTarget.style.color = '#fff'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#004e64'; }}
             >
-              <ArrowLeft size={18} /> Xem Danh Sách Đấu Giá
+              <ArrowLeft size={18} /> View Auctions
             </button>
           </div>
         </div>
 
         {/* Footer note */}
         <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.78rem', marginTop: '1.25rem' }}>
-          Được xử lý bảo mật bởi <strong style={{ color: '#6b7280' }}>VNPay</strong>. Vui lòng giữ lại thông tin này cho mục đích tra cứu.
+          Securely processed by <strong style={{ color: '#6b7280' }}>VNPay</strong>. Keep this information for future reference.
         </p>
       </div>
 

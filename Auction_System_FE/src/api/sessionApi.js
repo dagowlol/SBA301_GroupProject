@@ -14,7 +14,7 @@ export const sessionApi = {
 
     const queryString = query.toString();
     const path = `/auction-sessions${queryString ? `?${queryString}` : ''}`;
-    return apiRequest(path);
+    return apiRequest(path, { signal: params.signal });
   },
 
   /**

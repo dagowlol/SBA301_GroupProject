@@ -29,7 +29,7 @@ public class MailServiceImpl implements MailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
-            message.setSubject("Mã OTP của bạn — Auction System");
+            message.setSubject("Your Auction System verification code");
             message.setText(buildOtpEmailText(otp));
             mailSender.send(message);
             log.info("OTP email sent to: {}", toEmail);
@@ -42,12 +42,12 @@ public class MailServiceImpl implements MailService {
 
     private String buildOtpEmailText(String otp) {
         return """
-                Xin chào,
-                Mã OTP của bạn là:
+                Hello,
+                Your verification code is:
                     %s
-                Mã này sẽ hết hạn sau 5 phút.
-                Vui lòng không chia sẻ mã này với bất kỳ ai.
-                Trân trọng,
+                This code expires in 5 minutes.
+                Do not share this code with anyone.
+                Regards,
                 Auction System Team
                 """.formatted(otp);
     }
@@ -59,8 +59,8 @@ public class MailServiceImpl implements MailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
-            message.setSubject("Thông báo: Mật khẩu của bạn đã được thay đổi");
-            message.setText("Xin chào,\n\nMật khẩu tài khoản của bạn trên hệ thống Auction System vừa được thay đổi thành công.\nNếu bạn không thực hiện yêu cầu này, vui lòng liên hệ ngay với bộ phận hỗ trợ.\n\nTrân trọng,\nAuction System Team");
+            message.setSubject("Your Auction System password was changed");
+            message.setText("Hello,\n\nYour Auction System password was changed successfully.\nIf you did not make this change, contact support immediately.\n\nRegards,\nAuction System Team");
             mailSender.send(message);
             log.info("Password changed email sent to: {}", toEmail);
         } catch (Exception e) {

@@ -29,7 +29,7 @@ export default function AuctionRoom() {
 
   const { data: sessionDetail, isLoading, error } = useAuctionSessionDetail(sessionId);
   const { latestBid, wsError, placeBid, clearWsError } = useBidWebSocket(sessionId, (limitPayload) => {
-    message.warning('Robot đã tắt - Tài khoản của bạn đã chạm hạn mức tối đa của Auto-Bid.');
+    message.warning('Auto-bid was disabled because your account reached its configured limit.');
     setAutoBidConfig(prev => prev ? { ...prev, isActive: false } : null);
   });
 
@@ -107,10 +107,10 @@ export default function AuctionRoom() {
       if (res && res.url) {
         window.location.href = res.url;
       } else {
-        message.error('Không nhận được đường dẫn thanh toán.');
+        message.error('The payment URL was not returned.');
       }
     } catch (err) {
-      message.error('Có lỗi xảy ra: ' + err.message);
+      message.error('Payment failed: ' + err.message);
     } finally {
       setLoadingPayment(false);
     }
@@ -125,9 +125,9 @@ export default function AuctionRoom() {
         isActive: false
       });
       setAutoBidConfig(updated);
-      message.success('Đã hủy chế độ đặt giá tự động.');
+      message.success('Auto-bid disabled successfully.');
     } catch (err) {
-      message.error('Không thể hủy chế độ tự động: ' + err.message);
+      message.error('Unable to disable auto-bid: ' + err.message);
     }
   };
 
@@ -144,7 +144,7 @@ export default function AuctionRoom() {
     return (
       <Container className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '60vh' }}>
         <Spinner animation="border" style={{ color: '#004e64', width: '3rem', height: '3rem' }} />
-        <div className="mt-3 text-muted">Đang kết nối vào phòng...</div>
+        <div className="mt-3 text-muted">Connecting to the auction room...</div>
       </Container>
     );
   }
@@ -154,10 +154,10 @@ export default function AuctionRoom() {
       <Container className="py-5">
         <Alert variant="danger" className="text-center p-5 shadow-sm rounded border-0 bg-white">
           <HelpCircle size={48} className="text-danger mb-3" />
-          <h3 className="fw-bold">Phòng Đấu Giá Không Tồn Tại</h3>
-          <p className="text-muted mb-4">{error?.message || 'Không thể lấy thông tin phiên đấu giá.'}</p>
+          <h3 className="fw-bold">Auction Room Not Found</h3>
+          <p className="text-muted mb-4">{error?.message || 'Unable to retrieve the auction session.'}</p>
           <Button variant="outline-danger" className="px-4 py-2" onClick={() => navigate('/auction')}>
-            Quay lại danh mục
+            Back to Auctions
           </Button>
         </Alert>
       </Container>
@@ -171,13 +171,13 @@ export default function AuctionRoom() {
         onClick={() => navigate('/auction')}
         className="text-decoration-none text-dark d-inline-flex align-items-center gap-2 mb-4 p-0 fw-medium"
       >
-        <ArrowLeft size={18} /> Quay lại danh mục
+        <ArrowLeft size={18} /> Back to Auctions
       </Button>
 
       {wsError && (
         <Alert variant="danger" onClose={clearWsError} dismissible className="d-flex align-items-center gap-2 border-0 shadow-sm">
           <AlertCircle size={20} />
-          <span><strong>Lỗi Đặt Giá:</strong> {wsError}</span>
+          <span><strong>Bidding Error:</strong> {wsError}</span>
         </Alert>
       )}
 
@@ -200,11 +200,11 @@ export default function AuctionRoom() {
           <Card className="border-0 shadow-sm bg-light rounded-4 overflow-hidden">
             <Card.Body className="p-4 text-center">
               {isEnded ? (
-                <Badge bg="danger" className="fs-5 px-4 py-2 rounded-pill shadow-sm tracking-wider">ĐÃ KẾT THÚC</Badge>
+                <Badge bg="danger" className="fs-5 px-4 py-2 rounded-pill shadow-sm tracking-wider">ENDED</Badge>
               ) : (
                 <>
                   <div className="text-muted small text-uppercase mb-2 fw-bold d-flex align-items-center justify-content-center gap-1 tracking-wider">
-                    <Clock size={16} /> Thời gian còn lại
+                    <Clock size={16} /> Time Remaining
                   </div>
                   <CountdownTimer endTime={sessionDetail.endTime} onTimeUp={handleTimeUp} />
                 </>
@@ -219,7 +219,7 @@ export default function AuctionRoom() {
           <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ backgroundColor: '#f8f9fa' }}>
             <div style={{ height: '6px', backgroundColor: '#004e64', width: '100%' }}></div>
             <Card.Body className="p-4 p-xl-5">
-              <div className="text-muted small text-uppercase fw-bold tracking-wider mb-2">Giá hiện tại</div>
+              <div className="text-muted small text-uppercase fw-bold tracking-wider mb-2">Current Price</div>
               <div className="fw-bold display-4 font-monospace mb-3" style={{ color: '#004e64', letterSpacing: '-1px' }}>
                 ${sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </div>
@@ -228,7 +228,7 @@ export default function AuctionRoom() {
               {sessionDetail.reservePrice > 0 && (
                 <div className="mb-3">
                   <div className="d-flex justify-content-between align-items-center mb-1">
-                    <span className="text-muted small fw-semibold">Giá dự định (Reserve)</span>
+                    <span className="text-muted small fw-semibold">Reserve Price</span>
                     <span className="font-monospace fw-bold" style={{ fontSize: '0.9rem', color: '#6b7280' }}>
                       ${sessionDetail.reservePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
@@ -237,25 +237,25 @@ export default function AuctionRoom() {
                     sessionDetail.status === 'RESERVE_NOT_MET' ? (
                       <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#fef3c7' }}>
                         <AlertCircle size={16} style={{ color: '#d97706' }} />
-                        <span className="small fw-semibold" style={{ color: '#92400e' }}>Chưa đạt giá dự định</span>
+                        <span className="small fw-semibold" style={{ color: '#92400e' }}>Reserve not met</span>
                       </div>
                     ) : (
                       <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#d1fae5' }}>
                         <Crown size={16} className="text-success" />
-                        <span className="small fw-semibold text-success">Đã đạt giá dự định</span>
+                        <span className="small fw-semibold text-success">Reserve met</span>
                       </div>
                     )
                   ) : (
                     sessionDetail.currentPrice >= sessionDetail.reservePrice ? (
                       <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#d1fae5' }}>
                         <Crown size={16} className="text-success" />
-                        <span className="small fw-semibold text-success">Đã đạt giá dự định</span>
+                        <span className="small fw-semibold text-success">Reserve met</span>
                       </div>
                     ) : (
                       <div className="d-flex align-items-center gap-2 py-2 px-3 rounded" style={{ backgroundColor: '#fef3c7' }}>
                         <AlertCircle size={16} style={{ color: '#d97706' }} />
                         <span className="small fw-semibold" style={{ color: '#92400e' }}>
-                          Còn thiếu ${Math.max(0, sessionDetail.reservePrice - sessionDetail.currentPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })} nữa để đạt giá dự định
+                          {Math.max(0, sessionDetail.reservePrice - sessionDetail.currentPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })} VND more is needed to meet the reserve
                         </span>
                       </div>
                     )
@@ -266,7 +266,7 @@ export default function AuctionRoom() {
               <div className="d-flex align-items-center gap-2 fw-medium px-3 py-2 rounded" style={{ backgroundColor: '#e9ecef' }}>
                 <Crown size={20} className="text-warning" style={{ fill: 'currentColor' }} />
                 <span className="text-dark">
-                  {sessionDetail.currentWinnerName || <span className="text-muted fst-italic">Chưa có người đặt giá</span>}
+                  {sessionDetail.currentWinnerName || <span className="text-muted fst-italic">No bids yet</span>}
                 </span>
               </div>
             </Card.Body>
@@ -277,10 +277,10 @@ export default function AuctionRoom() {
             <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7' }}>
               <div style={{ height: '6px', backgroundColor: '#d97706', width: '100%' }}></div>
               <Card.Body className="p-4">
-                <h5 className="fw-bold text-warning-emphasis mb-2">Chúc mừng! Bạn đã thắng phiên đấu giá</h5>
+                <h5 className="fw-bold text-warning-emphasis mb-2">Congratulations! You won this auction</h5>
                 <p className="text-muted small mb-3">
-                  Giá thắng: <strong className="text-dark">${sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>.
-                  Vui lòng hoàn tất thanh toán của bạn qua VNPay bên dưới.
+                  Winning price: <strong className="text-dark">{sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })} VND</strong>.
+                  Complete your payment through VNPay below.
                 </p>
                 {payment ? (
                   payment.status === 'PENDING' ? (
@@ -291,16 +291,16 @@ export default function AuctionRoom() {
                       onClick={handlePayWithVNPay}
                       disabled={loadingPayment}
                     >
-                      Thanh toán bằng VNPay
+                      Pay with VNPay
                     </Button>
                   ) : (
                     <Badge bg="success" className="w-100 py-2.5 fs-6 rounded-3">
-                      ĐÃ THANH TOÁN ({payment.status})
+                      PAID ({payment.status})
                     </Badge>
                   )
                 ) : (
                   <Button variant="secondary" className="w-100 py-2.5" disabled>
-                    Đang chuẩn bị thông tin thanh toán...
+                    Preparing payment information...
                   </Button>
                 )}
               </Card.Body>
@@ -312,12 +312,12 @@ export default function AuctionRoom() {
             <Card className="border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style={{ backgroundColor: '#fef3c7', border: '1px solid #fcd34d' }}>
               <div style={{ height: '6px', backgroundColor: '#f59e0b', width: '100%' }}></div>
               <Card.Body className="p-4">
-                <h5 className="fw-bold mb-2" style={{ color: '#92400e' }}>Phiên đấu giá không đạt giá dự định</h5>
+                <h5 className="fw-bold mb-2" style={{ color: '#92400e' }}>The reserve price was not met</h5>
                 <p className="text-muted small mb-3">
-                  Giá đặt cao nhất (<strong>${sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>)
-                  không đạt mức giá dự định
+                  The highest bid (<strong>{sessionDetail.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })} VND</strong>)
+                  did not meet the reserve price
                   (<strong>${sessionDetail.reservePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>).
-                  Phiên đấu giá đã kết thúc mà không có người thắng.
+                  The auction ended without a winner.
                 </p>
               </Card.Body>
             </Card>
@@ -338,7 +338,7 @@ export default function AuctionRoom() {
 
           {/* Bid Logs */}
           <div>
-            <h6 className="fw-bold text-muted text-uppercase tracking-wider mb-3 ms-1" style={{ fontSize: '0.8rem' }}>Lịch sử đặt giá (Top 10)</h6>
+            <h6 className="fw-bold text-muted text-uppercase tracking-wider mb-3 ms-1" style={{ fontSize: '0.8rem' }}>Bid History (Top 10)</h6>
             <ListGroup variant="flush" className="border rounded-4 shadow-sm bg-white overflow-hidden">
               {sessionDetail.recentBids && sessionDetail.recentBids.length > 0 ? (
                 sessionDetail.recentBids.map((bid, idx) => (
@@ -350,7 +350,7 @@ export default function AuctionRoom() {
                     <div>
                       <div className="fw-semibold text-dark d-flex align-items-center gap-2">
                         {bid.bidderName}
-                        {idx === 0 && <Badge bg="success" className="rounded-pill" style={{ fontSize: '0.65rem' }}>Mới nhất</Badge>}
+                        {idx === 0 && <Badge bg="success" className="rounded-pill" style={{ fontSize: '0.65rem' }}>Latest</Badge>}
                       </div>
                       <div className="text-muted small mt-1">{new Date(bid.bidTime).toLocaleTimeString('en-US', { hour12: false })}</div>
                     </div>
@@ -361,7 +361,7 @@ export default function AuctionRoom() {
                 ))
               ) : (
                 <ListGroup.Item className="py-5 text-center text-muted fst-italic border-0">
-                  Chưa có lượt đặt giá nào. Hãy là người đầu tiên!
+                  No bids yet. Be the first to bid!
                 </ListGroup.Item>
               )}
             </ListGroup>

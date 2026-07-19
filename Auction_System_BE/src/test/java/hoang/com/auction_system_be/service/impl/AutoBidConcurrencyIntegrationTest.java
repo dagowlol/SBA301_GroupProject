@@ -2,6 +2,7 @@ package hoang.com.auction_system_be.service.impl;
 
 import hoang.com.auction_system_be.entity.*;
 import hoang.com.auction_system_be.enums.SessionStatus;
+import hoang.com.auction_system_be.enums.ItemStatus;
 import hoang.com.auction_system_be.repository.*;
 import hoang.com.auction_system_be.service.autobid.AutoBidService;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,7 +90,7 @@ public class AutoBidConcurrencyIntegrationTest {
                 .category(category)
                 .seller(staff)
                 .startingPrice(BigDecimal.valueOf(100))
-                .status(hoang.com.auction_system_be.enums.ItemStatus.APPROVED)
+                .status(ItemStatus.APPROVED)
                 .build();
         item = auctionItemRepository.save(item);
 
