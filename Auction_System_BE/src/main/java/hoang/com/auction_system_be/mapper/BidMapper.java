@@ -28,6 +28,7 @@ public class BidMapper {
                 .amount(bid.getAmount())
                 .bidTime(bid.getBidTimestamp())
                 .isSuspicious(bid.isSuspicious())
+                .status(bid.getStatus() != null ? bid.getStatus().name() : null)
                 .build();
     }
 

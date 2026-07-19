@@ -23,6 +23,7 @@ import {
   Plus,
   AlertCircle
 } from 'lucide-react';
+import { message } from 'antd';
 
 export default function ItemApproval() {
   const {
@@ -120,7 +121,7 @@ export default function ItemApproval() {
     const reason = window.prompt("Enter rejection reason (required):");
     if (reason === null) return; // cancelled
     if (!reason.trim()) {
-      alert("Rejection reason is required!");
+      message.warning("Rejection reason is required!");
       return;
     }
 

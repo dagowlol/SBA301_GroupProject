@@ -34,4 +34,14 @@ public class BidController {
                 .result(bidService.getBidLogs(page, size, sessionId, userId))
                 .build();
     }
+
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'AUCTION_MANAGER')")
+    @Operation(summary = "Cancel a suspicious bid", description = "Cancel a bid and recalculate the highest bid if necessary. Requires ADMIN or AUCTION_MANAGER role.")
+    public ApiResponse<Void> cancelBid(@PathVariable Long id) {
+        bidService.cancelBid(id);
+        return ApiResponse.<Void>builder()
+                .message("Bid cancelled successfully")
+                .build();
+    }
 }

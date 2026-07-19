@@ -8,11 +8,14 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.Optional;
+import hoang.com.auction_system_be.enums.BidStatus;
 
 @Repository
 public interface BidRepository extends JpaRepository<Bid, Long>, JpaSpecificationExecutor<Bid> {
 
-    List<Bid> findTop10ByParticipantSessionIdOrderByBidTimestampDesc(Long sessionId);
+    List<Bid> findTop10ByParticipantSessionIdAndStatusNotOrderByBidTimestampDesc(Long sessionId, BidStatus status);
 
     Optional<Bid> findTopByParticipantUserIdAndParticipantSessionIdOrderByBidTimestampDesc(Long userId, Long sessionId);
+
+    Optional<Bid> findTopByParticipantSessionIdAndStatusOrderByAmountDesc(Long sessionId, BidStatus status);
 }
