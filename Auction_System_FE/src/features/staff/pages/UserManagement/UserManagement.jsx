@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Search, Pencil, UserX, UserCheck, ShieldPlus, ShieldMinus, RefreshCw, X } from 'lucide-react';
+import { message } from 'antd';
 import { userApi } from '../../../../api/userApi';
 import './UserManagement.css';
 
@@ -67,9 +68,10 @@ function CreateUserModal({ onClose, onSave }) {
     setLoading(true);
     try {
       await userApi.createUser(form);
+      message.success('User created successfully');
       onSave();
     } catch (err) {
-      alert(err.message || 'Error creating user');
+      message.error(err.message || 'Error creating user');
     } finally {
       setLoading(false);
     }
@@ -133,9 +135,10 @@ function EditUserModal({ user, onClose, onSave }) {
     setLoading(true);
     try {
       await userApi.updateUser(user.id, form);
+      message.success('User updated successfully');
       onSave();
     } catch (err) {
-      alert(err.message || 'Error updating user');
+      message.error(err.message || 'Error updating user');
     } finally {
       setLoading(false);
     }
@@ -189,9 +192,10 @@ function AssignRoleModal({ user, onClose, onSave }) {
     setLoading(true);
     try {
       await userApi.assignRole(user.id, { role });
+      message.success('Role updated successfully');
       onSave();
     } catch (err) {
-      alert(err.message || 'Error assigning role');
+      message.error(err.message || 'Error assigning role');
     } finally {
       setLoading(false);
     }
@@ -240,9 +244,10 @@ function StatusModal({ user, onClose, onSave }) {
     setLoading(true);
     try {
       await userApi.updateStatus(user.id, { status: nextStatus });
+      message.success(`User ${nextStatus === 'SUSPENDED' ? 'suspended' : 'reactivated'} successfully`);
       onSave();
     } catch (err) {
-      alert(err.message || 'Error updating status');
+      message.error(err.message || 'Error updating status');
     } finally {
       setLoading(false);
     }
@@ -321,9 +326,10 @@ export default function UserManagement() {
     if (!window.confirm(`Delete user "${user.firstName} ${user.lastName}"? This cannot be undone.`)) return;
     try {
       await userApi.deleteUser(user.id);
+      message.success('User deleted successfully');
       fetchUsers();
     } catch (err) {
-      alert(err.message || 'Error deleting user');
+      message.error(err.message || 'Error deleting user');
     }
   };
 

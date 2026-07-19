@@ -22,4 +22,5 @@ public class BidLogResponse {
     BigDecimal amount;
     LocalDateTime bidTime;
     Boolean isSuspicious;
+    String status;
 }

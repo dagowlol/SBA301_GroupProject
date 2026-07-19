@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -99,6 +100,8 @@ public class AuthServiceImpl implements AuthService {
                             request.getEmail(),
                             request.getPassword()));
             handleSuccessfulLogin(user, authentication);
+        } catch (DisabledException e) {
+            throw new AppException(ErrorCode.USER_INACTIVE);
         } catch (AuthenticationException e) {
             handleFailedLogin(user);
         }

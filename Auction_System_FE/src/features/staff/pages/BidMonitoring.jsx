@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, Modal, Space, Alert } from 'antd';
-import { Eye, AlertTriangle, Radio } from 'lucide-react';
-import { fetchBidLogs } from '../services/bidMonitoringApi';
+import { Table, Input, Button, Modal, Space, Alert, message, Popconfirm } from 'antd';
+import { Eye, AlertTriangle, Radio, Trash2 } from 'lucide-react';
+import { fetchBidLogs, cancelBidApi } from '../services/bidMonitoringApi';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './BidMonitoring.css';
 
@@ -26,7 +26,7 @@ export default function BidMonitoring() {
 
       setStats({
         totalBids: bidsData.length,
-        suspiciousBids: bidsData.filter(b => b.isSuspicious).length,
+        suspiciousBids: bidsData.filter(b => b.isSuspicious && b.status !== 'CANCELLED').length,
       });
     } catch (error) {
       console.error('Error loading bid logs:', error);
@@ -40,6 +40,17 @@ export default function BidMonitoring() {
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleCancelBid = async (bidId) => {
+    try {
+      await cancelBidApi(bidId);
+      message.success('Bid has been cancelled successfully');
+      loadData();
+    } catch (error) {
+      console.error('Error cancelling bid:', error);
+      message.error(error.response?.data?.message || 'Failed to cancel bid');
+    }
+  };
 
   // ----- Filtering -----
   const getFilteredBids = () => {
@@ -81,10 +92,16 @@ export default function BidMonitoring() {
     },
     {
       title: 'Status',
-      dataIndex: 'isSuspicious',
       key: 'status',
-      render: (isSuspicious) => {
-        if (isSuspicious) {
+      render: (_, record) => {
+        if (record.status === 'CANCELLED') {
+          return (
+            <span className="text-secondary text-decoration-line-through d-flex align-items-center gap-1">
+              <span className="status-dot bg-secondary opacity-50"></span> Cancelled
+            </span>
+          );
+        }
+        if (record.isSuspicious) {
           return (
             <span className="text-danger fw-bold d-flex align-items-center gap-1">
               <span className="status-dot bg-danger"></span> Suspicious
@@ -111,6 +128,21 @@ export default function BidMonitoring() {
               setIsModalVisible(true);
             }}
           />
+          {record.isSuspicious && record.status !== 'CANCELLED' && (
+            <Popconfirm
+              title="Cancel this suspicious bid?"
+              description="Are you sure you want to cancel this bid? This will recalculate the current price."
+              onConfirm={() => handleCancelBid(record.bidId)}
+              okText="Yes, Cancel"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <Trash2
+                size={18}
+                className="action-icon text-danger cursor-pointer"
+              />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -221,9 +253,13 @@ export default function BidMonitoring() {
               <p><strong>Time:</strong> {new Date(selectedBid.bidTime).toLocaleString()}</p>
               <p>
                 <strong>Status:</strong>{' '}
-                <span className={selectedBid.isSuspicious ? 'text-danger fw-bold' : 'text-success'}>
-                  {selectedBid.isSuspicious ? 'Suspicious' : 'Normal'}
-                </span>
+                {selectedBid.status === 'CANCELLED' ? (
+                  <span className="text-secondary text-decoration-line-through fw-bold">Cancelled</span>
+                ) : (
+                  <span className={selectedBid.isSuspicious ? 'text-danger fw-bold' : 'text-success'}>
+                    {selectedBid.isSuspicious ? 'Suspicious' : 'Normal'}
+                  </span>
+                )}
               </p>
             </div>
           </div>
