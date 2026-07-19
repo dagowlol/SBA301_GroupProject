@@ -166,3 +166,9 @@ body {
   color: #495057 !important;
   border-color: #e9ecef !important;
 }
+
+/* Keep all Ant Design system messages at the bottom of the viewport. */
+.ant-message {
+  top: auto !important;
+  bottom: 24px !important;
+}

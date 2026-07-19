@@ -3,7 +3,7 @@ import { Container, Row, Col, Nav, Card, Spinner, Button } from 'react-bootstrap
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../../context/AuthContext';
 import { userApi } from '../../../api/userApi';
-import { LogOut, User, Gavel, Upload, DollarSign, Settings, MapPin, Key } from 'lucide-react';
+import { LogOut, User, Gavel, MapPin, Key } from 'lucide-react';
 import ChangePasswordModal from './ChangePasswordModal';
 import EditAddressTab from './EditAddressTab';
 import AuctionItemsTab from './AuctionItemsTab';
@@ -11,8 +11,6 @@ import AuctionItemsTab from './AuctionItemsTab';
 const TABS = [
   { id: 'auction-item', label: 'Auction Item', icon: Gavel },
   // { id: 'upload-item', label: 'Upload item', icon: Upload },
-  { id: 'earning-report', label: 'Earning Report', icon: DollarSign },
-  { id: 'account-setting', label: 'Account Setting', icon: Settings },
   { id: 'edit-address', label: 'Edit Address', icon: MapPin },
 ];
 
@@ -21,7 +19,8 @@ export default function MyAccountPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const currentTab = searchParams.get('tab') || 'auction-item';
+  const requestedTab = searchParams.get('tab');
+  const currentTab = TABS.some((tab) => tab.id === requestedTab) ? requestedTab : 'auction-item';
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -60,10 +59,6 @@ export default function MyAccountPage() {
         return <AuctionItemsTab />;
       // case 'upload-item':
       //   return <div><h4>Upload Item</h4><p className="text-muted">Content for Upload Item will be implemented here.</p></div>;
-      case 'earning-report':
-        return <div><h4>Earning Report</h4><p className="text-muted">Content for Earning Report will be implemented here.</p></div>;
-      case 'account-setting':
-        return <div><h4>Account Setting</h4><p className="text-muted">Content for Account Setting will be implemented here.</p></div>;
       case 'edit-address':
         return <EditAddressTab user={user} />;
       default:
