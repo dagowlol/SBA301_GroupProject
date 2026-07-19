@@ -59,7 +59,7 @@ export default function FilterBar({
                   <Search size={16} />
                 </InputGroup.Text>
                 <Form.Control
-                  placeholder="Tìm kiếm theo tên sản phẩm..."
+                  placeholder="Search by item name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="border-start-0 py-2"
@@ -80,11 +80,11 @@ export default function FilterBar({
                   className="py-2"
                   style={{ fontSize: '0.88rem' }}
                 >
-                  <option value="default">Mặc định</option>
-                  <option value="newest">Mới nhất (startTime)</option>
-                  <option value="price_low">Giá tăng dần</option>
-                  <option value="price_high">Giá giảm dần</option>
-                  <option value="title_a_z">Tên A-Z</option>
+                  <option value="default">Default</option>
+                  <option value="newest">Newest</option>
+                  <option value="price_low">Price: Low to High</option>
+                  <option value="price_high">Price: High to Low</option>
+                  <option value="title_a_z">Name: A-Z</option>
                 </Form.Select>
               </div>
             </Col>

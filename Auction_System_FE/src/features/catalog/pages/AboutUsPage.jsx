@@ -42,7 +42,7 @@ export default function AboutUsPage() {
               <div className="large-image-wrapper bg-secondary" style={{ minHeight: '500px', borderRadius: '4px', overflow: 'hidden' }}>
                 <img
                   src="https://images.unsplash.com/photo-1605429523419-d828acb941d9?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                  alt="Không gian trưng bày vật phẩm"
+                  alt="Auction item exhibition space"
                   className="w-100 h-100 object-fit-cover"
                   style={{ minHeight: '500px' }}
                 />
@@ -99,7 +99,7 @@ export default function AboutUsPage() {
               <div className="side-image-wrapper h-100 bg-secondary" style={{ minHeight: '400px', borderRadius: '4px', overflow: 'hidden' }}>
                 <img
                   src="https://plus.unsplash.com/premium_photo-1706571538582-f40bad685f68?q=80&w=715&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                  alt="Đồ vật đấu giá trên bục trưng bày"
+                  alt="Auction item displayed on a pedestal"
                   className="w-100 h-100 object-fit-cover"
                 />
               </div>
