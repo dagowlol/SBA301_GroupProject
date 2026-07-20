@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import hoang.com.auction_system_be.service.DistributedLockService;
 import hoang.com.auction_system_be.service.autobid.AutoBidService;
+import hoang.com.auction_system_be.service.session.detector.SuspiciousBidDetector;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -69,6 +70,7 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
         DistributedLockService lockService;
         AutoBidService autoBidService;
         ObjectStorageService objectStorageService;
+        SuspiciousBidDetector suspiciousBidDetector;
 
         // ─── WebSocket / Bid Logic ────────────────────────────────────────────
 
@@ -113,7 +115,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                         AuctionParticipant participant = resolveParticipant(user, session);
 
                         LocalDateTime now = LocalDateTime.now();
-                        saveBidRecord(participant, request.getBidAmount(), now);
+                        boolean isSuspicious = suspiciousBidDetector.detect(session, user, request.getBidAmount(), now);
+                        saveBidRecord(participant, request.getBidAmount(), now, isSuspicious);
 
                         updateSessionAndHandleAntiSnipe(session, participant, request.getBidAmount(), now);
 
@@ -173,8 +176,9 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                                 auctionSessionMapper.toParticipant(user, session)));
         }
 
-        private void saveBidRecord(AuctionParticipant participant, BigDecimal bidAmount, LocalDateTime now) {
+        private void saveBidRecord(AuctionParticipant participant, BigDecimal bidAmount, LocalDateTime now, boolean isSuspicious) {
                 Bid bid = bidMapper.toBid(participant, bidAmount, now);
+                bid.setSuspicious(isSuspicious);
                 bidRepository.save(bid);
         }
 

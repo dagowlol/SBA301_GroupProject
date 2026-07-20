@@ -22,4 +22,7 @@ public interface BidRepository extends JpaRepository<Bid, Long>, JpaSpecificatio
             LocalDateTime fromDate, LocalDateTime toDate, BidStatus status);
 
     Optional<Bid> findTopByParticipantSessionIdAndStatusOrderByAmountDesc(Long sessionId, BidStatus status);
+
+    long countByParticipantUserIdAndParticipantSessionIdAndBidTimestampGreaterThanEqualAndStatusNot(
+            Long userId, Long sessionId, LocalDateTime fromDate, BidStatus status);
 }
