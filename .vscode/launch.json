@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-AuctionSystemBeApplication<Auction_System_BE>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "hoang.com.auction_system_be.AuctionSystemBeApplication",
+            "projectName": "Auction_System_BE",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

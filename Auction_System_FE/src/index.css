@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color: #2b2d42;
+  background-color: #f8f9fa;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Public Catalog Card styling */
+.product-card {
+  border-radius: 6px !important;
+  transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 78, 100, 0.12) !important;
+}
+
+.product-card:hover img {
+  transform: scale(1.03);
+}
+
+.btn-bid-now {
+  transition: all 0.2s ease;
+  border-color: #004e64 !important;
+  color: #004e64 !important;
+}
+
+.btn-bid-now:hover {
+  background-color: #004e64 !important;
+  border-color: #004e64 !important;
+  color: #ffffff !important;
+}
+
+/* Hover effects */
+.hover-teal:hover {
+  color: #005f73 !important;
+}
+
+.hover-white:hover {
+  color: #ffffff !important;
+}
+
+.hover-sidebar:hover {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  color: #ffffff !important;
+}
+
+.active-sidebar {
+  background-color: #00607a !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border-left: 4px solid #ffffff;
+}
+
+/* Table styles */
+.table {
+  background-color: #ffffff;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.table th {
+  background-color: #004e64 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  border: none !important;
+}
+
+.table td {
+  padding: 1.1rem 0.85rem !important;
+  color: #495057;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Hover icons transition */
+.hover-opacity {
+  transition: opacity 0.15s ease;
+}
+
+.hover-opacity:hover {
+  opacity: 0.75;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.italic {
+  font-style: italic;
+}
+
+/* Text and Gradient Accents */
+.text-teal {
+  color: #005f73 !important;
+}
+
+/* Custom border widths */
+.border-white-10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Scrollbar hiding utilities */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Badge customizations */
+.bg-success-subtle {
+  background-color: #e2fbf5 !important;
+  color: #0f9f83 !important;
+  border-color: #c7f5eb !important;
+}
+
+.bg-warning-subtle {
+  background-color: #fffbf2 !important;
+  color: #b07e0a !important;
+  border-color: #ffecc4 !important;
+}
+
+.bg-info-subtle {
+  background-color: #e8f4fd !important;
+  color: #0077c8 !important;
+  border-color: #cde6fa !important;
+}
+
+.bg-danger-subtle {
+  background-color: #ffeef0 !important;
+  color: #d93848 !important;
+  border-color: #ffd0d6 !important;
+}
+
+.bg-secondary-subtle {
+  background-color: #f1f3f5 !important;
+  color: #495057 !important;
+  border-color: #e9ecef !important;
+}
+
+/* Keep all Ant Design system messages at the bottom of the viewport. */
+.ant-message {
+  top: auto !important;
+  bottom: 24px !important;
+}

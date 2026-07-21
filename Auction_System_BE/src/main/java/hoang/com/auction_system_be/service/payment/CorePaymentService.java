@@ -1,0 +1,11 @@
+package hoang.com.auction_system_be.service.payment;
+
+import hoang.com.auction_system_be.dto.response.PaymentResponse;
+
+public interface CorePaymentService {
+    PaymentResponse getPaymentStatus(String gatewayRef);
+
+    void updatePaymentStatus(Long paymentId, String gatewayRef, String method, boolean isSuccess, String failureReason);
+
+    PaymentResponse getMyPaymentForSession(Long sessionId);
+}

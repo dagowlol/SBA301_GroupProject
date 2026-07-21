@@ -1,0 +1,105 @@
+import { useContext } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Tags,
+  Package,
+  Calendar,
+  Activity,
+  Cpu,
+  Newspaper,
+  Users,
+  BarChart3,
+  LogOut
+} from 'lucide-react';
+import { AuthContext } from '../../../context/AuthContext';
+import { auctionSocketService } from '../../../features/auction/services/auctionSocketService';
+
+export default function Sidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
+
+  const handleSignOut = async () => {
+    auctionSocketService.disconnect();
+    await logout();
+    navigate('/');
+  };
+
+  const menuItems = [
+    { name: 'Home', icon: LayoutDashboard, path: '/admin/dashboard', badge: null },
+    { name: 'Auction Categories', icon: Tags, path: '/admin/categories', badge: 'F08' },
+    { name: 'Auction Items', icon: Package, path: '/admin/items', badge: 'F09' },
+    { name: 'Auction Sessions', icon: Calendar, path: '/admin/sessions', badge: 'F10' },
+    { name: 'Bid Monitoring', icon: Activity, path: '/admin/bid-monitoring', badge: 'F11' },
+    // { name: 'Auto-Bid Management', icon: Cpu, path: '/admin/autobid', badge: 'F12' },
+    { name: 'Auction Statistics', icon: BarChart3, path: '/admin/statistics', badge: 'F15' },
+    { name: 'User Management', icon: Users, path: '/admin/users', badge: 'F14' },
+  ];
+
+  return (
+    <div
+      className="admin-sidebar d-flex flex-column text-white min-vh-100 flex-shrink-0"
+      style={{ width: '260px', backgroundColor: '#004e64', borderRight: '1px solid #003a4b' }}
+    >
+      {/* Brand Logo Header */}
+      <div className="p-4" style={{ backgroundColor: '#003a4b' }}>
+        <h4 className="m-0 fw-bold tracking-wide text-white">Annexe Auction</h4>
+        <span className="text-white-50 small font-monospace tracking-widest uppercase">Staff Dashboard</span>
+      </div>
+
+      {/* Navigation List */}
+      <div className="d-flex flex-column justify-content-between flex-grow-1 p-3">
+        <ul className="nav nav-pills flex-column mb-auto gap-1">
+          {menuItems.map((item, idx) => {
+            const isActive = location.pathname === item.path;
+            const linkProps = item.path === '#'
+              ? { onClick: (e) => e.preventDefault(), href: '#' }
+              : { as: Link, to: item.path };
+
+            return (
+              <li key={idx} className="nav-item">
+                <Link
+                  to={item.path === '#' ? '#' : item.path}
+                  onClick={item.path === '#' ? (e) => e.preventDefault() : undefined}
+                  className={`nav-link text-white d-flex align-items-center justify-content-between py-2 px-3 rounded ${isActive ? 'active-sidebar' : 'hover-sidebar'
+                    }`}
+                  style={{
+                    backgroundColor: isActive ? '#00607a' : 'transparent',
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.92rem'
+                  }}
+                >
+                  <div className="d-flex align-items-center gap-2">
+                    <item.icon size={16} className={isActive ? 'text-white' : 'text-white-50'} />
+                    <span>{item.name}</span>
+                  </div>
+                  {item.badge && (
+                    <span
+                      className="badge font-monospace text-white-50 px-1 py-0.5 rounded border border-secondary"
+                      style={{ fontSize: '0.65rem', backgroundColor: 'rgba(255,255,255,0.08)' }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Sign Out Action */}
+        <div className="pt-3 border-top border-white-10">
+          <button
+            onClick={handleSignOut}
+            className="nav-link text-white d-flex align-items-center gap-2 py-2 px-3 rounded hover-sidebar border-0 bg-transparent w-100 text-start"
+            style={{ fontSize: '0.92rem', transition: 'all 0.2s', cursor: 'pointer' }}
+          >
+            <LogOut size={16} className="text-white-50" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
