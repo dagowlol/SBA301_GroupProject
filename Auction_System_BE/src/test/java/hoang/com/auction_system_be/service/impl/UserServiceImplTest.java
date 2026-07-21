@@ -1,5 +1,26 @@
 package hoang.com.auction_system_be.service.impl;
 
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import hoang.com.auction_system_be.dto.request.RoleAssignRequest;
 import hoang.com.auction_system_be.dto.request.UserCreateRequest;
 import hoang.com.auction_system_be.dto.request.UserStatusUpdateRequest;
@@ -13,23 +34,8 @@ import hoang.com.auction_system_be.exception.ErrorCode;
 import hoang.com.auction_system_be.mapper.UserMapper;
 import hoang.com.auction_system_be.repository.UserRepository;
 import hoang.com.auction_system_be.service.auth.SecurityContextService;
+import hoang.com.auction_system_be.service.common.mail.MailService;
 import hoang.com.auction_system_be.service.user.UserServiceImpl;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -45,6 +51,9 @@ class UserServiceImplTest {
 
     @Mock
     private SecurityContextService securityContextService;
+
+    @Mock
+    private MailService mailService;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -153,11 +162,12 @@ class UserServiceImplTest {
         RoleAssignRequest request = mock(RoleAssignRequest.class);
         when(request.getRole()).thenReturn(RoleName.ADMIN);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(securityContextService.getCurrentUserEntity()).thenReturn(user);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userMapper.toUserResponse(any(User.class))).thenReturn(userResponse);
 
-        UserResponse result = userService.assignRole(1L, request);
+        UserResponse result = userService.assignRole(2L, request);
 
         assertNotNull(result);
         verify(userRepository).save(user);
@@ -168,11 +178,12 @@ class UserServiceImplTest {
         UserStatusUpdateRequest request = mock(UserStatusUpdateRequest.class);
         when(request.getStatus()).thenReturn(UserStatus.SUSPENDED);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(securityContextService.getCurrentUserEntity()).thenReturn(user);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userMapper.toUserResponse(any(User.class))).thenReturn(userResponse);
 
-        UserResponse result = userService.updateStatus(1L, request);
+        UserResponse result = userService.updateStatus(2L, request);
 
         assertNotNull(result);
         verify(userRepository).save(user);

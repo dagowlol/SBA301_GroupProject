@@ -10,6 +10,7 @@ import hoang.com.auction_system_be.exception.AppException;
 import hoang.com.auction_system_be.repository.*;
 import hoang.com.auction_system_be.service.session.AuctionSessionServiceImpl;
 import hoang.com.auction_system_be.service.autobid.AutoBidService;
+import hoang.com.auction_system_be.service.session.detector.SuspiciousBidDetector;
 import hoang.com.auction_system_be.mapper.AuctionSessionMapper;
 import hoang.com.auction_system_be.mapper.BidMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,6 +67,9 @@ class AuctionSessionServiceImplTest {
         @Mock
         AutoBidService autoBidService;
 
+        @Mock
+        SuspiciousBidDetector suspiciousBidDetector;
+
         @InjectMocks
         AuctionSessionServiceImpl auctionSessionService;
 
@@ -116,6 +120,8 @@ class AuctionSessionServiceImplTest {
         @DisplayName("placeBid - success: valid bid is saved and broadcast")
         void placeBid_success() {
                 // Arrange
+                when(suspiciousBidDetector.detect(any(), any(), any(), any())).thenReturn(false);
+
                 PlaceBidRequest request = PlaceBidRequest.builder()
                                 .userId(1L)
                                 .bidAmount(BigDecimal.valueOf(110))
@@ -218,6 +224,8 @@ class AuctionSessionServiceImplTest {
         @DisplayName("placeBid - anti-snipe: extends auction time when bid placed within 30 seconds of end")
         void placeBid_extendAuctionTime() {
                 // Arrange - session ends in 20 seconds (within 30s anti-snipe window)
+                when(suspiciousBidDetector.detect(any(), any(), any(), any())).thenReturn(false);
+
                 LocalDateTime nearEndTime = LocalDateTime.now().plusSeconds(20);
                 testSession.setEndTime(nearEndTime);
                 testSession.setAntiSnipeWindowSeconds(30);
