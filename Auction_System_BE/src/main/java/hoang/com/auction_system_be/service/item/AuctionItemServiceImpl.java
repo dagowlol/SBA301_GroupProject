@@ -381,7 +381,10 @@ public class AuctionItemServiceImpl implements AuctionItemService {
             Root<AuctionSession> sessionRoot = subquery.from(AuctionSession.class);
             subquery.select(sessionRoot.get("item").get("id"));
             subquery.where(
-                cb.equal(sessionRoot.get("status"), SessionStatus.ENDED),
+                cb.or(
+                    cb.equal(sessionRoot.get("status"), SessionStatus.ENDED),
+                    cb.equal(sessionRoot.get("status"), SessionStatus.PAID)
+                ),
                 cb.equal(sessionRoot.get("currentWinnerParticipant").get("user").get("id"), requesterId),
                 cb.equal(sessionRoot.get("item").get("id"), root.get("id"))
             );
@@ -405,7 +408,7 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                     // Find the ENDED session for this item where current user is the winner,
                     // then attach the payment info (id + status)
                     item.getSessions().stream()
-                            .filter(s -> s.getStatus() == SessionStatus.ENDED
+                            .filter(s -> (s.getStatus() == SessionStatus.ENDED || s.getStatus() == SessionStatus.PAID)
                                     && s.getCurrentWinnerParticipant() != null
                                     && s.getCurrentWinnerParticipant().getUser().getId().equals(requesterId))
                             .findFirst()
@@ -429,6 +432,14 @@ public class AuctionItemServiceImpl implements AuctionItemService {
                 .totalPages(itemPage.getTotalPages())
                 .last(itemPage.isLast())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ItemResponse getItemById(Long itemId) {
+        AuctionItem item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new AppException(ErrorCode.ITEM_NOT_FOUND));
+        return itemMapper.toResponse(item);
     }
 
     @Override

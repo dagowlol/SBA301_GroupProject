@@ -25,6 +25,7 @@ import {
   ,ImagePlus,
   Ban
 } from 'lucide-react';
+import { resolveImageUrl } from '../../../utils/imageUtils';
 
 const formatVND = (value) => `${new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
@@ -70,6 +71,7 @@ export default function ItemApproval() {
   const [condition, setCondition] = useState('NEW');
   const [status, setStatus] = useState('Pending');
   const [imageFile, setImageFile] = useState(null);
+  const [existingImageUrl, setExistingImageUrl] = useState(null);
 
   // Error state for handling Spring Boot constraint exceptions
   const [error, setError] = useState('');
@@ -100,6 +102,7 @@ export default function ItemApproval() {
     setCondition('NEW');
     setStatus('Pending');
     setImageFile(null);
+    setExistingImageUrl(null);
     setError('');
     setShowAddModal(true);
   };
@@ -118,6 +121,7 @@ export default function ItemApproval() {
     setCondition(item.condition || 'NEW');
     setStatus(item.status);
     setImageFile(null);
+    setExistingImageUrl(item.imageUrl || null);
     setError('');
     setShowEditModal(true);
   };
@@ -722,6 +726,20 @@ export default function ItemApproval() {
                       <Form.Text>Choose a JPG, PNG or WebP image from this computer.</Form.Text>
                     </Col>
                   </Row>
+                  {(imageFile || existingImageUrl) && (
+                    <div className="mt-2">
+                      <div className="text-muted small mb-1 fw-semibold">
+                        {imageFile ? 'New image preview:' : 'Current image:'}
+                      </div>
+                      <img
+                        src={imageFile ? URL.createObjectURL(imageFile) : resolveImageUrl(existingImageUrl)}
+                        alt="Item preview"
+                        className="rounded border object-fit-cover"
+                        style={{ width: '160px', height: '120px' }}
+                        onLoad={(event) => { if (imageFile) URL.revokeObjectURL(event.currentTarget.src); }}
+                      />
+                    </div>
+                  )}
                 </Form.Group>
 
               </Modal.Body>

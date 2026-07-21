@@ -71,7 +71,9 @@ public interface AuctionSessionRepository extends JpaRepository<AuctionSession, 
     @Query("""
                 SELECT new hoang.com.auction_system_be.dto.response.AuctionSessionListResponse(
                     s.id, i.id, i.name, i.description,
-                    s.reservePrice, s.currentHighestBid, s.status, s.startTime, s.endTime
+                    s.reservePrice, s.currentHighestBid,
+                    (SELECT img.imageUrl FROM ItemImage img WHERE img.item = i AND img.isPrimary = true),
+                    s.status, s.startTime, s.endTime
                 )
                 FROM AuctionSession s
                 JOIN s.item i
@@ -89,7 +91,7 @@ public interface AuctionSessionRepository extends JpaRepository<AuctionSession, 
             @Param("search") String search,
             Pageable pageable);
 
-    @Query(value = "SELECT s.id, i.id as itemId, i.name as itemName, i.description, s.reserve_price as reservePrice, s.current_highest_bid as currentHighestBid, s.status, s.start_time as startTime, s.end_time as endTime FROM auction_sessions s JOIN auction_items i ON i.id = s.item_id WHERE s.deleted_at IS NOT NULL ORDER BY s.id DESC", nativeQuery = true)
+    @Query(value = "SELECT s.id, i.id as itemId, i.name as itemName, i.description, s.reserve_price as reservePrice, s.current_highest_bid as currentHighestBid, (SELECT TOP 1 img.image_url FROM item_images img WHERE img.item_id = i.id AND img.is_primary = 1) as itemImage, s.status, s.start_time as startTime, s.end_time as endTime FROM auction_sessions s JOIN auction_items i ON i.id = s.item_id WHERE s.deleted_at IS NOT NULL ORDER BY s.id DESC", nativeQuery = true)
     List<Object[]> findDeletedSessionsRaw();
 
     @Modifying

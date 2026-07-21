@@ -314,6 +314,8 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                 List<AuctionSessionListResponse> sessions = auctionSessionRepository.findOptimizedSessions(
                                 hasCursor, safeCursor, hasStatus, safeStatus, hasSearch, cleanSearch, pageable);
 
+                sessions.forEach(s -> s.setItemImage(objectStorageService.resolveUrl(s.getItemImage())));
+
                 boolean hasNext = sessions.size() > size;
                 if (hasNext) {
                         sessions.remove(sessions.size() - 1);
@@ -521,11 +523,12 @@ public class AuctionSessionServiceImpl implements AuctionSessionService {
                                         .itemDescription((String) row[3])
                                         .reservePrice(row[4] != null ? new BigDecimal(row[4].toString()) : null)
                                         .currentHighestBid(row[5] != null ? new BigDecimal(row[5].toString()) : null)
-                                        .status(SessionStatus.valueOf((String) row[6]))
-                                        .startTime(row[7] instanceof Timestamp ? ((Timestamp) row[7]).toLocalDateTime()
-                                                        : (LocalDateTime) row[7])
-                                        .endTime(row[8] instanceof Timestamp ? ((Timestamp) row[8]).toLocalDateTime()
+                                        .itemImage(objectStorageService.resolveUrl((String) row[6]))
+                                        .status(SessionStatus.valueOf((String) row[7]))
+                                        .startTime(row[8] instanceof Timestamp ? ((Timestamp) row[8]).toLocalDateTime()
                                                         : (LocalDateTime) row[8])
+                                        .endTime(row[9] instanceof Timestamp ? ((Timestamp) row[9]).toLocalDateTime()
+                                                        : (LocalDateTime) row[9])
                                         .build());
                 }
                 return result;

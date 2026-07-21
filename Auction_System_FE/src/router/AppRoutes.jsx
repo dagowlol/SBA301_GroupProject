@@ -7,6 +7,7 @@ import AdminRoute from './AdminRoute';
 // Feature components
 import CatalogPage from '../features/catalog/pages/CatalogPage';
 import ProductDetailPage from '../features/catalog/pages/ProductDetailPage';
+import ItemDetailPage from '../features/catalog/pages/ItemDetailPage';
 import CategoryManagement from '../features/staff/pages/CategoryManagement';
 import ItemApproval from '../features/staff/pages/ItemApproval';
 import VerifyEmailPage from '../features/auth/pages/VerifyEmailPage';
@@ -37,6 +38,7 @@ export default function AppRoutes() {
           <Route path="about-us" element={<AboutUsPage />} />
           <Route path="auction" element={<CatalogPage />} />
           <Route path="product/:id" element={<ProductDetailPage />} />
+          <Route path="item/:id" element={<ItemDetailPage />} />
           <Route path="auction/:sessionId" element={<AuctionRoom />} />
           <Route path="contact-us" element={<ContactUsPage />} />
 

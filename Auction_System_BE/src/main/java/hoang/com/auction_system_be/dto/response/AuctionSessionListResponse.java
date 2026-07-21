@@ -22,6 +22,7 @@ public class AuctionSessionListResponse {
     private String itemDescription;
     private BigDecimal reservePrice;
     private BigDecimal currentHighestBid;
+    private String itemImage;
     private SessionStatus status;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

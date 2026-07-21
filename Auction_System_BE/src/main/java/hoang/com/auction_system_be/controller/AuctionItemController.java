@@ -86,6 +86,14 @@ public class AuctionItemController {
                                 .build();
         }
 
+        @GetMapping("/{id}")
+        @Operation(summary = "Get item by ID", description = "Returns full details of a single auction item by its ID.")
+        public ApiResponse<ItemResponse> getItemById(@PathVariable Long id) {
+                return ApiResponse.<ItemResponse>builder()
+                                .result(auctionItemService.getItemById(id))
+                                .build();
+        }
+
         @GetMapping
         @Operation(summary = "Get list of items", description = "Get items with pagination, filtering and role-based access.")
         public ApiResponse<PageResponse<ItemResponse>> getItems(

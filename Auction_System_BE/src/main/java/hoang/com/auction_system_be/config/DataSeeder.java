@@ -278,18 +278,27 @@ public class DataSeeder implements CommandLineRunner {
     private Map<AuctionSession, List<AuctionParticipant>> seedParticipants(List<AuctionSession> sessions, SeedUsers users) {
         Map<AuctionSession, List<AuctionParticipant>> bySession = new LinkedHashMap<>();
         List<AuctionParticipant> allParticipants = new ArrayList<>();
+        int bidderSize = users.bidders().size();
         for (int i = 0; i < sessions.size(); i++) {
             AuctionSession session = sessions.get(i);
             int participantCount = session.getStatus() == SessionStatus.SCHEDULED ? 6 : 10 + (i % 4);
+            participantCount = Math.min(participantCount, bidderSize);
             List<AuctionParticipant> sessionParticipants = new ArrayList<>();
+            Set<Long> addedUserIds = new HashSet<>();
+            int idx = i;
             for (int j = 0; j < participantCount; j++) {
-                User bidder = users.bidders().get((i + j * 2) % users.bidders().size());
+                while (addedUserIds.contains(users.bidders().get(idx % bidderSize).getId())) {
+                    idx++;
+                }
+                User bidder = users.bidders().get(idx % bidderSize);
+                addedUserIds.add(bidder.getId());
                 AuctionParticipant participant = AuctionParticipant.builder()
                         .session(session)
                         .user(bidder)
                         .build();
                 sessionParticipants.add(participant);
                 allParticipants.add(participant);
+                idx++;
             }
             bySession.put(session, sessionParticipants);
         }
@@ -611,7 +620,7 @@ public class DataSeeder implements CommandLineRunner {
                 "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=1200&auto=format&fit=crop&q=80",
                 "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=1200&auto=format&fit=crop&q=80",
                 "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&auto=format&fit=crop&q=80",
-                "https://images.unsplash.com/photo-1509048191080-d2e2678e53cb?w=1200&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1200&auto=format&fit=crop&q=80",
                 "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=1200&auto=format&fit=crop&q=80",
                 "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=1200&auto=format&fit=crop&q=80",
                 "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1200&auto=format&fit=crop&q=80",

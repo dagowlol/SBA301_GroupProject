@@ -96,5 +96,10 @@ export const itemApi = {
     const queryString = query.toString();
     return apiRequest(`/items/my-won${queryString ? `?${queryString}` : ''}`);
   },
+
+  /**
+   * Fetches a single item by ID
+   */
+  getItemById: (id) => apiRequest(`/items/${id}`),
 };
 

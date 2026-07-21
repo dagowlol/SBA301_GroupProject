@@ -127,7 +127,7 @@ export default function AuthModal({ show, onHide }) {
                     <a href="#forgot" className="small-link text-muted fw-medium link-hover">Lost your password?</a>
                   </div>
                 </Form>
-
+{/* 
                 <div className="mt-2 mb-4">
                   <p className="small-text fw-medium text-muted mb-3">Or sign in with</p>
                   <div className="d-flex gap-3">
@@ -138,7 +138,7 @@ export default function AuthModal({ show, onHide }) {
                       <span className="fw-bold fs-5 px-1">G</span> Google
                     </button>
                   </div>
-                </div>
+                </div> */}
 
               <div className="pt-3 border-top mt-auto">
                 <p className="small-text fw-medium mb-0">

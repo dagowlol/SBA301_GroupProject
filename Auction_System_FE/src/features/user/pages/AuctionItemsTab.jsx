@@ -411,8 +411,10 @@ export default function AuctionItemsTab() {
   const hasActiveFilters = filters.name || filters.categoryId || filters.status;
 
   const handleItemClick = (item) => {
-    if (item.sessionId) {
+    if (item.sessionId && item.sessionStatus === 'ACTIVE') {
       navigate(`/auction/${item.sessionId}`);
+    } else {
+      navigate(`/item/${item.id}`);
     }
   };
 

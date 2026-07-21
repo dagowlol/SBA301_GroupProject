@@ -48,6 +48,7 @@ public class ItemMapper {
 
         if (item.getSessions() != null && !item.getSessions().isEmpty()) {
             builder.sessionId(item.getSessions().get(0).getId());
+            builder.sessionStatus(item.getSessions().get(0).getStatus());
         }
 
         if (item.getImages() != null && !item.getImages().isEmpty()) {
